@@ -2,8 +2,11 @@
 
 このTODOは、Lv.5すき焼きMVPを「製品として遊べる」と言える状態まで進めるための完了条件です。
 
+開発規則は `DEVELOPMENT_RULES.md` に置く。特にDemo modeとProduction pathは別物として扱い、Demo完了をProduction完了に読み替えない。
+
 ## 0. MVP Definition
 
+- [x] Demo modeとProduction pathを混ぜない規則が `DEVELOPMENT_RULES.md` に明文化されている。
 - [ ] Start画面からResult画面まで、Unity EditorのPlay Modeで一度も手動Scene切替せず完走できる。
 - [ ] 開発用Mock入力、Mock切替UI、デバッグ用ボタンがプレイヤー向け画面に表示されない。
 - [ ] Lv.5すき焼き以外のLv.1-Lv.4はLevel Selectに表示されるが、Coming Soonとして選択不可になっている。
@@ -480,6 +483,8 @@
 
 ## 21. Inspector Demo Mode
 
+- [x] Demo modeの規則が `DEVELOPMENT_RULES.md` に書かれている。
+- [x] Demo modeの完了条件とProduction pathの完了条件がTODO上で分かれている。
 - [x] デモモードはゲーム画面のUIではなく、`Sukiyaki Demo Driver` のInspector設定で切り替えられる。
 - [x] `Sukiyaki Demo Driver` がLv.5 Sceneに配置されている。
 - [x] `Sukiyaki Demo Driver` が `HashiInputProvider` を参照している。
@@ -501,3 +506,4 @@
 - [ ] Demo modeをOFFに戻すとBLE本番入力で起動する。
 - [x] Demo modeとBLE modeの切り替え時にneutral calibrationが古い入力源から引き継がれない。
 - [ ] Demo mode関連の設定が最終ビルドで誤って有効になっていないことをリリース前に確認する。
+- [ ] `ChopChop > Validate MVP Setup` がRelease build向けSceneでDemo有効状態をErrorとして検出する。
