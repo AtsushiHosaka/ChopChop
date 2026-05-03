@@ -1,4 +1,5 @@
 using ChopChop.App;
+using ChopChop.Audio;
 using ChopChop.Levels;
 using ChopChop.Levels.Sukiyaki;
 using UnityEngine;
@@ -123,6 +124,9 @@ namespace ChopChop.UI
         {
             cueOverlay = gameObject.AddComponent<SukiyakiCueOverlay>();
             cueOverlay.Initialize(localization, stage);
+
+            var audioBinder = gameObject.AddComponent<SukiyakiAudioBinder>();
+            audioBinder.Initialize(stage);
         }
 
         private void StartCountdown()

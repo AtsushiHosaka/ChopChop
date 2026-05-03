@@ -1,4 +1,5 @@
 using ChopChop.Levels;
+using ChopChop.Audio;
 using ChopChop.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -10,6 +11,7 @@ namespace ChopChop.App
         private static AppRuntime instance;
 
         private readonly SceneNavigator navigator = new SceneNavigator();
+        private AudioService audioService;
         private GameLocalization localization;
         private LevelCatalog levelCatalog;
         private GameObject currentScreen;
@@ -17,6 +19,7 @@ namespace ChopChop.App
 
         public static AppRuntime Instance => instance;
         public SceneNavigator Navigator => navigator;
+        public AudioService Audio => audioService;
         public GameLocalization Localization => localization;
         public LevelCatalog LevelCatalog => levelCatalog;
 
@@ -35,6 +38,13 @@ namespace ChopChop.App
 
         private void Awake()
         {
+            audioService = GetComponent<AudioService>();
+            if (audioService == null)
+            {
+                audioService = gameObject.AddComponent<AudioService>();
+            }
+
+            audioService.Initialize();
             localization = new GameLocalization();
             levelCatalog = LevelCatalogLoader.Load();
             SceneManager.sceneLoaded += HandleSceneLoaded;
@@ -64,6 +74,7 @@ namespace ChopChop.App
 
             DestroyCurrentScreen();
             builtSceneName = sceneName;
+            UpdateBgmForScene(sceneName);
 
             if (sceneName == AppScenes.Start)
             {
@@ -85,6 +96,18 @@ namespace ChopChop.App
             {
                 currentScreen = PrototypeLevelScreenController.Create(localization, navigator, levelDefinition);
             }
+        }
+
+        private void UpdateBgmForScene(string sceneName)
+        {
+            if (audioService == null)
+            {
+                return;
+            }
+
+            audioService.PlayBgm(sceneName == AppScenes.SukiyakiLevel
+                ? AudioBgmId.Sukiyaki
+                : AudioBgmId.Menu);
         }
 
         private void DestroyCurrentScreen()

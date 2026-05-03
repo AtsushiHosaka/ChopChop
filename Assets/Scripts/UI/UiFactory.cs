@@ -1,4 +1,5 @@
 using System;
+using ChopChop.Audio;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -78,6 +79,7 @@ namespace ChopChop.UI
             Stretch(text.rectTransform, 12f);
 
             buttonObject.AddComponent<UiButtonAnimator>();
+            buttonObject.AddComponent<UiButtonAudio>();
             return button;
         }
 

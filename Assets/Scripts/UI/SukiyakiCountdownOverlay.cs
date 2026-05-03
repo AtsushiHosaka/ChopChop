@@ -1,4 +1,5 @@
 using System;
+using ChopChop.Audio;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -95,6 +96,7 @@ namespace ChopChop.UI
             image.enabled = true;
             image.sprite = sprite;
             image.rectTransform.localScale = Vector3.one * 1.18f;
+            AudioService.Instance?.PlayCue(AudioCueId.CountdownTick);
         }
 
         private void Animate(float localElapsed)
@@ -113,6 +115,7 @@ namespace ChopChop.UI
         private void Finish()
         {
             running = false;
+            AudioService.Instance?.PlayCue(AudioCueId.CountdownGo);
             completed?.Invoke();
             completed = null;
             if (canvasGroup != null)

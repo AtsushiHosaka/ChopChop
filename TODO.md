@@ -692,3 +692,21 @@
 - [ ] UIアニメーションがボタン押下、言語切替、カウントダウン、Cue画像表示を邪魔しない。
 - [ ] 2P split-screen時、左右HUDのアニメーションが画面中央dividerをまたがない。
 - [ ] 最終MVPでは過度な揺れ/点滅を避け、箸操作と食材接触に注意が向く程度に抑える。
+
+## 29. BGM And Sound Effects
+
+- [x] `AudioService` がAppRuntime配下で永続化され、Sceneを跨いでBGM/SEを管理する。
+- [x] Start/Level Select/Result/PrototypeではMenu BGM、Lv.5 SukiyakiではSukiyaki BGMが自動で切り替わる。
+- [x] BGM切り替え時に短いfade-inを行い、Scene遷移時に唐突に鳴らさない。
+- [x] 全 `UiFactory.CreateButton` ボタンにclick SEが付いている。
+- [x] 全 `UiFactory.CreateButton` ボタンにhover SEが付いている。
+- [x] カウントダウンの3/2/1表示ごとにtick SEが鳴る。
+- [x] カウントダウン完了時にstart SEが鳴る。
+- [x] Sukiyaki工程変更時に短い工程切替SEが鳴る。
+- [x] Sukiyaki工程成功時に成功SEが鳴る。
+- [x] Sukiyaki工程失敗/肉破れ時に失敗SEが鳴る。
+- [x] Result遷移前に完了SEが鳴る。
+- [ ] Unity Editor Play ModeでBGM/SEの音量バランスを確認する。
+- [ ] BGM/SEがプレイヤー向けUIに開発用トグルとして露出していないことを確認する。
+- [ ] 2P split-screen時、P1/P2の成功/失敗SEが過剰に重ならないように設計する。
+- [ ] 最終版では生成WAVを使い続けるか、商用利用可能な高品質assetへ差し替えるか判断する。
