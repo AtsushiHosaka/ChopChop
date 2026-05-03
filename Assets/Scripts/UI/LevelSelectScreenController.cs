@@ -138,9 +138,23 @@ namespace ChopChop.UI
                 return definition.thumbnail;
             }
 
-            return definition.sceneName == AppScenes.SukiyakiLevel
-                ? Resources.Load<Sprite>("UI/LevelThumbnails/level05_sukiyaki")
-                : null;
+            switch (definition.sceneName)
+            {
+                case AppScenes.TutorialTempura:
+                    return Resources.Load<Sprite>("UI/LevelThumbnails/tutorial_tempura");
+                case AppScenes.Level01Sashimi:
+                    return Resources.Load<Sprite>("UI/LevelThumbnails/level01_sashimi");
+                case AppScenes.Level02TamagoKakeGohan:
+                    return Resources.Load<Sprite>("UI/LevelThumbnails/level02_tamago_kake_gohan");
+                case AppScenes.Level03Tofu:
+                    return Resources.Load<Sprite>("UI/LevelThumbnails/level03_tofu");
+                case AppScenes.Level04GrilledFish:
+                    return Resources.Load<Sprite>("UI/LevelThumbnails/level04_grilled_fish");
+                case AppScenes.SukiyakiLevel:
+                    return Resources.Load<Sprite>("UI/LevelThumbnails/level05_sukiyaki");
+                default:
+                    return null;
+            }
         }
 
         private void ApplyBackgroundImage()

@@ -1,0 +1,164 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: ChopChopText Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: ChopChopText
+  m_TableCollectionNameGuidString: 101a242c047804791ad49f927466dc3b
+  m_Entries:
+  - m_Id: 263184384
+    m_Key: app.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767296
+    m_Key: app.start
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767297
+    m_Key: app.levelSelect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767298
+    m_Key: app.language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767299
+    m_Key: app.quit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767300
+    m_Key: app.back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767301
+    m_Key: level.1.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767302
+    m_Key: level.2.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767303
+    m_Key: level.3.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767304
+    m_Key: level.4.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767305
+    m_Key: level.5.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767306
+    m_Key: level.locked
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767307
+    m_Key: level.1.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767308
+    m_Key: level.2.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767309
+    m_Key: level.3.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767310
+    m_Key: level.4.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767311
+    m_Key: level.5.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767312
+    m_Key: hud.calibrate
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767313
+    m_Key: step.mixEgg
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767314
+    m_Key: step.pickMeat
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767315
+    m_Key: step.putInBroth
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767316
+    m_Key: step.flipMeat
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767317
+    m_Key: step.dipEgg
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767318
+    m_Key: step.deliver
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767319
+    m_Key: hud.time
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767320
+    m_Key: hud.failures
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767321
+    m_Key: hud.speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767322
+    m_Key: hud.care
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767323
+    m_Key: level.setupMissing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767324
+    m_Key: result.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767325
+    m_Key: result.retry
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767326
+    m_Key: result.levelSelect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 831237374599168
+    m_Key: tutorial.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 831237374599169
+    m_Key: tutorial.desc
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 3535406005568929792
+  references:
+    version: 2
+    RefIds:
+    - rid: 3535406005568929792
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1777635886792

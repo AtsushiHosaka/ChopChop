@@ -1,0 +1,159 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: ChopChopText_en
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 101a242c047804791ad49f927466dc3b, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 263184384
+    m_Localized: ChopChop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767296
+    m_Localized: Start
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767297
+    m_Localized: Level Select
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767298
+    m_Localized: "\u65E5\u672C\u8A9E"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767299
+    m_Localized: Quit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767300
+    m_Localized: Back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767301
+    m_Localized: Lv.1 Sashimi
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767302
+    m_Localized: Lv.2 Tamago Kake Gohan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767303
+    m_Localized: Lv.3 Tofu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767304
+    m_Localized: Lv.4 Grilled Fish
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767305
+    m_Localized: Lv.5 Sukiyaki
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767306
+    m_Localized: Coming Soon
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767307
+    m_Localized: Practice lifting slippery sashimi.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767308
+    m_Localized: Practice gentle mixing and lifting.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767309
+    m_Localized: Practice holding fragile tofu.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767310
+    m_Localized: Practice flaking grilled fish.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767311
+    m_Localized: Flip beef and dip it in egg.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767312
+    m_Localized: Hold the chopsticks naturally.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767313
+    m_Localized: Mix the egg!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767314
+    m_Localized: Pick up the beef!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767315
+    m_Localized: Put it in the broth!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767316
+    m_Localized: Flip it in the broth!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767317
+    m_Localized: Dip it in egg!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767318
+    m_Localized: Bring it to the mouth!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767319
+    m_Localized: Time
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767320
+    m_Localized: Fails
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767321
+    m_Localized: Speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767322
+    m_Localized: Care
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767323
+    m_Localized: Lv.5 scene references are not assigned.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767324
+    m_Localized: Result
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767325
+    m_Localized: Retry
+    m_Metadata:
+      m_Items: []
+  - m_Id: 275767326
+    m_Localized: Level Select
+    m_Metadata:
+      m_Items: []
+  - m_Id: 831237374599168
+    m_Localized: Tutorial Tempura
+    m_Metadata:
+      m_Items: []
+  - m_Id: 831237374599169
+    m_Localized: Learn the basics with large tempura pieces.
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

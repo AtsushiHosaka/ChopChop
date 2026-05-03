@@ -1,6 +1,6 @@
 # ChopChop MVP Completion Checklist
 
-このTODOは、Lv.5すき焼きMVPを「製品として遊べる」と言える状態まで進めるための完了条件です。
+このTODOは、ChopChopを「製品として遊べる」と言える状態まで進めるための完了条件です。最初の完成対象はLv.5すき焼きだが、レベル追加の導線とScene分割は最初から全レベル分を持つ。
 
 開発規則は `DEVELOPMENT_RULES.md` に置く。特にDemo modeとProduction pathは別物として扱い、Demo完了をProduction完了に読み替えない。
 
@@ -9,8 +9,9 @@
 - [x] Demo modeとProduction pathを混ぜない規則が `DEVELOPMENT_RULES.md` に明文化されている。
 - [ ] Start画面からResult画面まで、Unity EditorのPlay Modeで一度も手動Scene切替せず完走できる。
 - [x] 開発用Mock入力、Mock切替UI、デバッグ用ボタンがプレイヤー向け画面に表示されない。
-- [x] Lv.5すき焼き以外のLv.1-Lv.4はLevel Selectに表示されるが、Coming Soonとして選択不可になっている。
+- [x] Tutorial/Lv.1-Lv.5がLevel Selectに表示され、対応Sceneへ遷移できるCatalog構成になっている。
 - [ ] Lv.5は本番用BLE箸、食材、工程UI、スコア、Result Sceneを使って進行する。
+- [ ] Tutorial/Lv.1-Lv.4も本番入力とデモ検証を分離したまま、各レベル固有の完了条件まで遊べる。
 - [x] `ChopChop > Validate MVP Setup` がError/Warningなしで通る。
 
 ## 0.5 Production Asset Policy
@@ -31,13 +32,40 @@
 - [x] `StartScene` を起動するとタイトル、Start、Language、Quitが表示される。
 - [x] `StartScene` に生成済み背景画像が表示され、UIテキストとボタンがその上に重なる。
 - [x] `Start` を押すと `LevelSelectScene` に遷移する。
-- [x] `LevelSelectScene` でLv.1-Lv.4がLocked/Coming Soon表示になる。
-- [x] Lv.5カードのみ選択可能で、押すと `Level05_SukiyakiScene` に遷移する。
+- [x] `LevelSelectScene` でTutorial/Lv.1-Lv.5が現在の学習順で表示される。
+- [x] 各レベルカードを押すと、対応する分割Sceneへ遷移する。
+- [x] Lv.5カードを押すと `Level05_SukiyakiScene` に遷移する。
 - [x] Lv.5カードに生成済みすき焼きサムネイル画像が表示される。
+- [x] Tutorial/Lv.1-Lv.4カードに生成済みレベルサムネイル画像が表示される。
 - [x] `Level05_SukiyakiScene` 完了後、ゲーム内Overlayではなく `ResultScene` に遷移する。
 - [x] `ResultScene` にSpeed、Care、失敗回数、完了時間が表示される。
 - [x] `ResultScene` のRetryでLv.5を再開始できる。
 - [x] `ResultScene` のLevel Selectで `LevelSelectScene` に戻れる。
+
+## 1.5 Level Roadmap And Scene Split
+
+- [x] 学習順を `Tutorial: Tempura -> Lv.1 Sashimi -> Lv.2 Tamago Kake Gohan -> Lv.3 Tofu -> Lv.4 Grilled Fish -> Lv.5 Sukiyaki` に更新する。
+- [x] プレイヤー向けのレベル番号は `Tutorial, Lv.1 Sashimi, Lv.2 Tamago Kake Gohan, Lv.3 Tofu, Lv.4 Grilled Fish, Lv.5 Sukiyaki` とする。
+- [ ] 開発着手順は `Lv.5 Sukiyaki -> Lv.1 Sashimi -> Lv.3 Tofu -> Tutorial Tempura -> Lv.2 Tamago Kake Gohan -> Lv.4 Grilled Fish` を基本にする。
+- [x] `LevelCatalog.asset` が上記の順序で `LevelDefinition` を参照している。
+- [x] `Tutorial_Tempura.asset` が存在し、`Tutorial_TempuraScene` を指している。
+- [x] `Level01_Sashimi.asset` が存在し、`Level01_SashimiScene` を指している。
+- [x] `Level02_TamagoKakeGohan.asset` が存在し、`Level02_TamagoKakeGohanScene` を指している。
+- [x] `Level03_Tofu.asset` が存在し、`Level03_TofuScene` を指している。
+- [x] `Level04_GrilledFish.asset` が存在し、`Level04_GrilledFishScene` を指している。
+- [x] `Level05_Sukiyaki.asset` が存在し、`Level05_SukiyakiScene` を指している。
+- [x] `Assets/Scenes/Levels/Tutorial_TempuraScene.unity` が存在する。
+- [x] `Assets/Scenes/Levels/Level01_SashimiScene.unity` が存在する。
+- [x] `Assets/Scenes/Levels/Level02_TamagoKakeGohanScene.unity` が存在する。
+- [x] `Assets/Scenes/Levels/Level03_TofuScene.unity` が存在する。
+- [x] `Assets/Scenes/Levels/Level04_GrilledFishScene.unity` が存在する。
+- [x] `Assets/Scenes/Levels/Level05_SukiyakiScene.unity` が存在する。
+- [x] Build Settingsが `Start -> LevelSelect -> Tutorial -> Lv.1 -> Lv.2 -> Lv.3 -> Lv.4 -> Lv.5 -> Result` の順になっている。
+- [x] 非すき焼きSceneでも `AppRuntime` がPrototype Level画面を生成し、戻る導線を持つ。
+- [ ] 各レベルSceneに本番用 `ILevelController` 実装を接続する。
+- [ ] 各レベルSceneにデモ専用Driverを別GameObjectとして接続する。
+- [ ] 各レベルSceneのデモDriverは初期状態OFFで、プレイヤー向けUIから切り替えられない。
+- [x] `ChopChop > Validate MVP Setup` が全LevelDefinition/Scene/thumbnailの欠損を検出する。
 
 ## 2. Localization
 
@@ -534,3 +562,69 @@
 - [ ] 各工程waypointはHashi root座標ではなく、Lower/Upper Tipの目標位置からrootを逆算できる設定へ移行する。
 - [ ] Mix Egg用に、ボウル内の安全な円軌道/楕円軌道を定義し、箸Tipが壁や底に入りすぎない範囲で混ぜる。
 - [ ] 本番BLE入力時も、箸姿勢を完全自由移動ではなく工程ごとのInteraction Volume内に制限する。
+
+## 23. Tutorial And Lv.1-Lv.4 Level Completion
+
+- [x] Tutorial Tempura用のサムネイル画像が `Assets/Resources/UI/LevelThumbnails/tutorial_tempura.png` にある。
+- [x] Lv.1 Sashimi用のサムネイル画像が `Assets/Resources/UI/LevelThumbnails/level01_sashimi.png` にある。
+- [x] Lv.2 Tamago Kake Gohan用のサムネイル画像が `Assets/Resources/UI/LevelThumbnails/level02_tamago_kake_gohan.png` にある。
+- [x] Lv.3 Tofu用のサムネイル画像が `Assets/Resources/UI/LevelThumbnails/level03_tofu.png` にある。
+- [x] Lv.4 Grilled Fish用のサムネイル画像が `Assets/Resources/UI/LevelThumbnails/level04_grilled_fish.png` にある。
+- [x] Tutorial Sceneに天ぷら練習用の食材/皿/作業面が配置されている。
+- [x] Lv.1 Sceneに刺身練習用の食材/皿/作業面が配置されている。
+- [x] Lv.2 Sceneに卵かけご飯練習用の器/米/卵/作業面が配置されている。
+- [x] Lv.3 Sceneに豆腐assetと、一枚豆腐から切り分けるプロトタイプが配置されている。
+- [x] Lv.4 Sceneに焼き魚ほぐしプロトタイプが配置されている。
+- [ ] Tutorial本番: 大きく持ちやすい天ぷらを、潰さずにつまむ/持ち上げる/離す工程がある。
+- [ ] Tutorialデモ: 天ぷらを自動でつまむ/持ち上げる/離す動作が、Productionとは別Driverで確認できる。
+- [ ] Lv.1本番: 刺身の滑り、横ずれ、清潔な持ち上げ判定がある。
+- [ ] Lv.1デモ: 刺身を箸でつまみ、滑らせず皿から持ち上げる確認ができる。
+- [ ] Lv.2本番: 米表面マスクと卵の粘性/混ざり度を使い、丁寧な混ぜ方を評価する。
+- [ ] Lv.2デモ: 卵を割る/米と混ぜる/口へ運ぶ流れが自動で確認できる。
+- [ ] Lv.3本番: 一枚豆腐を箸で押し切り、適切なstrokeなら溝が入り、切り分け後につまめる。
+- [ ] Lv.3本番: 切る前の豆腐に最初から分割線や隙間が見えない。
+- [ ] Lv.3本番: 切断後だけ、切断線に沿って分離した豆腐片が見える。
+- [ ] Lv.3本番: 過大な圧縮/せん断では切り分けではなく崩れ判定になる。
+- [ ] Lv.3デモ: 一枚豆腐へ自動strokeを入れ、溝の出現と切り分けを確認できる。
+- [ ] Lv.4本番: 焼き魚の身だけを繊維方向に沿ってほぐし、骨/皮を避ける判定がある。
+- [ ] Lv.4デモ: 焼き魚の身フレークが繊維方向に順番に剥がれる確認ができる。
+- [ ] 全レベルでProduction pathはBLE箸入力を使用し、Demo driverの自動入力を参照しない。
+- [ ] 全レベルでDemo完了をProduction完了として扱わない。
+
+## 24. Grilled Fish R&D And Production Plan
+
+- [x] `GrilledFishFlakePrototype` があり、身フレーク、皮、骨を別パーツとして生成できる。
+- [x] `GrilledFishFlakePrototype.ApplyChopstickStroke` で接触点に近い身フレークを繊維方向へ剥がすAPIがある。
+- [x] Lv.4 SceneにProduction用の焼き魚ほぐしプロトタイプが置かれている。
+- [x] Lv.4 SceneにDemo Preview RootがProductionとは別に置かれている。
+- [ ] 箸Tipの接触点、移動方向、速度、pinchを `ApplyChopstickStroke` へ接続する。
+- [ ] 皮、骨、身フレークを本番assetとして分割して用意する。
+- [ ] 身フレークは魚の繊維方向に沿った細長いmeshで、UVとmaterialがしっとりした焼き魚に見える。
+- [ ] 皮はObi Clothまたは薄いmeshで、箸に引っかかって少しめくれる。
+- [ ] 大きな身の柔らかさはObi Softbodyまたは簡易springで表現する。
+- [ ] ほぐれてよい部位と、箸で触ると減点される骨/皮部位を `FishInteractionZone` として分ける。
+- [ ] 繊維方向に沿うstrokeは成功、横切るstrokeや骨への接触はCare低下になる。
+- [ ] ほぐした身の総量、骨接触回数、皮破れ回数、操作時間からScoreを計算する。
+- [ ] フレークが剥がれた後に不自然に飛ばず、皿上に柔らかく残る。
+- [ ] Runtimeで完全なmesh破壊を主実装にしない。必要なら本番assetの事前分割/BlendShape/Softbodyを組み合わせる。
+- [ ] 本番前に、Obi Softbodyで大きな身の押し込みが自然かを検証する。
+- [ ] 本番前に、Obi Clothで皮のめくれだけを補助表現できるか検証する。
+
+## 25. Tofu R&D And Production Plan
+
+- [x] `TofuCutPrototype` があり、初期状態は一枚豆腐として表示できる。
+- [x] `TofuCutPrototype.ApplyChopstickCut` で接触点に近い潜在cut lineを進めるAPIがある。
+- [x] `TofuCutPrototype.ApplyChopstickPressure` は既存呼び出し互換としてcut入力へ委譲する。
+- [x] Lv.3 SceneにProduction用の一枚豆腐切り分けプロトタイプが置かれている。
+- [x] Lv.3 SceneにDemo Preview RootがProductionとは別に置かれている。
+- [ ] 箸Tipの接触点、tip間距離、pinch、押し込み速度、stroke方向を `ApplyChopstickCut` へ接続する。
+- [ ] 豆腐本番assetは表面が滑らかな一枚meshとして用意し、切断前の溝は見せない。
+- [ ] 潜在cut lineは見えないデータとして持ち、箸strokeが進んだ時だけ溝mesh/凹みshaderを出す。
+- [ ] 切断完了時に一枚meshから分割済みcell表示へ切り替え、ポップが目立たない演出にする。
+- [ ] 圧縮が適切なら豆腐に細い溝が入り、切り分け可能になる。
+- [ ] 圧縮しすぎると切断ではなく局所崩れ、横滑りしすぎると崩れ/減点になる。
+- [ ] Obi Softbodyで豆腐全体の柔らかい揺れ/押し込みを検証する。
+- [ ] 本番実装は「Softbodyで一枚豆腐の柔らかさ + 潜在cut line/分割cellで切断後の分離」を基本方針にする。
+- [ ] Runtime boolean切断/任意mesh切断はMVPの主実装にしない。
+- [ ] 豆腐が崩れた時、破片の位置とScore理由がプレイヤーに分かる。
+- [ ] 豆腐を崩さず運べた時、CareとSpeedへ反映される。

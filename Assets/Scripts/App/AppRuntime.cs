@@ -81,6 +81,10 @@ namespace ChopChop.App
             {
                 currentScreen = ResultScreenController.Create(localization, navigator, LevelResultStore.CurrentResult, LevelResultStore.RetrySceneName);
             }
+            else if (TryFindLevel(sceneName, out var levelDefinition))
+            {
+                currentScreen = PrototypeLevelScreenController.Create(localization, navigator, levelDefinition);
+            }
         }
 
         private void DestroyCurrentScreen()
@@ -90,6 +94,26 @@ namespace ChopChop.App
                 Destroy(currentScreen);
                 currentScreen = null;
             }
+        }
+
+        private bool TryFindLevel(string sceneName, out LevelDefinition levelDefinition)
+        {
+            levelDefinition = null;
+            if (levelCatalog == null)
+            {
+                return false;
+            }
+
+            foreach (var level in levelCatalog.Levels)
+            {
+                if (level != null && level.sceneName == sceneName)
+                {
+                    levelDefinition = level;
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
