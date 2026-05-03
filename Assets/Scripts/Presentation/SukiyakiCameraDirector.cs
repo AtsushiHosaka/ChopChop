@@ -137,9 +137,8 @@ namespace ChopChop.Presentation
                 case SukiyakiStep.PickMeat:
                     return stageLayout.RawMeat.Position;
                 case SukiyakiStep.PutInBroth:
-                    return stageLayout.Broth.Position;
                 case SukiyakiStep.FlipMeat:
-                    return stageLayout.Flip.Position;
+                    return stageLayout.Broth.Position;
                 case SukiyakiStep.DeliverToMouth:
                     return stageLayout.Mouth.Position;
                 case SukiyakiStep.Calibration:

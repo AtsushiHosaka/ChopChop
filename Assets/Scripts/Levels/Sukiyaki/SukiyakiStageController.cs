@@ -156,16 +156,6 @@ namespace ChopChop.Levels.Sukiyaki
             }
         }
 
-        private void RegisterRoughFlipFailure()
-        {
-            FailureCount++;
-            roughness += 0.25f;
-            if (CurrentStep == SukiyakiStep.FlipMeat)
-            {
-                SetStep(SukiyakiStep.FlipMeat);
-            }
-        }
-
         private void FinishLevel()
         {
             var completionTime = Time.time - levelStartTime;
@@ -273,12 +263,6 @@ namespace ChopChop.Levels.Sukiyaki
                 stepProgress = Mathf.Clamp(stepProgress + progressDelta, 0f, stepGoalSeconds);
             }
 
-            if (CurrentStep == SukiyakiStep.FlipMeat && IsViolentFlip(frame))
-            {
-                RegisterRoughFlipFailure();
-                return;
-            }
-
             if (stepProgress >= stepGoalSeconds)
             {
                 CompleteCurrentStep();
@@ -344,11 +328,6 @@ namespace ChopChop.Levels.Sukiyaki
             return Mathf.Clamp01(Mathf.Max(angularRoughness, accelerationRoughness));
         }
 
-        private static bool IsViolentFlip(HashiInputFrame frame)
-        {
-            return frame.GyroDegreesPerSecond.magnitude > 520f || frame.Acceleration.magnitude > 11f;
-        }
-
         private void MoveRailFor(SukiyakiStep step)
         {
             if (railMover == null)
@@ -371,7 +350,7 @@ namespace ChopChop.Levels.Sukiyaki
                     railMover.MoveTo(3);
                     break;
                 case SukiyakiStep.FlipMeat:
-                    railMover.MoveTo(4);
+                    railMover.MoveTo(3);
                     break;
                 case SukiyakiStep.DipEgg:
                     railMover.MoveTo(1);

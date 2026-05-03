@@ -13,6 +13,7 @@ namespace ChopChop.Food.Meat
         [SerializeField] private MeatContactZone contactZone;
         [SerializeField] private MeatTearProfile tearProfile = null;
         [SerializeField] private MeatTearDriverBehaviour tearDriver;
+        [Tooltip("When enabled, gameplay stress is evaluated during broth transfer and flip handling. Physical Obi tear events are still observed in every meat state.")]
         [SerializeField] private bool evaluateOnlyWhileFlipping = true;
         [SerializeField] private bool logStressFrames = false;
         [SerializeField] private float levelStartTime;
@@ -106,7 +107,7 @@ namespace ChopChop.Food.Meat
                 return;
             }
 
-            if (evaluateOnlyWhileFlipping && meatActor != null && meatActor.MeatState != MeatState.Flipping)
+            if (evaluateOnlyWhileFlipping && meatActor != null && !ShouldEvaluateStress(meatActor.MeatState))
             {
                 RecoverDamage(Time.deltaTime);
                 return;
@@ -209,6 +210,11 @@ namespace ChopChop.Food.Meat
             {
                 recentStressFrames.RemoveAt(0);
             }
+        }
+
+        private static bool ShouldEvaluateStress(MeatState state)
+        {
+            return state == MeatState.FlipReady || state == MeatState.Flipping;
         }
     }
 }

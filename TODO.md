@@ -110,7 +110,7 @@
 - [ ] Egg waypointがある。
 - [ ] Meat waypointがある。
 - [ ] Broth waypointがある。
-- [ ] Flip waypointがある。
+- [x] Flip工程は独立した皿ではなく、Broth waypointを再利用して割下内で行う。
 - [ ] Mouth waypointがある。
 - [ ] 工程が変わるたびにHashiが対応waypointへ移動する。
 - [ ] waypoint移動中にHashiのBLE姿勢操作が破綻しない。
@@ -126,8 +126,8 @@
 - [ ] Mix Eggで荒すぎる操作をするとCareが下がる。
 - [ ] Pick Meatは箸を閉じて肉を掴むと進行する。
 - [ ] Put In Brothは肉を掴んだまま鍋/割下へ移動すると進行する。
-- [ ] Flip Meatは肉を返す動きで進行する。
-- [ ] Flip Meatで乱暴に動かすと失敗回数が増える。
+- [ ] Flip Meatは割下内の肉を返す動きで進行する。
+- [ ] Flip Meatで乱暴に動かすと `MeatTearController` 経由で肉が破れ、失敗回数が増える。
 - [ ] Dip Eggは肉を掴んだまま卵へ入れると進行する。
 - [ ] Deliver To Mouthは肉を口Targetへ運ぶと完了する。
 - [ ] 各工程の進行条件がBLE値だけでなく、対応Target Zoneとの位置関係も見る。
@@ -147,7 +147,7 @@
 - [ ] Egg target zoneが配置されている。
 - [ ] Meat pick target zoneが配置されている。
 - [ ] Broth target zoneが配置されている。
-- [ ] Flip target zoneが配置されている。
+- [ ] Flip判定はBroth内のTarget Zoneまたは鍋内専用Flip Zoneで行われる。
 - [ ] Mouth target zoneが配置されている。
 - [ ] それぞれのTarget Zoneが工程ロジックに接続されている。
 - [ ] Zoneに入っていないのに工程が進まない。
@@ -155,11 +155,12 @@
 
 ## 8.5 Stage Props And Environment
 
-- [x] `SukiyakiStageLayout` から卵/肉/鍋/Flip/口の座標を一括編集できる。
+- [x] `SukiyakiStageLayout` から卵/肉/鍋/口の座標を一括編集できる。
 - [x] `SukiyakiStageLayout` のEgg座標を変えると卵ボウル、卵液面、Egg waypointが一緒に動く。
 - [x] `SukiyakiStageLayout` のRaw Meat座標を変えると生肉皿、肉初期位置、Meat waypointが一緒に動く。
 - [x] `SukiyakiStageLayout` のBroth座標を変えると鍋、割下、Broth waypointが一緒に動く。
-- [x] `SukiyakiStageLayout` のFlip座標を変えるとFlip用支持皿、Flip waypointが一緒に動く。
+- [x] Flip工程は `SukiyakiStageController` と `SukiyakiCameraDirector` でBroth座標を参照する。
+- [ ] 旧Flip Station/Flip皿が本番フローに不要ならSceneから撤去する。
 - [x] `SukiyakiStageLayout` のMouth座標を変えると口Target、Mouth waypointが一緒に動く。
 - [x] Scene上で直接動かした座標を `Capture Positions From Scene` でInspector値へ取り込める。
 - [x] 各Station配下が `Visuals`, `Physics`, `Targets`, `Food`, `Legacy` に整理されている。
@@ -214,12 +215,12 @@
 
 - [x] `Main Camera` に `SukiyakiCameraDirector` がアタッチされている。
 - [x] `SukiyakiCameraDirector` が `SukiyakiStageController.StepChanged` を購読している。
-- [x] `SukiyakiCameraDirector` が `SukiyakiStageLayout` の卵/肉/鍋/Flip/口座標を参照している。
+- [x] `SukiyakiCameraDirector` が `SukiyakiStageLayout` の卵/肉/鍋/口座標を参照している。
 - [ ] Calibration中は箸と全体の位置関係が分かる引きの画になる。
 - [x] Mix Egg中は卵ボウルに寄り、箸先と卵Fluidが見える。
 - [x] Pick Meat中は生肉トレイに寄り、箸先と肉の接触が見える。
 - [x] Put In Broth中は鍋に寄り、肉を割下へ入れる場所が見える。
-- [ ] Flip Meat中はFlip皿/鍋周辺に寄り、肉が破れる/破れない操作が見える。
+- [ ] Flip Meat中は鍋/割下に寄り、肉が破れる/破れない操作が見える。
 - [ ] Dip Egg中は卵ボウルに戻り、肉を卵へ入れる場所が見える。
 - [ ] Deliver To Mouth中は口Targetへ寄り、目的地が分かる。
 - [x] 工程遷移時にカメラが瞬間移動せず、0.5-1.0秒程度で滑らかに移動する。
@@ -349,7 +350,8 @@
 
 ## 12. Meat Tearing
 
-- [ ] Flip工程以外では基本的に破れ判定が強く働かない。
+- [x] Put In Broth/Flip工程中はゲーム側stress破れ判定が走る。
+- [ ] Pick/Dip/Deliver工程では基本的に破れ判定が強く働かない。
 - [ ] Flip工程中にcritical stressを超えると肉が破れる。
 - [ ] accumulated damageがdurabilityを超えると肉が破れる。
 - [ ] Obiの自然破れ `OnClothTorn` を `MeatTearController` が受け取る。
@@ -505,6 +507,7 @@
 - [ ] Play ModeでDemo有効のままResult Sceneへ遷移する。
 - [ ] Demo modeをOFFに戻すとBLE本番入力で起動する。
 - [x] Demo modeとBLE modeの切り替え時にneutral calibrationが古い入力源から引き継がれない。
+- [x] Lv.5 Sceneの初期設定では `Sukiyaki Demo Driver.demoModeEnabled` がOFFになっている。
 - [ ] Demo mode関連の設定が最終ビルドで誤って有効になっていないことをリリース前に確認する。
 - [ ] `ChopChop > Validate MVP Setup` がRelease build向けSceneでDemo有効状態をErrorとして検出する。
 
