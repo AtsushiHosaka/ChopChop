@@ -597,6 +597,8 @@
 - [x] `GrilledFishFlakePrototype.ApplyChopstickStroke` で接触点に近い身フレークを繊維方向へ剥がすAPIがある。
 - [x] Lv.4 SceneにProduction用の焼き魚ほぐしプロトタイプが置かれている。
 - [x] Lv.4 SceneにDemo Preview RootがProductionとは別に置かれている。
+- [x] Lv.4 prototypeの魚がCapsule/Cubeではなく、魚形body、頭、尾、焦げ目、背骨、肋骨、身フレークで構成されている。
+- [x] 骨prototypeはCube列ではなく、中心 spine と左右 rib bones の円柱パーツで構成されている。
 - [ ] 箸Tipの接触点、移動方向、速度、pinchを `ApplyChopstickStroke` へ接続する。
 - [ ] 皮、骨、身フレークを本番assetとして分割して用意する。
 - [ ] 身フレークは魚の繊維方向に沿った細長いmeshで、UVとmaterialがしっとりした焼き魚に見える。
