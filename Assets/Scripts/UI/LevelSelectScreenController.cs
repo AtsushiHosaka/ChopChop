@@ -35,6 +35,7 @@ namespace ChopChop.UI
 
             var header = UiFactory.CreatePanel(transform, "Header", new Color(0f, 0f, 0f, 0.2f));
             UiFactory.Anchor(header, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(44f, -126f), new Vector2(-44f, -28f));
+            UiFactory.AddFadeSlideIn(header.gameObject, 0.34f, 0.04f, new Vector2(0f, 18f), 0.99f);
             UiFactory.AddHorizontalLayout(header.gameObject, 20f, TextAnchor.MiddleLeft, new RectOffset(24, 24, 12, 12));
 
             titleText = UiFactory.CreateText(header, "Title", 48, FontStyle.Bold, TextAnchor.MiddleLeft, Color.white);
@@ -86,6 +87,7 @@ namespace ChopChop.UI
                 : new Color(0.22f, 0.24f, 0.25f, 1f);
             var button = UiFactory.CreateButton(parent, definition.levelId, string.Empty, color, Color.white);
             button.interactable = definition.isUnlocked;
+            UiFactory.AddFadeSlideIn(button.gameObject, 0.34f, 0.08f + cards.Count * 0.045f, Vector2.zero, 1f);
 
             var thumbnail = CreateThumbnail(button.transform, ResolveThumbnail(definition), definition.isUnlocked);
             thumbnail.transform.SetAsFirstSibling();

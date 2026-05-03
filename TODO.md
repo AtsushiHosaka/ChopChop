@@ -673,3 +673,22 @@
 - [ ] 空欄スキャンはDiscovery専用とし、2P production play開始には使えない。
 - [ ] P1/P2どちらかのBLEが未接続の場合、対戦開始前にプレイヤー向け案内を出して開始を止める。
 - [ ] 片方だけ再接続した時、もう片方のneutral calibrationや入力状態を巻き戻さない。
+
+## 28. UI Motion And Feedback Polish
+
+- [x] 画面Rootに短いfade-inを入れ、Scene遷移時の唐突な表示を避ける。
+- [x] `UiButtonAnimator` により、全ての `UiFactory.CreateButton` ボタンがhover/pressで軽く反応する。
+- [x] `UiSliderValueAnimator` により、HUD progress barが瞬間変化ではなく滑らかに追従する。
+- [x] Start画面のMain UIが左から軽く入る。
+- [x] Level SelectのHeaderが上から軽く入り、Level Cardが順番にfade-inする。
+- [x] Sukiyaki HUDが上から軽く入り、工程変更時にStep textが軽くpopする。
+- [x] 失敗数が変化した時、Failures textが軽くpopする。
+- [x] カウントダウン画像が数字ごとにpopし、次工程開始前にfadeする。
+- [x] Sukiyaki工程Cue画像と成功/失敗画像が表示時に軽くpopし、feedback後にfadeする。
+- [x] Result panelが中央へ軽くfade/slide-inする。
+- [x] Prototype level HUDにも共通fade-inを適用する。
+- [x] UI motionは `Time.unscaledTime` / `Time.unscaledDeltaTime` を使い、ゲーム進行のtimeScaleに引っ張られない。
+- [ ] Play ModeでStart -> LevelSelect -> Lv.5 -> ResultのUI motionが速すぎ/遅すぎないことを確認する。
+- [ ] UIアニメーションがボタン押下、言語切替、カウントダウン、Cue画像表示を邪魔しない。
+- [ ] 2P split-screen時、左右HUDのアニメーションが画面中央dividerをまたがない。
+- [ ] 最終MVPでは過度な揺れ/点滅を避け、箸操作と食材接触に注意が向く程度に抑える。

@@ -31,6 +31,7 @@ namespace ChopChop.UI
                 backgroundObject.GetComponent<Image>().color = background;
             }
 
+            AddFadeSlideIn(root, 0.22f, 0f, Vector2.zero, 1f);
             return root;
         }
 
@@ -76,6 +77,7 @@ namespace ChopChop.UI
             text.text = label;
             Stretch(text.rectTransform, 12f);
 
+            buttonObject.AddComponent<UiButtonAnimator>();
             return button;
         }
 
@@ -99,7 +101,27 @@ namespace ChopChop.UI
             Stretch(fillRect, 0f);
             slider.fillRect = fillRect;
             slider.targetGraphic = fillRect.GetComponent<Image>();
+            sliderObject.AddComponent<UiSliderValueAnimator>();
             return slider;
+        }
+
+        public static UiFadeSlideIn AddFadeSlideIn(GameObject target, float duration, float delay, Vector2 offset, float startScale = 0.98f)
+        {
+            var canvasGroup = target.GetComponent<CanvasGroup>();
+            if (canvasGroup == null)
+            {
+                canvasGroup = target.AddComponent<CanvasGroup>();
+            }
+
+            var animation = target.GetComponent<UiFadeSlideIn>();
+            if (animation == null)
+            {
+                animation = target.AddComponent<UiFadeSlideIn>();
+            }
+
+            animation.Configure(duration, delay, offset, startScale);
+            animation.Play();
+            return animation;
         }
 
         public static VerticalLayoutGroup AddVerticalLayout(GameObject target, float spacing, TextAnchor alignment, RectOffset padding)

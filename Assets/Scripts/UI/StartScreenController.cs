@@ -39,6 +39,7 @@ namespace ChopChop.UI
             mainRect.pivot = new Vector2(0f, 0.5f);
             mainRect.anchoredPosition = new Vector2(128f, 0f);
             UiFactory.SetSize(mainRect, 620f, 560f);
+            UiFactory.AddFadeSlideIn(main, 0.42f, 0.08f, new Vector2(-34f, 0f), 0.98f);
 
             UiFactory.AddVerticalLayout(main, 24f, TextAnchor.MiddleLeft, new RectOffset(0, 0, 0, 0));
 

@@ -46,6 +46,7 @@ namespace ChopChop.UI
         {
             var top = UiFactory.CreatePanel(transform, "Prototype HUD", new Color(0f, 0f, 0f, 0.42f));
             UiFactory.Anchor(top, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(24f, -116f), new Vector2(-24f, -20f));
+            UiFactory.AddFadeSlideIn(top.gameObject, 0.28f, 0.04f, new Vector2(0f, 18f), 0.99f);
             UiFactory.AddHorizontalLayout(top.gameObject, 18f, TextAnchor.MiddleLeft, new RectOffset(20, 20, 10, 10));
 
             var textGroup = new GameObject("Level Text", typeof(RectTransform));

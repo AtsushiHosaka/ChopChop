@@ -18,6 +18,9 @@ namespace ChopChop.UI
         private Text levelSelectText;
         private Slider progressBar;
         private SukiyakiCueOverlay cueOverlay;
+        private UiPunchScale stepPunch;
+        private UiPunchScale failurePunch;
+        private int lastFailureCount = -1;
 
         public static GameObject Create(GameLocalization localization, SceneNavigator navigator)
         {
@@ -60,6 +63,12 @@ namespace ChopChop.UI
 
             timeText.text = $"{localization.Text(LocalizationKeys.Hud.Time)}: {stage.ElapsedSeconds:0.0}s";
             failureText.text = $"{localization.Text(LocalizationKeys.Hud.Failures)}: {stage.FailureCount}";
+            if (lastFailureCount >= 0 && stage.FailureCount != lastFailureCount)
+            {
+                failurePunch?.Play();
+            }
+
+            lastFailureCount = stage.FailureCount;
             progressBar.value = stage.StepProgress01;
         }
 
@@ -81,16 +90,19 @@ namespace ChopChop.UI
         {
             var top = UiFactory.CreatePanel(transform, "HUD", new Color(0f, 0f, 0f, 0.48f));
             UiFactory.Anchor(top, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(24f, -110f), new Vector2(-24f, -20f));
+            UiFactory.AddFadeSlideIn(top.gameObject, 0.28f, 0.04f, new Vector2(0f, 18f), 0.99f);
             UiFactory.AddHorizontalLayout(top.gameObject, 18f, TextAnchor.MiddleLeft, new RectOffset(20, 20, 10, 10));
 
             stepText = UiFactory.CreateText(top, "Step", 32, FontStyle.Bold, TextAnchor.MiddleLeft, Color.white);
             UiFactory.SetSize(stepText.rectTransform, 620f, 70f);
+            stepPunch = stepText.gameObject.AddComponent<UiPunchScale>();
 
             timeText = UiFactory.CreateText(top, "Time", 27, FontStyle.Bold, TextAnchor.MiddleLeft, Color.white);
             UiFactory.SetSize(timeText.rectTransform, 220f, 70f);
 
             failureText = UiFactory.CreateText(top, "Failures", 27, FontStyle.Bold, TextAnchor.MiddleLeft, Color.white);
             UiFactory.SetSize(failureText.rectTransform, 180f, 70f);
+            failurePunch = failureText.gameObject.AddComponent<UiPunchScale>();
 
             progressBar = UiFactory.CreateProgressBar(top, "Progress", new Color(1f, 1f, 1f, 0.22f), new Color(0.98f, 0.72f, 0.22f, 1f));
             UiFactory.SetSize(progressBar.GetComponent<RectTransform>(), 340f, 24f);
@@ -135,6 +147,7 @@ namespace ChopChop.UI
             panel.anchorMax = new Vector2(0.5f, 0.5f);
             panel.pivot = new Vector2(0.5f, 0.5f);
             UiFactory.SetSize(panel, 680f, 260f);
+            UiFactory.AddFadeSlideIn(panel.gameObject, 0.3f, 0f, new Vector2(0f, -18f), 0.96f);
             UiFactory.AddVerticalLayout(panel.gameObject, 24f, TextAnchor.MiddleCenter, new RectOffset(36, 36, 34, 34));
 
             var message = UiFactory.CreateText(panel, "Message", 34, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white);
@@ -149,6 +162,7 @@ namespace ChopChop.UI
         private void HandleStepChanged(SukiyakiStep step)
         {
             UpdateTexts();
+            stepPunch?.Play();
         }
 
         private void HandleCompleted(LevelRunResult result)

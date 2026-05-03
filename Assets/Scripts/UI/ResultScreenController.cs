@@ -41,6 +41,7 @@ namespace ChopChop.UI
             panel.anchorMax = new Vector2(0.5f, 0.5f);
             panel.pivot = new Vector2(0.5f, 0.5f);
             UiFactory.SetSize(panel, 700f, 520f);
+            UiFactory.AddFadeSlideIn(panel.gameObject, 0.38f, 0.04f, new Vector2(0f, -24f), 0.96f);
             UiFactory.AddVerticalLayout(panel.gameObject, 22f, TextAnchor.MiddleCenter, new RectOffset(46, 46, 38, 38));
 
             titleText = UiFactory.CreateText(panel, "Title", 60, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white);
