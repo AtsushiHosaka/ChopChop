@@ -628,3 +628,48 @@
 - [ ] Runtime boolean切断/任意mesh切断はMVPの主実装にしない。
 - [ ] 豆腐が崩れた時、破片の位置とScore理由がプレイヤーに分かる。
 - [ ] 豆腐を崩さず運べた時、CareとSpeedへ反映される。
+
+## 26. Two Player Split Screen Versus
+
+- [x] 2人対戦の基本仕様を「左: Player 1 / 右: Player 2 / 高い合計スコアが勝ち」に決める。
+- [x] `LevelRunResult.TotalScore` があり、Speed + Care の合計で勝敗判定できる。
+- [x] `VersusLevelRunResult` があり、P1/P2結果、勝者、引き分けを表現できる。
+- [x] `LevelResultStore` がSingle ResultとVersus Resultを区別して保持できる。
+- [x] `SceneNavigator.LoadVersusResult` で2人対戦結果をResult Sceneへ渡せる。
+- [x] `ResultScreenController` が2人対戦結果の場合、P1/P2合計スコアと勝者を表示できる。
+- [x] `SplitScreenCameraLayout` がP1 Cameraを左半分、P2 Cameraを右半分へ割り当てられる。
+- [x] `SplitScreenVersusController` がP1/P2両方のStage完了を待ち、2人対戦結果へ遷移できる。
+- [x] `HashiInputProvider` が `PlayerId` と `PlayerLabel` を持ち、入力ログをP1/P2で分けられる。
+- [x] `BleHashiInputSource` は現macOS BLE pluginが単一receiverである間、2つ目のBLE起動をブロックして混線を防ぐ。
+- [x] `TwoPlayerBleAssignment` がP1/P2のBLE設定を別々に持ち、空欄/同一設定/Native単一receiver制限を検出できる。
+- [x] Lv.5 Sceneに通常1Pを壊さない無効状態の `Versus Prototype Root` があり、分割画面/2P BLE/Versus Controllerのplaceholderを保持している。
+- [ ] 2P用SceneまたはMode選択を追加し、通常1PのLv.5フローを壊さずに起動できる。
+- [ ] 2P用SceneにP1用Stage一式とP2用Stage一式を別rootとして配置する。
+- [ ] P1/P2それぞれに独立した `HashiInputProvider`, `HashiPosePresenter`, `HashiTipInputBinder`, `WaypointRailMover` を配置する。
+- [ ] P1/P2それぞれに独立した肉/卵/鍋/Target Zone/Score状態を持たせる。
+- [ ] P1/P2でObi Solver/Obi Cloth/Obi Fluidが干渉しないよう、solverまたはcollision phaseを分離する。
+- [ ] P1 CameraはP1 rootだけを自然に見せ、P2 CameraはP2 rootだけを自然に見せる。
+- [ ] 画面中央のdividerがHUDや操作対象を邪魔しない。
+- [ ] P1/P2それぞれのHUDが左右画面内に収まり、互いに重ならない。
+- [ ] P1/P2両方が完了するまでResult Sceneへ遷移しない。
+- [ ] 片方が先に完了した場合、完了済みプレイヤーは結果待ち表示になり、もう片方の画面はプレイ継続できる。
+- [ ] 勝敗は `TotalScore = Speed + Care` で判定し、同点はDraw表示にする。
+- [ ] Retry時はP1/P2両方の状態、neutral calibration、食材状態、タイマーが初期化される。
+- [ ] Level Selectから「1人で練習」「2人で対戦」を選べる製品向けUIを追加する。
+
+## 27. Two Player BLE Production Requirements
+
+- [x] 現在のmacOS BLE pluginが単一receiver設計であることをコード上で明示している。
+- [x] 単一receiverのまま2人分BLEを開始しようとした時、2つ目を止めてError logを出す。
+- [x] P1/P2 BLE設定は `TwoPlayerBleAssignment` で個別に保持できる。
+- [x] P1/P2 BLE設定が同一targetを指す場合、production validationで失敗する。
+- [ ] Native macOS BLE pluginを複数receiver対応にする。
+- [ ] Native callbackにreceiver idまたはplayer idを含め、P1/P2のpayload queueへ正しく配送する。
+- [ ] Native側でP1/P2それぞれ別のPeripheralへ同時接続できる。
+- [ ] Native側でP1/P2それぞれ別のCharacteristic通知を同時購読できる。
+- [ ] C#側 `MacHashiBleReceiver` がreceiver idごとにqueueを持つ。
+- [ ] P1/P2のdevice name filterは必ずユニークにする。例: `ChopChop-P1`, `ChopChop-P2`。
+- [ ] device nameが同じ量産機では、peripheral UUID固定割当またはペアリング画面でP1/P2を明示選択する。
+- [ ] 空欄スキャンはDiscovery専用とし、2P production play開始には使えない。
+- [ ] P1/P2どちらかのBLEが未接続の場合、対戦開始前にプレイヤー向け案内を出して開始を止める。
+- [ ] 片方だけ再接続した時、もう片方のneutral calibrationや入力状態を巻き戻さない。

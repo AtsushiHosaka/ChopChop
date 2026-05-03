@@ -39,7 +39,12 @@ namespace ChopChop.App
             [LocalizationKeys.Level.SetupMissing] = "Lv.5のシーン参照が未設定です",
             [LocalizationKeys.Result.Title] = "結果",
             [LocalizationKeys.Result.Retry] = "もう一度",
-            [LocalizationKeys.Result.LevelSelect] = "レベル選択へ"
+            [LocalizationKeys.Result.LevelSelect] = "レベル選択へ",
+            [LocalizationKeys.Result.PlayerOne] = "プレイヤー1",
+            [LocalizationKeys.Result.PlayerTwo] = "プレイヤー2",
+            [LocalizationKeys.Result.Winner] = "勝者",
+            [LocalizationKeys.Result.Draw] = "引き分け",
+            [LocalizationKeys.Result.Total] = "合計"
         };
 
         private static readonly IReadOnlyDictionary<string, string> EnglishEntries = new Dictionary<string, string>
@@ -77,7 +82,12 @@ namespace ChopChop.App
             [LocalizationKeys.Level.SetupMissing] = "Lv.5 scene references are not assigned.",
             [LocalizationKeys.Result.Title] = "Result",
             [LocalizationKeys.Result.Retry] = "Retry",
-            [LocalizationKeys.Result.LevelSelect] = "Level Select"
+            [LocalizationKeys.Result.LevelSelect] = "Level Select",
+            [LocalizationKeys.Result.PlayerOne] = "Player 1",
+            [LocalizationKeys.Result.PlayerTwo] = "Player 2",
+            [LocalizationKeys.Result.Winner] = "Winner",
+            [LocalizationKeys.Result.Draw] = "Draw",
+            [LocalizationKeys.Result.Total] = "Total"
         };
 
         public static IReadOnlyDictionary<string, string> Japanese => JapaneseEntries;

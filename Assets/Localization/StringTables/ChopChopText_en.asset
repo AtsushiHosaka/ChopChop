@@ -154,6 +154,26 @@ MonoBehaviour:
     m_Localized: Learn the basics with large tempura pieces.
     m_Metadata:
       m_Items: []
+  - m_Id: 836616414289920
+    m_Localized: Player 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 836616418484224
+    m_Localized: Player 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 836616418484225
+    m_Localized: Winner
+    m_Metadata:
+      m_Items: []
+  - m_Id: 836616418484226
+    m_Localized: Draw
+    m_Metadata:
+      m_Items: []
+  - m_Id: 836616418484227
+    m_Localized: Total
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -151,6 +151,26 @@ MonoBehaviour:
     m_Key: tutorial.desc
     m_Metadata:
       m_Items: []
+  - m_Id: 836616414289920
+    m_Key: result.playerOne
+    m_Metadata:
+      m_Items: []
+  - m_Id: 836616418484224
+    m_Key: result.playerTwo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 836616418484225
+    m_Key: result.winner
+    m_Metadata:
+      m_Items: []
+  - m_Id: 836616418484226
+    m_Key: result.draw
+    m_Metadata:
+      m_Items: []
+  - m_Id: 836616418484227
+    m_Key: result.total
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

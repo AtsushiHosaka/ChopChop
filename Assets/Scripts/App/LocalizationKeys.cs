@@ -42,6 +42,11 @@ namespace ChopChop.App
             public const string Title = "result.title";
             public const string Retry = "result.retry";
             public const string LevelSelect = "result.levelSelect";
+            public const string PlayerOne = "result.playerOne";
+            public const string PlayerTwo = "result.playerTwo";
+            public const string Winner = "result.winner";
+            public const string Draw = "result.draw";
+            public const string Total = "result.total";
         }
     }
 }

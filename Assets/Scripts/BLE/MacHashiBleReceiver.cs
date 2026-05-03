@@ -13,6 +13,7 @@ namespace ChopChop.BLE
 
         private bool isDisposed;
 
+        public static bool SupportsConcurrentReceivers => false;
         public bool IsRunning { get; private set; }
         public string Status { get; private set; } = "Stopped";
 

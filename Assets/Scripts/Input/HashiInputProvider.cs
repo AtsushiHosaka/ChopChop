@@ -1,3 +1,4 @@
+using ChopChop.Core;
 using UnityEngine;
 
 namespace ChopChop.Input
@@ -5,6 +6,8 @@ namespace ChopChop.Input
     [AddComponentMenu("ChopChop/Input/Hashi Input Provider")]
     public sealed class HashiInputProvider : MonoBehaviour
     {
+        [SerializeField] private PlayerId playerId = new PlayerId(0);
+        [SerializeField] private string playerLabel = "P1";
         [SerializeField] private HashiInputMode inputMode = HashiInputMode.Ble;
         [SerializeField] private string deviceNameFilter = string.Empty;
         [SerializeField] private string serviceUuid = string.Empty;
@@ -17,6 +20,14 @@ namespace ChopChop.Input
         public HashiInputFrame CurrentFrame { get; private set; } = HashiInputFrame.Empty;
         public bool HasNeutral => calibration.HasNeutral;
         public HashiInputMode InputMode => inputMode;
+        public PlayerId PlayerId => playerId;
+        public string PlayerLabel => string.IsNullOrWhiteSpace(playerLabel) ? playerId.ToString() : playerLabel.Trim();
+
+        public void ConfigurePlayer(PlayerId id, string label = "")
+        {
+            playerId = id;
+            playerLabel = string.IsNullOrWhiteSpace(label) ? id.ToString() : label.Trim();
+        }
 
         public void ConfigureConnection(
             string deviceName = "",
@@ -81,7 +92,7 @@ namespace ChopChop.Input
             source?.StopInput();
             source = inputMode == HashiInputMode.Demo
                 ? new DemoHashiInputSource()
-                : new BleHashiInputSource(deviceNameFilter, serviceUuid, characteristicUuid);
+                : new BleHashiInputSource(deviceNameFilter, serviceUuid, characteristicUuid, PlayerLabel);
             source.StartInput();
         }
 

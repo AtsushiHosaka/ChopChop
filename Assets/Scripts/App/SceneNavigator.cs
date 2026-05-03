@@ -27,6 +27,12 @@ namespace ChopChop.App
             Load(AppScenes.Result);
         }
 
+        public void LoadVersusResult(VersusLevelRunResult result, string retrySceneName)
+        {
+            LevelResultStore.SetVersus(result, retrySceneName);
+            Load(AppScenes.Result);
+        }
+
         public void Quit()
         {
 #if UNITY_EDITOR

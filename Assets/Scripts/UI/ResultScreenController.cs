@@ -10,6 +10,8 @@ namespace ChopChop.UI
         private GameLocalization localization;
         private SceneNavigator navigator;
         private LevelRunResult result;
+        private VersusLevelRunResult versusResult;
+        private bool hasVersusResult;
         private string retrySceneName;
         private Text titleText;
         private Text statsText;
@@ -30,6 +32,8 @@ namespace ChopChop.UI
             localization = appLocalization;
             navigator = sceneNavigator;
             result = levelResult;
+            versusResult = LevelResultStore.CurrentVersusResult;
+            hasVersusResult = LevelResultStore.HasVersusResult;
             retrySceneName = levelSceneName;
 
             var panel = UiFactory.CreatePanel(transform, "Result Panel", new Color(0.04f, 0.045f, 0.05f, 0.92f));
@@ -80,13 +84,40 @@ namespace ChopChop.UI
         private void UpdateTexts()
         {
             titleText.text = localization.Text(LocalizationKeys.Result.Title);
-            statsText.text = $"{localization.Text(LocalizationKeys.Hud.Time)}: {result.CompletionTime:0.0}s\n"
-                + $"{localization.Text(LocalizationKeys.Hud.Speed)}: {result.SpeedScore:0}\n"
-                + $"{localization.Text(LocalizationKeys.Hud.Care)}: {result.CareScore:0}\n"
-                + $"{localization.Text(LocalizationKeys.Hud.Failures)}: {result.FailureCount}";
+            statsText.text = hasVersusResult ? VersusStatsText() : SinglePlayerStatsText(result);
             retryText.text = localization.Text(LocalizationKeys.Result.Retry);
             levelSelectText.text = localization.Text(LocalizationKeys.Result.LevelSelect);
             languageText.text = localization.Text(LocalizationKeys.App.Language);
+        }
+
+        private string SinglePlayerStatsText(LevelRunResult runResult)
+        {
+            return $"{localization.Text(LocalizationKeys.Hud.Time)}: {runResult.CompletionTime:0.0}s\n"
+                + $"{localization.Text(LocalizationKeys.Hud.Speed)}: {runResult.SpeedScore:0}\n"
+                + $"{localization.Text(LocalizationKeys.Hud.Care)}: {runResult.CareScore:0}\n"
+                + $"{localization.Text(LocalizationKeys.Hud.Failures)}: {runResult.FailureCount}";
+        }
+
+        private string VersusStatsText()
+        {
+            var playerOneLabel = localization.Text(LocalizationKeys.Result.PlayerOne);
+            var playerTwoLabel = localization.Text(LocalizationKeys.Result.PlayerTwo);
+            var winnerText = versusResult.IsDraw
+                ? localization.Text(LocalizationKeys.Result.Draw)
+                : $"{localization.Text(LocalizationKeys.Result.Winner)}: {(versusResult.WinnerPlayerIndex == 0 ? playerOneLabel : playerTwoLabel)}";
+
+            return $"{winnerText}\n"
+                + PlayerLine(playerOneLabel, versusResult.PlayerOne)
+                + "\n"
+                + PlayerLine(playerTwoLabel, versusResult.PlayerTwo);
+        }
+
+        private string PlayerLine(string label, LevelRunResult runResult)
+        {
+            return $"{label}  {localization.Text(LocalizationKeys.Result.Total)}: {runResult.TotalScore:0}  "
+                + $"{localization.Text(LocalizationKeys.Hud.Speed)}: {runResult.SpeedScore:0}  "
+                + $"{localization.Text(LocalizationKeys.Hud.Care)}: {runResult.CareScore:0}  "
+                + $"{localization.Text(LocalizationKeys.Hud.Failures)}: {runResult.FailureCount}";
         }
     }
 }
