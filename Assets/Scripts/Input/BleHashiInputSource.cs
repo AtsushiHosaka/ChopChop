@@ -13,26 +13,38 @@ namespace ChopChop.Input
         private readonly string serviceUuid;
         private readonly string characteristicUuid;
         private readonly string ownerLabel;
+        private readonly float accelerometerCorrection;
         private readonly MacHashiBleReceiver receiver = new MacHashiBleReceiver();
         private Quaternion rotation = Quaternion.identity;
         private bool blockedByActiveSource;
         private bool blockedLogEmitted;
+        private float lastMalformedPayloadWarningAt = -999f;
+        private int suppressedMalformedPayloadWarnings;
+        private bool staleSampleLogEmitted;
 
         public bool IsRunning => receiver.IsRunning;
         public HashiInputFrame CurrentFrame { get; private set; } = HashiInputFrame.Empty;
 
-        public BleHashiInputSource(string deviceNameFilter, string serviceUuid, string characteristicUuid, string ownerLabel = "")
+        public BleHashiInputSource(
+            string deviceNameFilter,
+            string serviceUuid,
+            string characteristicUuid,
+            string ownerLabel = "",
+            float accelerometerCorrection = 0.015f)
         {
             this.deviceNameFilter = deviceNameFilter;
             this.serviceUuid = serviceUuid;
             this.characteristicUuid = characteristicUuid;
             this.ownerLabel = string.IsNullOrWhiteSpace(ownerLabel) ? "Hashi" : ownerLabel.Trim();
+            this.accelerometerCorrection = Mathf.Clamp01(accelerometerCorrection);
         }
 
         public void StartInput()
         {
             blockedByActiveSource = false;
             blockedLogEmitted = false;
+            staleSampleLogEmitted = false;
+            suppressedMalformedPayloadWarnings = 0;
 
             lock (RuntimeLock)
             {
@@ -83,7 +95,7 @@ namespace ChopChop.Input
             {
                 if (!HashiBleSampleParser.TryParse(rawPayload, out var sample, out var error))
                 {
-                    Debug.LogWarning($"[Hashi Input/{ownerLabel}] Ignored BLE payload: {error}");
+                    LogMalformedPayload(error);
                     continue;
                 }
 
@@ -91,6 +103,11 @@ namespace ChopChop.Input
                 if (deltaTime > 0f)
                 {
                     rotation *= Quaternion.Euler(gyro * deltaTime);
+                }
+
+                if (sample.HasAccelerationVector)
+                {
+                    rotation = ApplyAccelerometerCorrection(rotation, sample.AccelerationVector);
                 }
 
                 var theta = sample.HasTheta ? sample.ThetaValue : CurrentFrame.ThetaDegrees;
@@ -106,6 +123,13 @@ namespace ChopChop.Input
                     rotation,
                     true,
                     sample.RealtimeReceived);
+                staleSampleLogEmitted = false;
+            }
+
+            if (CurrentFrame.HasSample && !staleSampleLogEmitted && Time.realtimeSinceStartup - CurrentFrame.TimeReceived >= 2f)
+            {
+                Debug.LogWarning($"[Hashi Input/{ownerLabel}] No BLE sample received for {Time.realtimeSinceStartup - CurrentFrame.TimeReceived:0.0}s. Holding the last valid chopstick pose.");
+                staleSampleLogEmitted = true;
             }
         }
 
@@ -121,6 +145,47 @@ namespace ChopChop.Input
                 activeSource = null;
                 activeOwnerLabel = string.Empty;
             }
+        }
+
+        private Quaternion ApplyAccelerometerCorrection(Quaternion currentRotation, Vector3 acceleration)
+        {
+            if (accelerometerCorrection <= 0f)
+            {
+                return currentRotation;
+            }
+
+            var magnitude = acceleration.magnitude;
+            if (magnitude < 0.25f || magnitude > 3.5f)
+            {
+                return currentRotation;
+            }
+
+            var measuredUp = -acceleration.normalized;
+            var currentUp = currentRotation * Vector3.up;
+            if (currentUp.sqrMagnitude < 0.0001f || measuredUp.sqrMagnitude < 0.0001f)
+            {
+                return currentRotation;
+            }
+
+            var correctedRotation = Quaternion.FromToRotation(currentUp.normalized, measuredUp) * currentRotation;
+            return Quaternion.Slerp(currentRotation, correctedRotation, accelerometerCorrection);
+        }
+
+        private void LogMalformedPayload(string error)
+        {
+            var now = Time.realtimeSinceStartup;
+            if (now - lastMalformedPayloadWarningAt < 2f)
+            {
+                suppressedMalformedPayloadWarnings++;
+                return;
+            }
+
+            var suffix = suppressedMalformedPayloadWarnings > 0
+                ? $" Suppressed {suppressedMalformedPayloadWarnings} similar malformed payload warning(s)."
+                : string.Empty;
+            Debug.LogWarning($"[Hashi Input/{ownerLabel}] Ignored BLE payload: {error}.{suffix}");
+            lastMalformedPayloadWarningAt = now;
+            suppressedMalformedPayloadWarnings = 0;
         }
     }
 }

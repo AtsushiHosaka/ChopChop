@@ -1,0 +1,12 @@
+{
+    "name": "ChopChop.EditMode.Tests",
+    "references": [
+        "Assembly-CSharp"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

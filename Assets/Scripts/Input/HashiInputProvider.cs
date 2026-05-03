@@ -13,6 +13,7 @@ namespace ChopChop.Input
         [SerializeField] private string serviceUuid = string.Empty;
         [SerializeField] private string characteristicUuid = string.Empty;
         [SerializeField] private bool captureNeutralOnStart;
+        [SerializeField, Range(0f, 1f)] private float accelerometerCorrection = 0.015f;
 
         private IHashiInputSource source;
         private readonly HashiCalibration calibration = new HashiCalibration();
@@ -92,7 +93,7 @@ namespace ChopChop.Input
             source?.StopInput();
             source = inputMode == HashiInputMode.Demo
                 ? new DemoHashiInputSource()
-                : new BleHashiInputSource(deviceNameFilter, serviceUuid, characteristicUuid, PlayerLabel);
+                : new BleHashiInputSource(deviceNameFilter, serviceUuid, characteristicUuid, PlayerLabel, accelerometerCorrection);
             source.StartInput();
         }
 

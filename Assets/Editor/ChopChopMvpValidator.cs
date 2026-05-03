@@ -18,6 +18,7 @@ namespace ChopChop.Editor
             hasError |= !ValidateLevelCatalog();
             hasError |= !ValidateLocalizationSource();
             hasError |= !ValidateSukiyakiSceneReferences();
+            hasError |= !ValidateReleaseDemoModes();
 
             if (hasError)
             {
@@ -221,6 +222,52 @@ namespace ChopChop.Editor
                     EditorSceneManager.CloseScene(scene, true);
                 }
             }
+        }
+
+        private static bool ValidateReleaseDemoModes()
+        {
+            var allValid = true;
+            foreach (var buildScene in EditorBuildSettings.scenes)
+            {
+                if (!buildScene.enabled || string.IsNullOrWhiteSpace(buildScene.path))
+                {
+                    continue;
+                }
+
+                var openedAdditively = false;
+                var scene = SceneManager.GetSceneByPath(buildScene.path);
+                if (!scene.IsValid() || !scene.isLoaded)
+                {
+                    scene = EditorSceneManager.OpenScene(buildScene.path, OpenSceneMode.Additive);
+                    openedAdditively = true;
+                }
+
+                try
+                {
+                    foreach (var root in scene.GetRootGameObjects())
+                    {
+                        foreach (var demoDriver in root.GetComponentsInChildren<SukiyakiDemoDriver>(true))
+                        {
+                            if (!demoDriver.DemoModeEnabled)
+                            {
+                                continue;
+                            }
+
+                            Debug.LogError($"[ChopChop] Demo driver '{demoDriver.name}' is enabled in build scene '{buildScene.path}'. Production/release validation requires demo mode OFF.");
+                            allValid = false;
+                        }
+                    }
+                }
+                finally
+                {
+                    if (openedAdditively && scene.IsValid() && scene.isLoaded)
+                    {
+                        EditorSceneManager.CloseScene(scene, true);
+                    }
+                }
+            }
+
+            return allValid;
         }
 
         private static T FindInScene<T>(Scene scene) where T : Component

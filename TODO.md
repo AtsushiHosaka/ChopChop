@@ -96,9 +96,9 @@
 - [ ] スクリーンショット形式のJSON payloadを受信できる。
 - [x] `theta`, `pinch`, `vel`, `acc`, `ax`, `ay`, `az`, `gx`, `gy`, `gz`, `ts` をparseできる。
 - [x] 欠けているfieldがあってもクラッシュしない。
-- [ ] 不正JSONが来てもクラッシュせず、throttled warningだけが出る。
-- [ ] 2秒以上受信が途切れた場合、最後の姿勢を保持する。
-- [ ] 受信途絶時にConsoleへ状態ログが出る。
+- [x] 不正JSONが来てもクラッシュせず、throttled warningだけが出る。
+- [x] 2秒以上受信が途切れた場合、最後の姿勢を保持する。
+- [x] 受信途絶時にConsoleへ状態ログが出る。
 - [ ] BLE再接続時に入力が復帰する。
 - [x] Native plugin missing時に本番画面がクラッシュしない。
 
@@ -111,7 +111,7 @@
 - [x] BLEの `theta` が上側の箸の開閉角として見える。
 - [x] 下側の箸は基準箸として安定して見える。
 - [x] `gx/gy/gz` によって `Hashi` 全体の姿勢が回転する。
-- [ ] 加速度 `ax/ay/az` によってgyro driftが弱く補正される。
+- [x] 加速度 `ax/ay/az` によってgyro driftが弱く補正される。
 - [x] 初回有効なBLE sampleでneutral poseをキャプチャできる。
 - [ ] neutral pose後、自然な持ち方が画面上の自然な箸姿勢になる。
 - [ ] thetaの正負/開閉方向が実機の動きと一致する。
@@ -475,12 +475,12 @@
 
 ## 18. Tests And Validation
 
-- [ ] `HashiBleSampleParser` のEditMode testがある。
-- [ ] screenshot形式JSONをparseするtestがある。
-- [ ] field欠落JSONをparseしてクラッシュしないtestがある。
-- [ ] malformed JSONを無視するtestがある。
-- [ ] `MeatContactAnalyzer` のpoke/shear/twist/tension/compression testがある。
-- [ ] `TearReasonClassifier` のreason分類testがある。
+- [x] `HashiBleSampleParser` のEditMode testがある。
+- [x] screenshot形式JSONをparseするtestがある。
+- [x] field欠落JSONをparseしてクラッシュしないtestがある。
+- [x] malformed JSONを無視するtestがある。
+- [x] `MeatContactAnalyzer` のpoke/shear/twist/tension/compression testがある。
+- [x] `TearReasonClassifier` のreason分類testがある。
 - [ ] `SukiyakiStageController` の工程遷移testがある。
 - [ ] `SukiyakiStageController` の肉破れretry testがある。
 - [x] `ChopChopMvpValidator` がBuild Settingsを検証する。
@@ -546,7 +546,7 @@
 - [x] Demo modeとBLE modeの切り替え時にneutral calibrationが古い入力源から引き継がれない。
 - [x] Lv.5 Sceneの初期設定では `Sukiyaki Demo Driver.demoModeEnabled` がOFFになっている。
 - [ ] Demo mode関連の設定が最終ビルドで誤って有効になっていないことをリリース前に確認する。
-- [ ] `ChopChop > Validate MVP Setup` がRelease build向けSceneでDemo有効状態をErrorとして検出する。
+- [x] `ChopChop > Validate MVP Setup` がRelease build向けSceneでDemo有効状態をErrorとして検出する。
 
 ## 22. Hashi Collision And Food Contact
 
