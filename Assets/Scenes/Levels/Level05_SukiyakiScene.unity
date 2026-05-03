@@ -4550,7 +4550,7 @@ Transform:
   m_GameObject: {fileID: 872340713}
   serializedVersion: 2
   m_LocalRotation: {x: 0.53729963, y: -0, z: -0, w: 0.8433914}
-  m_LocalPosition: {x: -1.38, y: 0.898, z: -0.099999994}
+  m_LocalPosition: {x: -1.38, y: 1.138, z: -0.099999994}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7223,6 +7223,14 @@ MonoBehaviour:
   eggYolkColor: {r: 1, g: 0.58, b: 0.05, a: 1}
   mixedEggColor: {r: 1, g: 0.78, b: 0.18, a: 1}
   brothColor: {r: 0.45, g: 0.17, b: 0.06, a: 1}
+  stirrers:
+  - {fileID: 1478005109}
+  - {fileID: 1851624397}
+  stirRadius: 0.16
+  stirredDiffusionRate: 3.5
+  passiveDiffusionRate: 0.015
+  minimumStirSpeed: 0.03
+  maximumStirSpeed: 0.75
 --- !u!1 &1405152489
 GameObject:
   m_ObjectHideFlags: 0
@@ -7638,7 +7646,7 @@ Transform:
   m_GameObject: {fileID: 1479609130}
   serializedVersion: 2
   m_LocalRotation: {x: 0.53729963, y: -0, z: -0, w: 0.8433914}
-  m_LocalPosition: {x: 1.65, y: 1, z: -0.36}
+  m_LocalPosition: {x: 1.65, y: 1.22, z: -0.36}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8237,7 +8245,7 @@ Transform:
   m_GameObject: {fileID: 1587705277}
   serializedVersion: 2
   m_LocalRotation: {x: 0.53729963, y: -0, z: -0, w: 0.8433914}
-  m_LocalPosition: {x: 0.72, y: 0.938, z: -0.01000002}
+  m_LocalPosition: {x: 0.72, y: 1.168, z: -0.01000002}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8504,7 +8512,7 @@ Transform:
   m_GameObject: {fileID: 1673978848}
   serializedVersion: 2
   m_LocalRotation: {x: 0.53729963, y: -0, z: -0, w: 0.8433914}
-  m_LocalPosition: {x: -0.68, y: 0.912, z: -0.75}
+  m_LocalPosition: {x: -0.68, y: 1.152, z: -0.75}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8676,9 +8684,9 @@ MonoBehaviour:
     label: Calibration
     stationRoot: {fileID: 0}
     waypoint: {fileID: 2117879991}
-    position: {x: -1.95, y: 0.95, z: -0.68}
+    position: {x: -1.95, y: 1.18, z: -0.68}
     eulerAngles: {x: 0, y: 0, z: 0}
-    waypointOffset: {x: 0, y: 0.94, z: -0.45}
+    waypointOffset: {x: 0, y: 1.18, z: -0.45}
     waypointEulerAngles: {x: 65, y: -0, z: -0}
   egg:
     label: Egg
@@ -8686,7 +8694,7 @@ MonoBehaviour:
     waypoint: {fileID: 872340714}
     position: {x: -1.38, y: 0.018, z: 0.32}
     eulerAngles: {x: -0, y: 0, z: 0}
-    waypointOffset: {x: 0, y: 0.88, z: -0.42}
+    waypointOffset: {x: 0, y: 1.12, z: -0.42}
     waypointEulerAngles: {x: 65, y: -0, z: -0}
   rawMeat:
     label: Raw Meat
@@ -8694,7 +8702,7 @@ MonoBehaviour:
     waypoint: {fileID: 1673978849}
     position: {x: -0.68, y: 0.012, z: -0.32}
     eulerAngles: {x: -0, y: 0, z: 0}
-    waypointOffset: {x: 0, y: 0.9, z: -0.43}
+    waypointOffset: {x: 0, y: 1.14, z: -0.43}
     waypointEulerAngles: {x: 65, y: -0, z: -0}
   broth:
     label: Broth
@@ -8702,7 +8710,7 @@ MonoBehaviour:
     waypoint: {fileID: 1901421049}
     position: {x: 0.42, y: 0.014, z: -0.28}
     eulerAngles: {x: -0, y: 0, z: 0}
-    waypointOffset: {x: 0, y: 0.93, z: -0.4}
+    waypointOffset: {x: 0, y: 1.17, z: -0.4}
     waypointEulerAngles: {x: 65, y: -0, z: -0}
   flip:
     label: Flip
@@ -8710,7 +8718,7 @@ MonoBehaviour:
     waypoint: {fileID: 1587705278}
     position: {x: 0.72, y: 0.018, z: 0.42}
     eulerAngles: {x: -0, y: 0, z: 0}
-    waypointOffset: {x: 0, y: 0.92, z: -0.43}
+    waypointOffset: {x: 0, y: 1.15, z: -0.43}
     waypointEulerAngles: {x: 65, y: -0, z: -0}
   mouth:
     label: Mouth
@@ -8718,7 +8726,7 @@ MonoBehaviour:
     waypoint: {fileID: 1479609131}
     position: {x: 1.65, y: 0.22, z: 0.1}
     eulerAngles: {x: -0, y: 0, z: 0}
-    waypointOffset: {x: 0, y: 0.78, z: -0.46}
+    waypointOffset: {x: 0, y: 1, z: -0.46}
     waypointEulerAngles: {x: 65, y: -0, z: -0}
 --- !u!1 &1716482400
 GameObject:
@@ -11869,7 +11877,7 @@ Transform:
   m_GameObject: {fileID: 1901421048}
   serializedVersion: 2
   m_LocalRotation: {x: 0.53729963, y: -0, z: -0, w: 0.8433914}
-  m_LocalPosition: {x: 0.42, y: 0.944, z: -0.68}
+  m_LocalPosition: {x: 0.42, y: 1.184, z: -0.68}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -13342,7 +13350,7 @@ Transform:
   m_GameObject: {fileID: 2117879990}
   serializedVersion: 2
   m_LocalRotation: {x: 0.53729963, y: -0, z: -0, w: 0.8433914}
-  m_LocalPosition: {x: -1.95, y: 0.95, z: -0.68}
+  m_LocalPosition: {x: -1.95, y: 1.18, z: -0.68}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

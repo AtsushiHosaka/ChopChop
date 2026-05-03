@@ -507,3 +507,18 @@
 - [x] Demo modeとBLE modeの切り替え時にneutral calibrationが古い入力源から引き継がれない。
 - [ ] Demo mode関連の設定が最終ビルドで誤って有効になっていないことをリリース前に確認する。
 - [ ] `ChopChop > Validate MVP Setup` がRelease build向けSceneでDemo有効状態をErrorとして検出する。
+
+## 22. Hashi Collision And Food Contact
+
+- [x] Egg/Meat/Broth/Flip/Mouth waypointの高さを、箸Tipが皿やボウル底より下へ潜らない位置へ調整している。
+- [x] Calibration waypointの高さを、箸Tipがテーブル下へ潜らない位置へ調整している。
+- [x] `ObiFluidMixMonitor` が箸Tipをstirrerとして参照し、箸近傍の卵粒子が混ざり値へ拡散する。
+- [ ] Play ModeでMix Egg中に箸Tipが卵液面付近に入り、ボウル底を貫通しないことをGame Viewで確認する。
+- [ ] Play ModeでMix Egg中に `EggMix01` が0から上昇し、卵の色が混ざっていくことを確認する。
+- [ ] Play Modeで箸本体が卵ボウル、肉皿、鍋、Flip皿を視覚的に貫通しないことを確認する。
+- [ ] 箸と食器/ステージ固体のCollision Layerを定義する。
+- [ ] 食材接触用Tip colliderと、食器衝突回避用chopstick body colliderを役割分離する。
+- [ ] `WaypointRailMover` の直接Transform移動だけに頼らず、移動前にCapsuleCast/ComputePenetrationで安全位置へ補正する `HashiCollisionGuard` を追加する。
+- [ ] 各工程waypointはHashi root座標ではなく、Lower/Upper Tipの目標位置からrootを逆算できる設定へ移行する。
+- [ ] Mix Egg用に、ボウル内の安全な円軌道/楕円軌道を定義し、箸Tipが壁や底に入りすぎない範囲で混ぜる。
+- [ ] 本番BLE入力時も、箸姿勢を完全自由移動ではなく工程ごとのInteraction Volume内に制限する。

@@ -14,15 +14,30 @@ namespace ChopChop.Food.Liquid
         [SerializeField] private Color eggYolkColor = new Color(1f, 0.58f, 0.05f, 1f);
         [SerializeField] private Color mixedEggColor = new Color(1f, 0.78f, 0.18f, 1f);
         [SerializeField] private Color brothColor = new Color(0.45f, 0.17f, 0.06f, 1f);
+        [SerializeField] private Transform[] stirrers = new Transform[0];
+        [Min(0.01f)] [SerializeField] private float stirRadius = 0.16f;
+        [Min(0f)] [SerializeField] private float stirredDiffusionRate = 3.5f;
+        [Min(0f)] [SerializeField] private float passiveDiffusionRate = 0.015f;
+        [Min(0f)] [SerializeField] private float minimumStirSpeed = 0.03f;
+        [Min(0.001f)] [SerializeField] private float maximumStirSpeed = 0.75f;
 
         private float eggMix01;
         private int activeEggParticleCount;
         private bool hasWhiteParticles;
         private bool hasYolkParticles;
+        private Vector3[] previousStirrerPositions = new Vector3[0];
+        private bool[] hasPreviousStirrerPositions = new bool[0];
+        private float[] stirrerSpeeds = new float[0];
 
         public float EggMix01 => eggMix01;
         public int ActiveEggParticleCount => activeEggParticleCount;
         public bool HasActiveEggFluid => activeEggParticleCount > 0 && hasWhiteParticles && hasYolkParticles;
+
+        public void SetStirrers(params Transform[] activeStirrers)
+        {
+            stirrers = activeStirrers ?? new Transform[0];
+            EnsureStirrerState();
+        }
 
         public void Configure(
             ObiSolver obiSolver,
@@ -60,9 +75,111 @@ namespace ChopChop.Food.Liquid
 
         private void LateUpdate()
         {
+            ApplyStirring(Time.deltaTime);
             RefreshEggMix();
             ApplyEggColors();
             ApplyBrothColor();
+        }
+
+        private void ApplyStirring(float deltaTime)
+        {
+            if (deltaTime <= 0f)
+            {
+                return;
+            }
+
+            EnsureStirrerState();
+            MeasureStirrerSpeeds(deltaTime);
+            ApplyDiffusion(eggWhiteEmitter, deltaTime);
+            ApplyDiffusion(eggYolkEmitter, deltaTime);
+        }
+
+        private void EnsureStirrerState()
+        {
+            var length = stirrers != null ? stirrers.Length : 0;
+            if (previousStirrerPositions.Length == length && hasPreviousStirrerPositions.Length == length)
+            {
+                return;
+            }
+
+            previousStirrerPositions = new Vector3[length];
+            hasPreviousStirrerPositions = new bool[length];
+            stirrerSpeeds = new float[length];
+        }
+
+        private void MeasureStirrerSpeeds(float deltaTime)
+        {
+            for (var i = 0; i < stirrerSpeeds.Length; i++)
+            {
+                stirrerSpeeds[i] = 0f;
+                var stirrer = stirrers[i];
+                if (stirrer == null)
+                {
+                    continue;
+                }
+
+                if (hasPreviousStirrerPositions[i])
+                {
+                    stirrerSpeeds[i] = (stirrer.position - previousStirrerPositions[i]).magnitude / deltaTime;
+                }
+
+                previousStirrerPositions[i] = stirrer.position;
+                hasPreviousStirrerPositions[i] = true;
+            }
+        }
+
+        private void ApplyDiffusion(ObiEmitter emitter, float deltaTime)
+        {
+            if (emitter == null || !emitter.isLoaded || emitter.solver == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < emitter.activeParticleCount && i < emitter.solverIndices.count; i++)
+            {
+                var solverIndex = emitter.solverIndices[i];
+                if (emitter.solver.life[solverIndex] <= 0f)
+                {
+                    continue;
+                }
+
+                var current = ReadYolk01(emitter, solverIndex);
+                var intensity = StirIntensityAt(emitter.solver, solverIndex);
+                var rate = passiveDiffusionRate + stirredDiffusionRate * intensity;
+                var amount = 1f - Mathf.Exp(-rate * deltaTime);
+                if (amount <= 0f)
+                {
+                    continue;
+                }
+
+                emitter.solver.userData[solverIndex] = new Vector4(Mathf.Lerp(current, 0.5f, amount), 0f, 0f, 0f);
+            }
+        }
+
+        private float StirIntensityAt(ObiSolver particleSolver, int solverIndex)
+        {
+            if (stirrers == null || stirrers.Length == 0 || solverIndex < 0 || solverIndex >= particleSolver.positions.count)
+            {
+                return 0f;
+            }
+
+            var particlePosition = particleSolver.positions[solverIndex];
+            var worldPosition = particleSolver.transform.TransformPoint(new Vector3(particlePosition.x, particlePosition.y, particlePosition.z));
+            var intensity = 0f;
+            for (var i = 0; i < stirrers.Length; i++)
+            {
+                var stirrer = stirrers[i];
+                if (stirrer == null)
+                {
+                    continue;
+                }
+
+                var distance01 = 1f - Mathf.Clamp01(Vector3.Distance(worldPosition, stirrer.position) / stirRadius);
+                var speed01 = Mathf.InverseLerp(minimumStirSpeed, maximumStirSpeed, stirrerSpeeds[i]);
+                intensity = Mathf.Max(intensity, distance01 * speed01);
+            }
+
+            return intensity;
         }
 
         private void Subscribe()
