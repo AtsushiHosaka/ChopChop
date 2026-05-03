@@ -1,4 +1,5 @@
 using ChopChop.BLE;
+using ChopChop.Input;
 using NUnit.Framework;
 
 namespace ChopChop.Tests.EditMode
@@ -44,6 +45,17 @@ namespace ChopChop.Tests.EditMode
             Assert.DoesNotThrow(() => HashiBleSampleParser.TryParse("{\"theta\":", out sample, out error));
             Assert.That(HashiBleSampleParser.TryParse("{\"theta\":", out sample, out error), Is.False);
             Assert.That(error, Is.Not.Empty);
+        }
+
+        [Test]
+        public void BleReconnectPolicyRetriesRecoverableNativeStatesOnly()
+        {
+            Assert.That(BleHashiInputSource.ShouldAutoReconnect("Stopped"), Is.True);
+            Assert.That(BleHashiInputSource.ShouldAutoReconnect("Failed: peripheral disconnected"), Is.True);
+            Assert.That(BleHashiInputSource.ShouldAutoReconnect("PoweredOff: waiting for Bluetooth"), Is.True);
+            Assert.That(BleHashiInputSource.ShouldAutoReconnect("Native plugin missing"), Is.False);
+            Assert.That(BleHashiInputSource.ShouldAutoReconnect("Unsupported platform"), Is.False);
+            Assert.That(BleHashiInputSource.ShouldAutoReconnect("Unauthorized: Bluetooth permission denied"), Is.False);
         }
     }
 }

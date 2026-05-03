@@ -1,7 +1,7 @@
 {
     "name": "ChopChop.EditMode.Tests",
     "references": [
-        "Assembly-CSharp"
+        "ChopChop.Runtime"
     ],
     "includePlatforms": [
         "Editor"

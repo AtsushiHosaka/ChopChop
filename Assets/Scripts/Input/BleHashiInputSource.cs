@@ -8,6 +8,7 @@ namespace ChopChop.Input
         private static readonly object RuntimeLock = new object();
         private static BleHashiInputSource activeSource;
         private static string activeOwnerLabel = string.Empty;
+        private const float ReconnectDelaySeconds = 3f;
 
         private readonly string deviceNameFilter;
         private readonly string serviceUuid;
@@ -21,6 +22,8 @@ namespace ChopChop.Input
         private float lastMalformedPayloadWarningAt = -999f;
         private int suppressedMalformedPayloadWarnings;
         private bool staleSampleLogEmitted;
+        private float nextReconnectAttemptAt;
+        private int reconnectAttemptCount;
 
         public bool IsRunning => receiver.IsRunning;
         public HashiInputFrame CurrentFrame { get; private set; } = HashiInputFrame.Empty;
@@ -45,18 +48,14 @@ namespace ChopChop.Input
             blockedLogEmitted = false;
             staleSampleLogEmitted = false;
             suppressedMalformedPayloadWarnings = 0;
+            nextReconnectAttemptAt = 0f;
+            reconnectAttemptCount = 0;
 
-            lock (RuntimeLock)
+            if (!TryClaimRuntimeLock())
             {
-                if (!MacHashiBleReceiver.SupportsConcurrentReceivers && activeSource != null && !ReferenceEquals(activeSource, this))
-                {
-                    blockedByActiveSource = true;
-                    CurrentFrame = HashiInputFrame.Empty;
-                    return;
-                }
-
-                activeSource = this;
-                activeOwnerLabel = ownerLabel;
+                blockedByActiveSource = true;
+                CurrentFrame = HashiInputFrame.Empty;
+                return;
             }
 
             receiver.Start(deviceNameFilter, serviceUuid, characteristicUuid);
@@ -89,6 +88,13 @@ namespace ChopChop.Input
             while (receiver.TryDequeueLog(out var message))
             {
                 Debug.Log($"[Hashi Input/{ownerLabel}] {message}");
+            }
+
+            if (!receiver.IsRunning)
+            {
+                ReleaseRuntimeLock();
+                TryReconnect();
+                return;
             }
 
             while (receiver.TryDequeueRawPayload(out var rawPayload))
@@ -124,6 +130,7 @@ namespace ChopChop.Input
                     true,
                     sample.RealtimeReceived);
                 staleSampleLogEmitted = false;
+                reconnectAttemptCount = 0;
             }
 
             if (CurrentFrame.HasSample && !staleSampleLogEmitted && Time.realtimeSinceStartup - CurrentFrame.TimeReceived >= 2f)
@@ -131,6 +138,62 @@ namespace ChopChop.Input
                 Debug.LogWarning($"[Hashi Input/{ownerLabel}] No BLE sample received for {Time.realtimeSinceStartup - CurrentFrame.TimeReceived:0.0}s. Holding the last valid chopstick pose.");
                 staleSampleLogEmitted = true;
             }
+        }
+
+        public static bool ShouldAutoReconnect(string status)
+        {
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                return true;
+            }
+
+            return !status.StartsWith("Native plugin", System.StringComparison.OrdinalIgnoreCase)
+                && !status.StartsWith("Unsupported", System.StringComparison.OrdinalIgnoreCase)
+                && !status.StartsWith("Unauthorized", System.StringComparison.OrdinalIgnoreCase);
+        }
+
+        private bool TryClaimRuntimeLock()
+        {
+            lock (RuntimeLock)
+            {
+                if (!MacHashiBleReceiver.SupportsConcurrentReceivers && activeSource != null && !ReferenceEquals(activeSource, this))
+                {
+                    return false;
+                }
+
+                activeSource = this;
+                activeOwnerLabel = ownerLabel;
+                return true;
+            }
+        }
+
+        private void TryReconnect()
+        {
+            if (!ShouldAutoReconnect(receiver.Status) || Time.realtimeSinceStartup < nextReconnectAttemptAt)
+            {
+                return;
+            }
+
+            if (!TryClaimRuntimeLock())
+            {
+                blockedByActiveSource = true;
+                return;
+            }
+
+            reconnectAttemptCount++;
+            Debug.LogWarning($"[Hashi Input/{ownerLabel}] BLE receiver is not running ({receiver.Status}). Reconnect attempt {reconnectAttemptCount}.");
+            receiver.Start(deviceNameFilter, serviceUuid, characteristicUuid);
+
+            if (receiver.IsRunning)
+            {
+                blockedByActiveSource = false;
+                staleSampleLogEmitted = false;
+                nextReconnectAttemptAt = 0f;
+                return;
+            }
+
+            ReleaseRuntimeLock();
+            nextReconnectAttemptAt = Time.realtimeSinceStartup + ReconnectDelaySeconds;
         }
 
         private void ReleaseRuntimeLock()

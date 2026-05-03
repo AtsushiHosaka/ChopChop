@@ -167,9 +167,17 @@ namespace ChopChop.BLE
 
         private void SetNativeState(int state, string message)
         {
+            var nativeState = (NativeBleState)state;
             Status = string.IsNullOrEmpty(message)
-                ? ((NativeBleState)state).ToString()
-                : $"{(NativeBleState)state}: {message}";
+                ? nativeState.ToString()
+                : $"{nativeState}: {message}";
+
+            if (IsTerminalState(nativeState))
+            {
+                IsRunning = false;
+                ClearActiveReceiver();
+            }
+
             EnqueueLog(Status);
         }
 
@@ -184,6 +192,25 @@ namespace ChopChop.BLE
         private static string Clean(string value)
         {
             return string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+        }
+
+        private static bool IsTerminalState(NativeBleState state)
+        {
+            return state == NativeBleState.Stopped
+                || state == NativeBleState.Unsupported
+                || state == NativeBleState.Unauthorized
+                || state == NativeBleState.PoweredOff
+                || state == NativeBleState.Failed;
+        }
+
+        private void ClearActiveReceiver()
+        {
+#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+            if (activeReceiver == this)
+            {
+                activeReceiver = null;
+            }
+#endif
         }
 
 #if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
@@ -224,14 +251,6 @@ namespace ChopChop.BLE
         private static string PtrToString(IntPtr pointer)
         {
             return pointer == IntPtr.Zero ? string.Empty : Marshal.PtrToStringAnsi(pointer) ?? string.Empty;
-        }
-
-        private void ClearActiveReceiver()
-        {
-            if (activeReceiver == this)
-            {
-                activeReceiver = null;
-            }
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

@@ -100,6 +100,8 @@
 - [x] 2秒以上受信が途切れた場合、最後の姿勢を保持する。
 - [x] 受信途絶時にConsoleへ状態ログが出る。
 - [ ] BLE再接続時に入力が復帰する。
+- [x] `BleHashiInputSource` がrecoverableなBLE停止/failed状態で自動reconnectを試す。
+- [x] native plugin missing / unsupported / unauthorized では自動reconnectを連打しない。
 - [x] Native plugin missing時に本番画面がクラッシュしない。
 
 ## 4. Hashi Pose And Model
