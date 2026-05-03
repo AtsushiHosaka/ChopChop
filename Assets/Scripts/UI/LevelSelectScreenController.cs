@@ -8,6 +8,8 @@ namespace ChopChop.UI
 {
     public sealed class LevelSelectScreenController : MonoBehaviour
     {
+        private const string BackgroundResourcePath = "UI/Start/start_background";
+
         private readonly List<LevelCard> cards = new List<LevelCard>();
         private GameLocalization localization;
         private SceneNavigator navigator;
@@ -27,6 +29,9 @@ namespace ChopChop.UI
         {
             localization = appLocalization;
             navigator = sceneNavigator;
+
+            ApplyBackgroundImage();
+            CreateReadableScrim();
 
             var header = UiFactory.CreatePanel(transform, "Header", new Color(0f, 0f, 0f, 0.2f));
             UiFactory.Anchor(header, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(44f, -126f), new Vector2(-44f, -28f));
@@ -82,19 +87,90 @@ namespace ChopChop.UI
             var button = UiFactory.CreateButton(parent, definition.levelId, string.Empty, color, Color.white);
             button.interactable = definition.isUnlocked;
 
+            var thumbnail = CreateThumbnail(button.transform, ResolveThumbnail(definition), definition.isUnlocked);
+            thumbnail.transform.SetAsFirstSibling();
+
+            var overlay = UiFactory.CreatePanel(button.transform, "Thumbnail Tint", definition.isUnlocked
+                ? new Color(0f, 0f, 0f, 0.36f)
+                : new Color(0f, 0f, 0f, 0.58f));
+            UiFactory.Stretch(overlay, 0f);
+            overlay.transform.SetSiblingIndex(1);
+
             var label = button.GetComponentInChildren<Text>();
             label.fontSize = 34;
             label.alignment = TextAnchor.UpperLeft;
             UiFactory.Anchor(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(26f, 104f), new Vector2(-26f, -22f));
+            label.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
 
             var description = UiFactory.CreateText(button.transform, "Description", 23, FontStyle.Normal, TextAnchor.UpperLeft, new Color(1f, 1f, 1f, 0.86f));
             UiFactory.Anchor(description.rectTransform, Vector2.zero, Vector2.one, new Vector2(26f, 40f), new Vector2(-26f, -94f));
+            description.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.5f);
 
             var state = UiFactory.CreateText(button.transform, "State", 22, FontStyle.Bold, TextAnchor.LowerRight, new Color(1f, 1f, 1f, 0.8f));
             UiFactory.Anchor(state.rectTransform, Vector2.zero, Vector2.one, new Vector2(26f, 20f), new Vector2(-26f, -20f));
+            state.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
 
             button.onClick.AddListener(() => navigator.LoadLevel(definition.sceneName));
             return new LevelCard(definition, label, description, state);
+        }
+
+        private RectTransform CreateThumbnail(Transform parent, Sprite sprite, bool isUnlocked)
+        {
+            var thumbnailObject = new GameObject("Thumbnail", typeof(RectTransform), typeof(Image));
+            thumbnailObject.transform.SetParent(parent, false);
+            var rectTransform = thumbnailObject.GetComponent<RectTransform>();
+            UiFactory.Stretch(rectTransform, 0f);
+
+            var image = thumbnailObject.GetComponent<Image>();
+            image.sprite = sprite;
+            image.color = sprite == null
+                ? new Color(0.18f, 0.18f, 0.18f, 1f)
+                : (isUnlocked ? Color.white : new Color(0.48f, 0.48f, 0.48f, 0.72f));
+            image.raycastTarget = false;
+            image.preserveAspect = false;
+            return rectTransform;
+        }
+
+        private static Sprite ResolveThumbnail(LevelDefinition definition)
+        {
+            if (definition.thumbnail != null)
+            {
+                return definition.thumbnail;
+            }
+
+            return definition.sceneName == AppScenes.SukiyakiLevel
+                ? Resources.Load<Sprite>("UI/LevelThumbnails/level05_sukiyaki")
+                : null;
+        }
+
+        private void ApplyBackgroundImage()
+        {
+            var background = transform.Find("Background")?.GetComponent<Image>();
+            if (background == null)
+            {
+                return;
+            }
+
+            var sprite = Resources.Load<Sprite>(BackgroundResourcePath);
+            if (sprite == null)
+            {
+                Debug.LogWarning($"[Level Select] Missing background sprite Resources/{BackgroundResourcePath}.png", this);
+                return;
+            }
+
+            background.sprite = sprite;
+            background.color = Color.white;
+            background.raycastTarget = false;
+        }
+
+        private void CreateReadableScrim()
+        {
+            var scrim = new GameObject("Readable Scrim", typeof(RectTransform), typeof(Image));
+            scrim.transform.SetParent(transform, false);
+            UiFactory.Stretch(scrim.GetComponent<RectTransform>(), 0f);
+            var image = scrim.GetComponent<Image>();
+            image.color = new Color(0.02f, 0.018f, 0.014f, 0.56f);
+            image.raycastTarget = false;
         }
 
         private void UpdateTexts()

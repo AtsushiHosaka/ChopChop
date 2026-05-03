@@ -29,9 +29,11 @@
 ## 1. Scene Flow
 
 - [x] `StartScene` を起動するとタイトル、Start、Language、Quitが表示される。
+- [x] `StartScene` に生成済み背景画像が表示され、UIテキストとボタンがその上に重なる。
 - [x] `Start` を押すと `LevelSelectScene` に遷移する。
 - [x] `LevelSelectScene` でLv.1-Lv.4がLocked/Coming Soon表示になる。
 - [x] Lv.5カードのみ選択可能で、押すと `Level05_SukiyakiScene` に遷移する。
+- [x] Lv.5カードに生成済みすき焼きサムネイル画像が表示される。
 - [x] `Level05_SukiyakiScene` 完了後、ゲーム内Overlayではなく `ResultScene` に遷移する。
 - [x] `ResultScene` にSpeed、Care、失敗回数、完了時間が表示される。
 - [x] `ResultScene` のRetryでLv.5を再開始できる。
@@ -382,7 +384,9 @@
 - [x] 日本語/英語それぞれの工程Cue画像が `Assets/Resources/UI/SukiyakiCues` に生成されている。
 - [x] `SukiyakiCueOverlay` が現在言語に応じた工程Cue画像を読み込む。
 - [x] `SukiyakiCueOverlay` が成功/失敗Cue画像を表示するコードを持つ。
+- [x] Lv.5開始前に `3, 2, 1` のカウントダウン画像Overlayが表示される。
 - [ ] Play Modeで工程Cue画像が画面上部に表示されることを確認する。
+- [ ] Play Modeで開始カウントダウンが表示され、終了後にCalibrationが始まることを確認する。
 - [ ] Play Modeで言語切替時にCue画像も日本語/英語で切り替わることを確認する。
 - [x] Calibration中のフィードバックが表示される。
 - [x] 工程名がHUDに表示される。

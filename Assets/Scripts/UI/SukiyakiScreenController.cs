@@ -47,8 +47,8 @@ namespace ChopChop.UI
             CreateHud();
             CreateCueOverlay();
             localization.LanguageChanged += UpdateTexts;
-            stage.StartLevel();
             UpdateTexts();
+            StartCountdown();
         }
 
         private void Update()
@@ -111,6 +111,21 @@ namespace ChopChop.UI
         {
             cueOverlay = gameObject.AddComponent<SukiyakiCueOverlay>();
             cueOverlay.Initialize(localization, stage);
+        }
+
+        private void StartCountdown()
+        {
+            var countdown = gameObject.AddComponent<SukiyakiCountdownOverlay>();
+            countdown.Begin(() =>
+            {
+                if (stage == null)
+                {
+                    return;
+                }
+
+                stage.StartLevel();
+                UpdateTexts();
+            });
         }
 
         private void CreateSetupMissingScreen()
