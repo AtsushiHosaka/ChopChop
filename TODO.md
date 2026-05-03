@@ -730,3 +730,14 @@
 - [ ] 2P対戦は基盤のみなので、2P専用Scene/Mode、左右HUD、P1/P2独立Stage、複数BLE receiver対応を実装する。
 - [ ] Player-visible assetのライセンス確認、最終asset差し替え、AssetCredits更新をリリース前に完了する。
 - [ ] UI/BGM/SE/Lighting/SkyboxをPlay Modeで目視・聴感確認し、MVP展示に耐える品質へ調整する。
+
+## 31. Current Verification Queue
+
+- [x] Runtime scriptsを `ChopChop.Runtime.asmdef` に切り出し、EditMode testsがRuntime assemblyを参照できる構成にする。
+- [x] Unity ConsoleのCompile Errorが0件であることを確認する。
+- [ ] Unity MCPの `Unity_RunCommand` がtimeoutしたため、Unity Editor menuから `ChopChop > Validate MVP Setup` を手動実行して結果を確認する。
+- [ ] Unity Test RunnerでEditMode testsを実行し、parser / meat stress / sukiyaki stage transition / meat retry / target zone gateが通ることを確認する。
+- [ ] Lv.5 Sceneに `SukiyakiStepTargetZone` をEgg/Meat/Broth/Flip/Mouth用に配置し、Lower/Upper Tipをtracked tipsへ接続する。
+- [ ] Target Zone未到達では工程progressが進まず、Zone到達後にBLE操作品質が良い時だけ進むことをPlay Modeで確認する。
+- [ ] BLE接続後に箸電源OFF/ONまたはperipheral切断/復帰を行い、自動reconnect後にtheta/gyro入力が復帰することを確認する。
+- [ ] 実機未接続、Native plugin missing、Bluetooth unauthorizedの各状態でreconnect logが過剰に連打されないことを確認する。
