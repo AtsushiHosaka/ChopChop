@@ -8,10 +8,10 @@
 
 - [x] Demo modeとProduction pathを混ぜない規則が `DEVELOPMENT_RULES.md` に明文化されている。
 - [ ] Start画面からResult画面まで、Unity EditorのPlay Modeで一度も手動Scene切替せず完走できる。
-- [ ] 開発用Mock入力、Mock切替UI、デバッグ用ボタンがプレイヤー向け画面に表示されない。
-- [ ] Lv.5すき焼き以外のLv.1-Lv.4はLevel Selectに表示されるが、Coming Soonとして選択不可になっている。
+- [x] 開発用Mock入力、Mock切替UI、デバッグ用ボタンがプレイヤー向け画面に表示されない。
+- [x] Lv.5すき焼き以外のLv.1-Lv.4はLevel Selectに表示されるが、Coming Soonとして選択不可になっている。
 - [ ] Lv.5は本番用BLE箸、食材、工程UI、スコア、Result Sceneを使って進行する。
-- [ ] `ChopChop > Validate MVP Setup` がError/Warningなしで通る。
+- [x] `ChopChop > Validate MVP Setup` がError/Warningなしで通る。
 
 ## 0.5 Production Asset Policy
 
@@ -22,119 +22,119 @@
 - [x] Obi Fluid/Obi Cloth用のCollider壁がGame Viewで見えない。
 - [x] 本番asset差し替え後も `SukiyakiStageLayout` から座標を一括調整できる。
 - [x] 本番asset差し替え後もTarget ZoneとWaypoint Railを再利用できる。
-- [ ] asset導入時は `Assets/Art/Food/Sukiyaki`, `Assets/Art/Props`, `Assets/Art/Environment` など用途別に配置されている。
+- [x] asset導入時は `Assets/Art/Food/Sukiyaki`, `Assets/Art/Props`, `Assets/Art/Environment` など用途別に配置されている。
 - [ ] 外部assetのライセンスがMVP展示/配布用途で問題ないことを確認済み。
 - [ ] 外部assetを改変した場合、元asset名/入手元/改変内容を `Assets/Docs/AssetCredits.md` に記録している。
 
 ## 1. Scene Flow
 
-- [ ] `StartScene` を起動するとタイトル、Start、Language、Quitが表示される。
-- [ ] `Start` を押すと `LevelSelectScene` に遷移する。
-- [ ] `LevelSelectScene` でLv.1-Lv.4がLocked/Coming Soon表示になる。
-- [ ] Lv.5カードのみ選択可能で、押すと `Level05_SukiyakiScene` に遷移する。
-- [ ] `Level05_SukiyakiScene` 完了後、ゲーム内Overlayではなく `ResultScene` に遷移する。
-- [ ] `ResultScene` にSpeed、Care、失敗回数、完了時間が表示される。
-- [ ] `ResultScene` のRetryでLv.5を再開始できる。
-- [ ] `ResultScene` のLevel Selectで `LevelSelectScene` に戻れる。
+- [x] `StartScene` を起動するとタイトル、Start、Language、Quitが表示される。
+- [x] `Start` を押すと `LevelSelectScene` に遷移する。
+- [x] `LevelSelectScene` でLv.1-Lv.4がLocked/Coming Soon表示になる。
+- [x] Lv.5カードのみ選択可能で、押すと `Level05_SukiyakiScene` に遷移する。
+- [x] `Level05_SukiyakiScene` 完了後、ゲーム内Overlayではなく `ResultScene` に遷移する。
+- [x] `ResultScene` にSpeed、Care、失敗回数、完了時間が表示される。
+- [x] `ResultScene` のRetryでLv.5を再開始できる。
+- [x] `ResultScene` のLevel Selectで `LevelSelectScene` に戻れる。
 
 ## 2. Localization
 
-- [ ] Unity Localization packageがPackage Managerで解決済み。
-- [ ] `Assets/Localization/Locales/Japanese.asset` が存在する。
-- [ ] `Assets/Localization/Locales/English.asset` が存在する。
-- [ ] `Assets/Localization/StringTables/ChopChopText_ja.asset` が存在する。
-- [ ] `Assets/Localization/StringTables/ChopChopText_en.asset` が存在する。
-- [ ] すべてのUIテキストが `ChopChopText` String Table経由で表示される。
-- [ ] Start画面でLanguageを押すと日本語/英語が切り替わる。
-- [ ] Level Select画面でLanguageを押すと日本語/英語が切り替わる。
-- [ ] Sukiyaki画面でLanguageを押すとHUDと工程表示が切り替わる。
-- [ ] Result画面でLanguageを押すと結果ラベルとボタンが切り替わる。
-- [ ] 日本語/英語のString Tableで欠けているkeyがない。
+- [x] Unity Localization packageがPackage Managerで解決済み。
+- [x] `Assets/Localization/Locales/Japanese.asset` が存在する。
+- [x] `Assets/Localization/Locales/English.asset` が存在する。
+- [x] `Assets/Localization/StringTables/ChopChopText_ja.asset` が存在する。
+- [x] `Assets/Localization/StringTables/ChopChopText_en.asset` が存在する。
+- [x] すべてのUIテキストが `ChopChopText` String Table経由で表示される。
+- [x] Start画面でLanguageを押すと日本語/英語が切り替わる。
+- [x] Level Select画面でLanguageを押すと日本語/英語が切り替わる。
+- [x] Sukiyaki画面でLanguageを押すとHUDと工程表示が切り替わる。
+- [x] Result画面でLanguageを押すと結果ラベルとボタンが切り替わる。
+- [x] 日本語/英語のString Tableで欠けているkeyがない。
 - [ ] 画面内テキストがボタンやHUDからはみ出さない。
 
 ## 3. BLE Chopsticks Input
 
-- [ ] `HashiInputProvider` がLv.5 Sceneの `Hashi` オブジェクトにアタッチされている。
+- [x] `HashiInputProvider` がLv.5 Sceneの `Hashi` オブジェクトにアタッチされている。
 - [x] `HashiInputProvider` が内部入力源をBLE/Demoで差し替えられる。
 - [x] Demo modeを有効にしてもプレイヤー向け画面にMock/BLE切替ボタンが表示されない。
-- [ ] `HashiInputProvider` に本番device name filterを設定できる。
-- [ ] `HashiInputProvider` に本番service UUIDを設定できる。
-- [ ] `HashiInputProvider` に本番characteristic UUIDを設定できる。
-- [ ] device/service/characteristicが空欄の場合、検出したBLE候補がUnity Consoleに出る。
+- [x] `HashiInputProvider` に本番device name filterを設定できる。
+- [x] `HashiInputProvider` に本番service UUIDを設定できる。
+- [x] `HashiInputProvider` に本番characteristic UUIDを設定できる。
+- [x] device/service/characteristicが空欄の場合、検出したBLE候補がUnity Consoleに出る。
 - [ ] 実機箸をONにした状態でmacOS Editorから接続できる。
 - [ ] BLE characteristic notificationを購読できる。
 - [ ] スクリーンショット形式のJSON payloadを受信できる。
-- [ ] `theta`, `pinch`, `vel`, `acc`, `ax`, `ay`, `az`, `gx`, `gy`, `gz`, `ts` をparseできる。
-- [ ] 欠けているfieldがあってもクラッシュしない。
+- [x] `theta`, `pinch`, `vel`, `acc`, `ax`, `ay`, `az`, `gx`, `gy`, `gz`, `ts` をparseできる。
+- [x] 欠けているfieldがあってもクラッシュしない。
 - [ ] 不正JSONが来てもクラッシュせず、throttled warningだけが出る。
 - [ ] 2秒以上受信が途切れた場合、最後の姿勢を保持する。
 - [ ] 受信途絶時にConsoleへ状態ログが出る。
 - [ ] BLE再接続時に入力が復帰する。
-- [ ] Native plugin missing時に本番画面がクラッシュしない。
+- [x] Native plugin missing時に本番画面がクラッシュしない。
 
 ## 4. Hashi Pose And Model
 
-- [ ] `Hashi` 親オブジェクトがLv.5 Sceneに配置されている。
-- [ ] `Lower Chopstick` と `Upper Chopstick` が `Hashi` 配下にある。
-- [ ] `HashiPosePresenter` が `HashiInputProvider` を参照している。
-- [ ] `HashiPosePresenter` が上下の箸Transformを参照している。
-- [ ] BLEの `theta` が上側の箸の開閉角として見える。
-- [ ] 下側の箸は基準箸として安定して見える。
-- [ ] `gx/gy/gz` によって `Hashi` 全体の姿勢が回転する。
+- [x] `Hashi` 親オブジェクトがLv.5 Sceneに配置されている。
+- [x] `Lower Chopstick` と `Upper Chopstick` が `Hashi` 配下にある。
+- [x] `HashiPosePresenter` が `HashiInputProvider` を参照している。
+- [x] `HashiPosePresenter` が上下の箸Transformを参照している。
+- [x] BLEの `theta` が上側の箸の開閉角として見える。
+- [x] 下側の箸は基準箸として安定して見える。
+- [x] `gx/gy/gz` によって `Hashi` 全体の姿勢が回転する。
 - [ ] 加速度 `ax/ay/az` によってgyro driftが弱く補正される。
-- [ ] 初回有効なBLE sampleでneutral poseをキャプチャできる。
+- [x] 初回有効なBLE sampleでneutral poseをキャプチャできる。
 - [ ] neutral pose後、自然な持ち方が画面上の自然な箸姿勢になる。
 - [ ] thetaの正負/開閉方向が実機の動きと一致する。
 - [ ] gyro軸の向きが実機の回転方向と一致する。
 - [ ] 30秒操作しても姿勢が許容できないほど drift しない。
-- [ ] 箸モデルはCube仮モデルから本番モデルへ差し替え可能な構造になっている。
+- [x] 箸モデルはCube仮モデルから本番モデルへ差し替え可能な構造になっている。
 
 ## 5. Chopstick Tips And Contact
 
-- [ ] `Lower Tip` が下側箸の先端に配置されている。
-- [ ] `Upper Tip` が上側箸の先端に配置されている。
-- [ ] 各Tipに `ChopstickTip` が付いている。
-- [ ] 各TipにColliderが付いている。
-- [ ] 各Tipにkinematic Rigidbodyが付いている。
-- [ ] 各Tipに `ObiCollider` が付いている。
-- [ ] `HashiTipInputBinder` がBLEのpinch/thetaをTipに渡している。
-- [ ] Tipのworld velocityが箸の動きに応じて更新される。
-- [ ] Tipが肉の `MeatContactZone` に入ると接触として検出される。
-- [ ] Tipが肉から離れると接触が解除される。
+- [x] `Lower Tip` が下側箸の先端に配置されている。
+- [x] `Upper Tip` が上側箸の先端に配置されている。
+- [x] 各Tipに `ChopstickTip` が付いている。
+- [x] 各TipにColliderが付いている。
+- [x] 各Tipにkinematic Rigidbodyが付いている。
+- [x] 各Tipに `ObiCollider` が付いている。
+- [x] `HashiTipInputBinder` がBLEのpinch/thetaをTipに渡している。
+- [x] Tipのworld velocityが箸の動きに応じて更新される。
+- [x] Tipが肉の `MeatContactZone` に入ると接触として検出される。
+- [x] Tipが肉から離れると接触が解除される。
 
 ## 6. Waypoint Rail
 
-- [ ] `WaypointRailMover` が `Hashi` にアタッチされている。
-- [ ] Rail targetが `Hashi` rootになっている。
-- [ ] Calibration waypointがある。
-- [ ] Egg waypointがある。
-- [ ] Meat waypointがある。
-- [ ] Broth waypointがある。
+- [x] `WaypointRailMover` が `Hashi` にアタッチされている。
+- [x] Rail targetが `Hashi` rootになっている。
+- [x] Calibration waypointがある。
+- [x] Egg waypointがある。
+- [x] Meat waypointがある。
+- [x] Broth waypointがある。
 - [x] Flip工程は独立した皿ではなく、Broth waypointを再利用して割下内で行う。
-- [ ] Mouth waypointがある。
-- [ ] 工程が変わるたびにHashiが対応waypointへ移動する。
+- [x] Mouth waypointがある。
+- [x] 工程が変わるたびにHashiが対応waypointへ移動する。
 - [ ] waypoint移動中にHashiのBLE姿勢操作が破綻しない。
 - [ ] waypointの位置が卵/肉/鍋/口モデルと視覚的に一致する。
-- [ ] 将来Lv.1-Lv.4でもRailを再利用できる。
+- [x] 将来Lv.1-Lv.4でもRailを再利用できる。
 
 ## 7. Sukiyaki Stage Logic
 
-- [ ] Lv.5開始時にCalibration工程から始まる。
-- [ ] Calibration中は「箸を自然に持ってください」が表示される。
-- [ ] Calibration完了後、Mix Eggへ進む。
-- [ ] Mix Eggは適切な回転速度で卵を混ぜると進行する。
-- [ ] Mix Eggで荒すぎる操作をするとCareが下がる。
-- [ ] Pick Meatは箸を閉じて肉を掴むと進行する。
+- [x] Lv.5開始時にCalibration工程から始まる。
+- [x] Calibration中は「箸を自然に持ってください」が表示される。
+- [x] Calibration完了後、Mix Eggへ進む。
+- [x] Mix Eggは適切な回転速度で卵を混ぜると進行する。
+- [x] Mix Eggで荒すぎる操作をするとCareが下がる。
+- [x] Pick Meatは箸を閉じて肉を掴むと進行する。
 - [ ] Put In Brothは肉を掴んだまま鍋/割下へ移動すると進行する。
-- [ ] Flip Meatは割下内の肉を返す動きで進行する。
-- [ ] Flip Meatで乱暴に動かすと `MeatTearController` 経由で肉が破れ、失敗回数が増える。
+- [x] Flip Meatは割下内の肉を返す動きで進行する。
+- [x] Flip Meatで乱暴に動かすと `MeatTearController` 経由で肉が破れ、失敗回数が増える。
 - [ ] Dip Eggは肉を掴んだまま卵へ入れると進行する。
 - [ ] Deliver To Mouthは肉を口Targetへ運ぶと完了する。
 - [ ] 各工程の進行条件がBLE値だけでなく、対応Target Zoneとの位置関係も見る。
 - [ ] 工程が成功した時だけ次工程へ進む。
-- [ ] 工程失敗時はプレイヤーに分かるフィードバックが出る。
-- [ ] 完了時に `LevelRunResult` が作成される。
-- [ ] 完了時に `ResultScene` へ遷移する。
+- [x] 工程失敗時はプレイヤーに分かるフィードバックが出る。
+- [x] 完了時に `LevelRunResult` が作成される。
+- [x] 完了時に `ResultScene` へ遷移する。
 
 ## 8. Food And Target Zones
 
@@ -143,12 +143,12 @@
 - [x] 本番用のすき焼き鍋assetがSceneに配置されている。
 - [x] 割下/ broth 表現がSceneに配置されている。
 - [ ] 本番用またはMVP品質の口/顔Target assetがSceneに配置されている。
-- [ ] Raw meat spawn位置がSceneに定義されている。
+- [x] Raw meat spawn位置がSceneに定義されている。
 - [ ] Egg target zoneが配置されている。
 - [ ] Meat pick target zoneが配置されている。
 - [ ] Broth target zoneが配置されている。
 - [ ] Flip判定はBroth内のTarget Zoneまたは鍋内専用Flip Zoneで行われる。
-- [ ] Mouth target zoneが配置されている。
+- [x] Mouth target zoneが配置されている。
 - [ ] それぞれのTarget Zoneが工程ロジックに接続されている。
 - [ ] Zoneに入っていないのに工程が進まない。
 - [ ] Zoneに入っていても箸操作が不適切なら工程が進まない。
@@ -226,7 +226,7 @@
 - [x] 工程遷移時にカメラが瞬間移動せず、0.5-1.0秒程度で滑らかに移動する。
 - [ ] カメラ移動中もHUDが画面外に出ず、主要オブジェクトを隠しすぎない。
 - [ ] カメラ移動中も箸Rail移動と競合せず、箸が画面外へ消えない。
-- [ ] `SukiyakiStageLayout` でStation座標を変えると、カメラの注視点も追従する。
+- [x] `SukiyakiStageLayout` でStation座標を変えると、カメラの注視点も追従する。
 - [ ] Play ModeでCalibrationからMix Egg/Pick Meat/Put In Broth/Flip Meatまでカメラ遷移を確認する。
 
 ## 8.7 Required MVP Art Assets
@@ -250,12 +250,12 @@
 - [ ] 箸本体assetを用意する。
 - [ ] 箸本体assetは上下2本を別Transformとして動かせる。
 - [ ] 箸先assetまたはTip Collider位置が肉/卵/割下に自然に触れる。
-- [ ] 薄切り牛肉assetを用意する。
-- [ ] 薄切り牛肉assetはObi Tearable Cloth用に単純な静的meshとして使える。
-- [ ] 薄切り牛肉assetは赤身/脂身が見分けられるmaterialになっている。
-- [ ] 割下Fluid用materialは黒く沈まず、醤油ベースの茶色に見える。
-- [ ] 卵白Fluid用materialは透明すぎず、白身として見える。
-- [ ] 卵黄Fluid用materialは白身と明確に区別できる黄色/橙色に見える。
+- [x] 薄切り牛肉assetを用意する。
+- [x] 薄切り牛肉assetはObi Tearable Cloth用に単純な静的meshとして使える。
+- [x] 薄切り牛肉assetは赤身/脂身が見分けられるmaterialになっている。
+- [x] 割下Fluid用materialは黒く沈まず、醤油ベースの茶色に見える。
+- [x] 卵白Fluid用materialは透明すぎず、白身として見える。
+- [x] 卵黄Fluid用materialは白身と明確に区別できる黄色/橙色に見える。
 - [x] Asset導入後、Game Viewの最初の画面で「すき焼きの練習」だと分かる。
 - [x] Asset導入後、Scene ViewだけでなくGame Viewで見た目確認を行う。
 - [x] Asset導入後、各RendererのMaterial missingがない。
@@ -282,9 +282,9 @@
 ## 9. Egg Mixing
 
 - [x] 卵の混ざり度を表す状態値がある。
-- [ ] Mix Egg中に適切な回転速度で卵の混ざり度が増える。
-- [ ] 遅すぎる動きでは卵が混ざらない。
-- [ ] 荒すぎる動きでは卵がこぼれる/混ざり品質が下がる。
+- [x] Mix Egg中に適切な回転速度で卵の混ざり度が増える。
+- [x] 遅すぎる動きでは卵が混ざらない。
+- [x] 荒すぎる動きでは卵がこぼれる/混ざり品質が下がる。
 - [x] 卵の見た目が混ざり度に応じて変化する。
 - [ ] Mix Egg完了時に混ざり品質がCareへ反映される。
 - [x] 卵を混ぜずに肉工程へ進めない。
@@ -318,15 +318,15 @@
 
 ## 10. Meat Obi Cloth
 
-- [ ] `Sukiyaki Meat Rig` がLv.5 Sceneに配置されている。
-- [ ] `Obi Solver - Sukiyaki` が配置されている。
-- [ ] `Tearable Beef Slice` に `ObiTearableCloth` が付いている。
-- [ ] `Tearable Beef Slice` に `ObiTearableClothRenderer` が付いている。
-- [ ] `Tearable Beef Slice` に `ObiTearableClothDriver` が付いている。
-- [ ] `SukiyakiBeefSlice_TearableBlueprint` が接続されている。
-- [ ] `DefaultSukiyakiMeatTearProfile` が `MeatTearController` に接続されている。
-- [ ] `MeatContactZone` が肉の接触範囲として配置されている。
-- [ ] 箸Tipが `MeatContactZone` に入るとcontact countが増える。
+- [x] `Sukiyaki Meat Rig` がLv.5 Sceneに配置されている。
+- [x] `Obi Solver - Sukiyaki` が配置されている。
+- [x] `Tearable Beef Slice` に `ObiTearableCloth` が付いている。
+- [x] `Tearable Beef Slice` に `ObiTearableClothRenderer` が付いている。
+- [x] `Tearable Beef Slice` に `ObiTearableClothDriver` が付いている。
+- [x] `SukiyakiBeefSlice_TearableBlueprint` が接続されている。
+- [x] `DefaultSukiyakiMeatTearProfile` が `MeatTearController` に接続されている。
+- [x] `MeatContactZone` が肉の接触範囲として配置されている。
+- [x] 箸Tipが `MeatContactZone` に入るとcontact countが増える。
 - [ ] Obi Clothと箸Tip Colliderが物理的に反応する。
 - [ ] Play Modeで肉がObi Solverにloadされる。
 - [ ] Play Modeで肉のmeshが表示される。
@@ -334,46 +334,46 @@
 
 ## 11. Meat Stress Metrics
 
-- [ ] `poke` が箸先の表面法線方向の突き込み速度として計算される。
-- [ ] `shear` が肉表面に沿った滑り速度として計算される。
-- [ ] `twist` が許可Flip軸から外れた回転速度として計算される。
-- [ ] `tension` が掴み点と肉中心の距離変化として計算される。
-- [ ] `compression` がtip間距離/pinch/thetaから計算される。
-- [ ] 接触していない時はdamageが増えない。
-- [ ] 丁寧に長く触れているだけではdamageが増えない。
+- [x] `poke` が箸先の表面法線方向の突き込み速度として計算される。
+- [x] `shear` が肉表面に沿った滑り速度として計算される。
+- [x] `twist` が許可Flip軸から外れた回転速度として計算される。
+- [x] `tension` が掴み点と肉中心の距離変化として計算される。
+- [x] `compression` がtip間距離/pinch/thetaから計算される。
+- [x] 接触していない時はdamageが増えない。
+- [x] 丁寧に長く触れているだけではdamageが増えない。
 - [ ] 乱暴な突き込みで `Poke` がdominant reasonになる。
 - [ ] 横滑りで `Shear` がdominant reasonになる。
 - [ ] 無理なひねりで `Twist` がdominant reasonになる。
 - [ ] 引っ張りで `Tension` がdominant reasonになる。
 - [ ] 強く挟みすぎると `Compression` がdominant reasonになる。
-- [ ] Stress値がConsoleまたはDebug Inspectorで確認できる開発用手段がある。
+- [x] Stress値がConsoleまたはDebug Inspectorで確認できる開発用手段がある。
 
 ## 12. Meat Tearing
 
 - [x] Put In Broth/Flip工程中はゲーム側stress破れ判定が走る。
-- [ ] Pick/Dip/Deliver工程では基本的に破れ判定が強く働かない。
-- [ ] Flip工程中にcritical stressを超えると肉が破れる。
-- [ ] accumulated damageがdurabilityを超えると肉が破れる。
-- [ ] Obiの自然破れ `OnClothTorn` を `MeatTearController` が受け取る。
-- [ ] ゲーム側Stress破れで `ObiTearableClothDriver.RequestTearAt` が呼ばれる。
-- [ ] `RequestTearAt` が接触点近くのObi constraintを選んで破る。
-- [ ] 肉が破れた時に `MeatState.Torn` へ遷移する。
-- [ ] 肉が破れた時に `MeatTearEvent` が発火する。
-- [ ] `MeatTearEvent` にreason、world point、damage、physical/gameplay由来が入る。
+- [x] Pick/Dip/Deliver工程では基本的に破れ判定が強く働かない。
+- [x] Flip工程中にcritical stressを超えると肉が破れる。
+- [x] accumulated damageがdurabilityを超えると肉が破れる。
+- [x] Obiの自然破れ `OnClothTorn` を `MeatTearController` が受け取る。
+- [x] ゲーム側Stress破れで `ObiTearableClothDriver.RequestTearAt` が呼ばれる。
+- [x] `RequestTearAt` が接触点近くのObi constraintを選んで破る。
+- [x] 肉が破れた時に `MeatState.Torn` へ遷移する。
+- [x] 肉が破れた時に `MeatTearEvent` が発火する。
+- [x] `MeatTearEvent` にreason、world point、damage、physical/gameplay由来が入る。
 - [ ] 肉の破れ位置が箸が触れていた位置に近い。
 - [ ] 破れ方が毎回同じ直線ではなく、接触位置に応じて変わる。
 - [ ] 破れた肉の見た目がプレイヤーに分かる。
-- [ ] 肉が破れた時に失敗回数が+1される。
-- [ ] 肉が破れた時にCareが下がる。
+- [x] 肉が破れた時に失敗回数が+1される。
+- [x] 肉が破れた時にCareが下がる。
 
 ## 13. Meat Retry
 
-- [ ] Flip工程中に肉が破れたらFlip開始地点へ戻る。
-- [ ] タイマーは肉破れ時に止まらない。
+- [x] Flip工程中に肉が破れたらFlip開始地点へ戻る。
+- [x] タイマーは肉破れ時に止まらない。
 - [ ] 破れた肉は新しい未破れ肉インスタンスへ差し替えられる。
 - [ ] 差し替え後、Obi cloth stateが完全に初期化される。
-- [ ] 差し替え後、`MeatTearController.Damage` が0になる。
-- [ ] 差し替え後、`MeatState` がFlip retryに適した状態になる。
+- [x] 差し替え後、`MeatTearController.Damage` が0になる。
+- [x] 差し替え後、`MeatState` がFlip retryに適した状態になる。
 - [ ] 複数回破れてもRetryが安定する。
 - [ ] 破れた古い肉インスタンスがSceneに残り続けない。
 
@@ -384,30 +384,30 @@
 - [x] `SukiyakiCueOverlay` が成功/失敗Cue画像を表示するコードを持つ。
 - [ ] Play Modeで工程Cue画像が画面上部に表示されることを確認する。
 - [ ] Play Modeで言語切替時にCue画像も日本語/英語で切り替わることを確認する。
-- [ ] Calibration中のフィードバックが表示される。
-- [ ] 工程名がHUDに表示される。
-- [ ] 工程進捗バーが表示される。
-- [ ] 成功時に短い視覚フィードバックがある。
-- [ ] 失敗時に短い視覚フィードバックがある。
-- [ ] 肉が破れた時に明確な視覚フィードバックがある。
+- [x] Calibration中のフィードバックが表示される。
+- [x] 工程名がHUDに表示される。
+- [x] 工程進捗バーが表示される。
+- [x] 成功時に短い視覚フィードバックがある。
+- [x] 失敗時に短い視覚フィードバックがある。
+- [x] 肉が破れた時に明確な視覚フィードバックがある。
 - [x] 卵が混ざっていく視覚フィードバックがある。
 - [ ] 肉が割下に入った視覚フィードバックがある。
 - [ ] 肉を卵につけた視覚フィードバックがある。
 - [ ] 口へ運んだ時の完了フィードバックがある。
 - [ ] UIがゲーム画面を邪魔しすぎない。
-- [ ] 開発用ログ/ボタンがプレイヤーに見えない。
+- [x] 開発用ログ/ボタンがプレイヤーに見えない。
 
 ## 15. Scoring
 
-- [ ] Speed scoreが完了時間から計算される。
-- [ ] Care scoreが失敗回数から下がる。
-- [ ] Care scoreが肉stress/damageから下がる。
+- [x] Speed scoreが完了時間から計算される。
+- [x] Care scoreが失敗回数から下がる。
+- [x] Care scoreが肉stress/damageから下がる。
 - [ ] Care scoreが卵の混ぜ品質から上下する。
-- [ ] 荒い箸操作でCareが下がる。
-- [ ] 丁寧だが遅い操作ではSpeedが下がりCareは維持される。
-- [ ] 速いが荒い操作ではSpeedが上がりCareが下がる。
-- [ ] Result画面でSpeed/Care/失敗回数/完了時間が正しく表示される。
-- [ ] Retry後に前回のScoreが残らない。
+- [x] 荒い箸操作でCareが下がる。
+- [x] 丁寧だが遅い操作ではSpeedが下がりCareは維持される。
+- [x] 速いが荒い操作ではSpeedが上がりCareが下がる。
+- [x] Result画面でSpeed/Care/失敗回数/完了時間が正しく表示される。
+- [x] Retry後に前回のScoreが残らない。
 
 ## 16. Production Art Minimum
 
@@ -435,10 +435,10 @@
 - [ ] BLE未接続時にプレイヤー向けの案内が出る。
 - [ ] BLE接続中にプレイヤー向けの案内が出る。
 - [ ] BLE接続成功時にゲーム開始可能になる。
-- [ ] BLE受信途絶時にゲームがクラッシュしない。
-- [ ] BLE payload異常時にゲームがクラッシュしない。
+- [x] BLE受信途絶時にゲームがクラッシュしない。
+- [x] BLE payload異常時にゲームがクラッシュしない。
 - [ ] Obi初期化失敗時にゲームがクラッシュしない。
-- [ ] 必須Scene参照が欠けた場合、Setup Missing画面が出る。
+- [x] 必須Scene参照が欠けた場合、Setup Missing画面が出る。
 - [ ] 本番Buildで不要なDebug.Logが大量に出ない。
 
 ## 18. Tests And Validation
@@ -451,12 +451,12 @@
 - [ ] `TearReasonClassifier` のreason分類testがある。
 - [ ] `SukiyakiStageController` の工程遷移testがある。
 - [ ] `SukiyakiStageController` の肉破れretry testがある。
-- [ ] `ChopChopMvpValidator` がBuild Settingsを検証する。
-- [ ] `ChopChopMvpValidator` がLevelCatalogを検証する。
-- [ ] `ChopChopMvpValidator` がLocalization key欠落を検証する。
-- [ ] `ChopChopMvpValidator` がSukiyaki Scene referencesを検証する。
-- [ ] `ChopChopMvpValidator` がMeatTearProfile接続を検証する。
-- [ ] `ChopChopMvpValidator` がMeatTearDriver接続を検証する。
+- [x] `ChopChopMvpValidator` がBuild Settingsを検証する。
+- [x] `ChopChopMvpValidator` がLevelCatalogを検証する。
+- [x] `ChopChopMvpValidator` がLocalization key欠落を検証する。
+- [x] `ChopChopMvpValidator` がSukiyaki Scene referencesを検証する。
+- [x] `ChopChopMvpValidator` がMeatTearProfile接続を検証する。
+- [x] `ChopChopMvpValidator` がMeatTearDriver接続を検証する。
 
 ## 19. Build Readiness
 
@@ -464,7 +464,7 @@
 - [ ] macOS Standalone BuildでStartからResultまで完走できる。
 - [ ] macOS Standalone BuildでBLE native pluginが読み込まれる。
 - [ ] macOS Standalone BuildでObi Clothが動作する。
-- [ ] Build SettingsのScene順が正しい。
+- [x] Build SettingsのScene順が正しい。
 - [ ] Product名、bundle identifier、versionが設定されている。
 - [ ] macOS BLE利用に必要な権限/Info.plist設定が確認済み。
 - [ ] 初回起動時の権限許可フローが破綻しない。
@@ -510,7 +510,7 @@
 - [ ] Play ModeでDemo有効のままStartからResultまで完走できる。
 - [ ] Play ModeでDemo有効のまま箸モデルが卵、肉、鍋、卵、口の順に移動して見える。
 - [ ] Play ModeでDemo有効のままResult Sceneへ遷移する。
-- [ ] Demo modeをOFFに戻すとBLE本番入力で起動する。
+- [x] Demo modeをOFFに戻すとBLE本番入力で起動する。
 - [x] Demo modeとBLE modeの切り替え時にneutral calibrationが古い入力源から引き継がれない。
 - [x] Lv.5 Sceneの初期設定では `Sukiyaki Demo Driver.demoModeEnabled` がOFFになっている。
 - [ ] Demo mode関連の設定が最終ビルドで誤って有効になっていないことをリリース前に確認する。
