@@ -482,7 +482,7 @@
 - [x] `MeatContactAnalyzer` のpoke/shear/twist/tension/compression testがある。
 - [x] `TearReasonClassifier` のreason分類testがある。
 - [x] `SukiyakiStageController` の工程遷移testがある。
-- [ ] `SukiyakiStageController` の肉破れretry testがある。
+- [x] `SukiyakiStageController` の肉破れretry testがある。
 - [x] `ChopChopMvpValidator` がBuild Settingsを検証する。
 - [x] `ChopChopMvpValidator` がLevelCatalogを検証する。
 - [x] `ChopChopMvpValidator` がLocalization key欠落を検証する。
