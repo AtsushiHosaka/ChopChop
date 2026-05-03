@@ -25,7 +25,7 @@
 - [x] 本番asset差し替え後もTarget ZoneとWaypoint Railを再利用できる。
 - [x] asset導入時は `Assets/Art/Food/Sukiyaki`, `Assets/Art/Props`, `Assets/Art/Environment` など用途別に配置されている。
 - [ ] 外部assetのライセンスがMVP展示/配布用途で問題ないことを確認済み。
-- [ ] 外部assetを改変した場合、元asset名/入手元/改変内容を `Assets/Docs/AssetCredits.md` に記録している。
+- [x] 外部assetを改変した場合、元asset名/入手元/改変内容を `Assets/Docs/AssetCredits.md` に記録している。
 
 ## 1. Scene Flow
 
@@ -709,6 +709,20 @@
 - [x] Sukiyaki工程失敗/肉破れ時に失敗SEが鳴る。
 - [x] Result遷移前に完了SEが鳴る。
 - [ ] Unity Editor Play ModeでBGM/SEの音量バランスを確認する。
-- [ ] BGM/SEがプレイヤー向けUIに開発用トグルとして露出していないことを確認する。
+- [x] BGM/SEがプレイヤー向けUIに開発用トグルとして露出していないことを確認する。
 - [ ] 2P split-screen時、P1/P2の成功/失敗SEが過剰に重ならないように設計する。
 - [ ] 最終版では生成WAVを使い続けるか、商用利用可能な高品質assetへ差し替えるか判断する。
+
+## 30. Final Open MVP Gaps
+
+- [ ] 実機BLE箸でmacOS Editor接続、Characteristic notification購読、JSON受信、theta/gyro軸の実機方向確認を行う。
+- [ ] Lv.5工程進行をTarget Zone接続込みにし、肉/卵/鍋/口の位置関係を見て成功判定する。
+- [ ] Obi Cloth肉の破れ位置、破れ理由、破れ後の未破れ肉差し替えをPlay Modeで複数回検証する。
+- [ ] Obi Fluid卵/割下が30秒以上こぼれず、卵白/黄身の混ざりがCare scoreへ反映されることを確認する。
+- [ ] 箸本体とTip colliderを分離し、食器/鍋/皿を視覚的に貫通しないCollision Guardを実装する。
+- [ ] Start -> LevelSelect -> Lv.5 -> ResultをDemo modeとProduction pathの両方でPlay Mode完走確認する。
+- [ ] macOS Standalone BuildでBLE native plugin、Obi Cloth、Obi Fluid、Result Scene遷移が動作することを確認する。
+- [ ] Lv.1-Lv.4/Tutorialは現状prototype中心なので、各レベルの本番 `ILevelController` とDemo専用Driverを別々に実装する。
+- [ ] 2P対戦は基盤のみなので、2P専用Scene/Mode、左右HUD、P1/P2独立Stage、複数BLE receiver対応を実装する。
+- [ ] Player-visible assetのライセンス確認、最終asset差し替え、AssetCredits更新をリリース前に完了する。
+- [ ] UI/BGM/SE/Lighting/SkyboxをPlay Modeで目視・聴感確認し、MVP展示に耐える品質へ調整する。
