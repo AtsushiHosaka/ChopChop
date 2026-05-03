@@ -481,7 +481,7 @@
 - [x] malformed JSONを無視するtestがある。
 - [x] `MeatContactAnalyzer` のpoke/shear/twist/tension/compression testがある。
 - [x] `TearReasonClassifier` のreason分類testがある。
-- [ ] `SukiyakiStageController` の工程遷移testがある。
+- [x] `SukiyakiStageController` の工程遷移testがある。
 - [ ] `SukiyakiStageController` の肉破れretry testがある。
 - [x] `ChopChopMvpValidator` がBuild Settingsを検証する。
 - [x] `ChopChopMvpValidator` がLevelCatalogを検証する。
