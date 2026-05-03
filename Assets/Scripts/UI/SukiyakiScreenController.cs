@@ -17,6 +17,7 @@ namespace ChopChop.UI
         private Text languageText;
         private Text levelSelectText;
         private Slider progressBar;
+        private SukiyakiCueOverlay cueOverlay;
 
         public static GameObject Create(GameLocalization localization, SceneNavigator navigator)
         {
@@ -44,6 +45,7 @@ namespace ChopChop.UI
             stage.Completed += HandleCompleted;
 
             CreateHud();
+            CreateCueOverlay();
             localization.LanguageChanged += UpdateTexts;
             stage.StartLevel();
             UpdateTexts();
@@ -103,6 +105,12 @@ namespace ChopChop.UI
             levelSelectText = levelSelectButton.GetComponentInChildren<Text>();
             levelSelectButton.onClick.AddListener(navigator.LoadLevelSelect);
 
+        }
+
+        private void CreateCueOverlay()
+        {
+            cueOverlay = gameObject.AddComponent<SukiyakiCueOverlay>();
+            cueOverlay.Initialize(localization, stage);
         }
 
         private void CreateSetupMissingScreen()

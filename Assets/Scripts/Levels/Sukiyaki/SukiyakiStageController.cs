@@ -35,6 +35,8 @@ namespace ChopChop.Levels.Sukiyaki
         public LevelRunResult CurrentResult => result;
 
         public event Action<SukiyakiStep> StepChanged;
+        public event Action<SukiyakiStep> StepSucceeded;
+        public event Action<SukiyakiStep> StepFailed;
         public event Action<LevelRunResult> Completed;
 
         public void Configure(HashiInputProvider hashiInput, WaypointRailMover mover, MeatTearController tearController)
@@ -85,27 +87,35 @@ namespace ChopChop.Levels.Sukiyaki
                 return;
             }
 
+            var completedStep = CurrentStep;
             switch (CurrentStep)
             {
                 case SukiyakiStep.Calibration:
+                    StepSucceeded?.Invoke(completedStep);
                     SetStep(SukiyakiStep.MixEgg);
                     break;
                 case SukiyakiStep.MixEgg:
+                    StepSucceeded?.Invoke(completedStep);
                     SetStep(SukiyakiStep.PickMeat);
                     break;
                 case SukiyakiStep.PickMeat:
+                    StepSucceeded?.Invoke(completedStep);
                     SetStep(SukiyakiStep.PutInBroth);
                     break;
                 case SukiyakiStep.PutInBroth:
+                    StepSucceeded?.Invoke(completedStep);
                     SetStep(SukiyakiStep.FlipMeat);
                     break;
                 case SukiyakiStep.FlipMeat:
+                    StepSucceeded?.Invoke(completedStep);
                     SetStep(SukiyakiStep.DipEgg);
                     break;
                 case SukiyakiStep.DipEgg:
+                    StepSucceeded?.Invoke(completedStep);
                     SetStep(SukiyakiStep.DeliverToMouth);
                     break;
                 case SukiyakiStep.DeliverToMouth:
+                    StepSucceeded?.Invoke(completedStep);
                     FinishLevel();
                     break;
             }
@@ -149,10 +159,12 @@ namespace ChopChop.Levels.Sukiyaki
             FailureCount++;
             roughness += 0.25f;
 
-            if (CurrentStep == SukiyakiStep.FlipMeat)
+            if (CurrentStep == SukiyakiStep.PutInBroth || CurrentStep == SukiyakiStep.FlipMeat)
             {
+                var failedStep = CurrentStep;
+                StepFailed?.Invoke(failedStep);
                 meatTearController?.ResetMeat();
-                SetStep(SukiyakiStep.FlipMeat);
+                SetStep(failedStep);
             }
         }
 

@@ -379,6 +379,11 @@
 
 ## 14. Visual Feedback
 
+- [x] 日本語/英語それぞれの工程Cue画像が `Assets/Resources/UI/SukiyakiCues` に生成されている。
+- [x] `SukiyakiCueOverlay` が現在言語に応じた工程Cue画像を読み込む。
+- [x] `SukiyakiCueOverlay` が成功/失敗Cue画像を表示するコードを持つ。
+- [ ] Play Modeで工程Cue画像が画面上部に表示されることを確認する。
+- [ ] Play Modeで言語切替時にCue画像も日本語/英語で切り替わることを確認する。
 - [ ] Calibration中のフィードバックが表示される。
 - [ ] 工程名がHUDに表示される。
 - [ ] 工程進捗バーが表示される。
