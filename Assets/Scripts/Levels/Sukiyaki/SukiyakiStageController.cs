@@ -18,6 +18,7 @@ namespace ChopChop.Levels.Sukiyaki
         [SerializeField] private LiquidSurfacePresenter eggLiquidSurface;
         [SerializeField] private LiquidSurfacePresenter brothLiquidSurface;
         [SerializeField] private ObiFluidMixMonitor eggFluidMixMonitor;
+        [SerializeField] private SukiyakiStepTargetZone[] targetZones = Array.Empty<SukiyakiStepTargetZone>();
         [SerializeField] private bool automaticProgress = true;
 
         private float levelStartTime;
@@ -33,6 +34,7 @@ namespace ChopChop.Levels.Sukiyaki
         public int FailureCount { get; private set; }
         public float StepProgress01 => stepGoalSeconds <= 0f ? 0f : Mathf.Clamp01(stepProgress / stepGoalSeconds);
         public LevelRunResult CurrentResult => result;
+        public bool IsCurrentTargetSatisfied => IsTargetSatisfiedFor(CurrentStep);
 
         public event Action<SukiyakiStep> StepChanged;
         public event Action<SukiyakiStep> StepSucceeded;
@@ -265,13 +267,16 @@ namespace ChopChop.Levels.Sukiyaki
 
             roughness = Mathf.Max(roughness, Roughness(frame));
             var quality = QualityFor(CurrentStep, frame);
+            var targetSatisfied = IsTargetSatisfiedFor(CurrentStep);
             if (CurrentStep == SukiyakiStep.MixEgg && eggFluidMixMonitor != null && eggFluidMixMonitor.HasActiveEggFluid)
             {
-                stepProgress = Mathf.Clamp01(eggFluidMixMonitor.EggMix01) * stepGoalSeconds;
+                stepProgress = targetSatisfied
+                    ? Mathf.Clamp01(eggFluidMixMonitor.EggMix01) * stepGoalSeconds
+                    : Mathf.Max(0f, stepProgress - deltaTime * 0.35f);
             }
             else
             {
-                var progressDelta = quality >= 0.55f ? deltaTime * quality : -deltaTime * 0.35f;
+                var progressDelta = targetSatisfied && quality >= 0.55f ? deltaTime * quality : -deltaTime * 0.35f;
                 stepProgress = Mathf.Clamp(stepProgress + progressDelta, 0f, stepGoalSeconds);
             }
 
@@ -338,6 +343,32 @@ namespace ChopChop.Levels.Sukiyaki
             var angularRoughness = Mathf.InverseLerp(80f, 360f, frame.GyroDegreesPerSecond.magnitude);
             var accelerationRoughness = Mathf.InverseLerp(2f, 8f, frame.Acceleration.magnitude);
             return Mathf.Clamp01(Mathf.Max(angularRoughness, accelerationRoughness));
+        }
+
+        public bool IsTargetSatisfiedFor(SukiyakiStep step)
+        {
+            if (targetZones == null || targetZones.Length == 0)
+            {
+                return true;
+            }
+
+            var hasZoneForStep = false;
+            for (var i = 0; i < targetZones.Length; i++)
+            {
+                var zone = targetZones[i];
+                if (zone == null || zone.Step != step)
+                {
+                    continue;
+                }
+
+                hasZoneForStep = true;
+                if (zone.isActiveAndEnabled && zone.IsSatisfied)
+                {
+                    return true;
+                }
+            }
+
+            return !hasZoneForStep;
         }
 
         private void MoveRailFor(SukiyakiStep step)

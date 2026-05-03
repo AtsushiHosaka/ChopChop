@@ -161,6 +161,8 @@
 - [ ] Dip Eggは肉を掴んだまま卵へ入れると進行する。
 - [ ] Deliver To Mouthは肉を口Targetへ運ぶと完了する。
 - [ ] 各工程の進行条件がBLE値だけでなく、対応Target Zoneとの位置関係も見る。
+- [x] `SukiyakiStepTargetZone` が箸Tipの内外判定を持ち、工程ごとのTarget Zoneとして使える。
+- [x] `SukiyakiStageController` はTarget Zoneが設定された工程で、Zone未到達時にprogressを進めない。
 - [ ] 工程が成功した時だけ次工程へ進む。
 - [x] 工程失敗時はプレイヤーに分かるフィードバックが出る。
 - [x] 完了時に `LevelRunResult` が作成される。

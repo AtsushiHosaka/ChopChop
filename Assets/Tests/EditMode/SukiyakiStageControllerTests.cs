@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using ChopChop.Food.Meat;
 using ChopChop.Food.Tearing;
+using ChopChop.Input;
+using ChopChop.Interaction;
 using ChopChop.Levels;
 using ChopChop.Levels.Sukiyaki;
 using NUnit.Framework;
@@ -118,11 +120,74 @@ namespace ChopChop.Tests.EditMode
             Assert.That(failedSteps, Is.EquivalentTo(new[] { SukiyakiStep.FlipMeat }));
         }
 
+        [Test]
+        public void StepTargetZoneRequiresTrackedTipInside()
+        {
+            var tip = CreateTip();
+            var zone = CreateTargetZone(SukiyakiStep.PickMeat, tip);
+
+            tip.transform.position = new Vector3(3f, 0f, 0f);
+            Assert.That(zone.IsSatisfied, Is.False);
+
+            tip.transform.position = Vector3.zero;
+            Assert.That(zone.IsSatisfied, Is.True);
+        }
+
+        [Test]
+        public void TargetZoneBlocksStepProgressUntilTipEntersZone()
+        {
+            var stage = CreateStage();
+            var tip = CreateTip();
+            var zone = CreateTargetZone(SukiyakiStep.PickMeat, tip);
+            var goodPickInput = new HashiInputFrame(
+                4f,
+                1f,
+                Vector3.zero,
+                Vector3.zero,
+                Quaternion.identity,
+                true,
+                0f);
+
+            SetPrivateField(stage, "targetZones", new[] { zone });
+            stage.StartLevel();
+            AdvanceTo(stage, SukiyakiStep.PickMeat);
+
+            tip.transform.position = new Vector3(3f, 0f, 0f);
+            EvaluateStepInput(stage, goodPickInput, 1f);
+            Assert.That(stage.CurrentStep, Is.EqualTo(SukiyakiStep.PickMeat));
+            Assert.That(stage.StepProgress01, Is.EqualTo(0f));
+
+            tip.transform.position = Vector3.zero;
+            EvaluateStepInput(stage, goodPickInput, 1f);
+            Assert.That(stage.CurrentStep, Is.EqualTo(SukiyakiStep.PutInBroth));
+        }
+
         private SukiyakiStageController CreateStage()
         {
             var stageObject = new GameObject("Sukiyaki Stage");
             createdObjects.Add(stageObject);
             return stageObject.AddComponent<SukiyakiStageController>();
+        }
+
+        private ChopstickTip CreateTip()
+        {
+            var tipObject = new GameObject("Chopstick Tip");
+            createdObjects.Add(tipObject);
+            return tipObject.AddComponent<ChopstickTip>();
+        }
+
+        private SukiyakiStepTargetZone CreateTargetZone(SukiyakiStep step, ChopstickTip trackedTip)
+        {
+            var zoneObject = new GameObject("Target Zone");
+            createdObjects.Add(zoneObject);
+
+            var collider = zoneObject.AddComponent<BoxCollider>();
+            collider.size = Vector3.one;
+
+            var zone = zoneObject.AddComponent<SukiyakiStepTargetZone>();
+            SetPrivateField(zone, "step", step);
+            SetPrivateField(zone, "trackedTips", new[] { trackedTip });
+            return zone;
         }
 
         private MeatTearController CreateMeatTearController(out MeatInteractionActor meatActor, out ManualMeatTearDriver tearDriver)
@@ -146,6 +211,15 @@ namespace ChopChop.Tests.EditMode
             {
                 stage.CompleteCurrentStep();
             }
+        }
+
+        private static void EvaluateStepInput(SukiyakiStageController stage, HashiInputFrame frame, float deltaTime)
+        {
+            var method = typeof(SukiyakiStageController).GetMethod(
+                "EvaluateStepInput",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(method, Is.Not.Null);
+            method.Invoke(stage, new object[] { frame, deltaTime });
         }
 
         private static void SetPrivateField<TTarget, TValue>(TTarget target, string fieldName, TValue value)
