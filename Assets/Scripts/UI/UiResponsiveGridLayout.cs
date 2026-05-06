@@ -21,6 +21,7 @@ namespace ChopChop.UI
         private Vector2 lastParentSize = Vector2.negativeInfinity;
         private int lastChildCount = -1;
         private bool forceNextLayout = true;
+        private bool isApplyingLayout;
 
         public void Configure(
             int preferredColumns,
@@ -39,6 +40,11 @@ namespace ChopChop.UI
 
         public void ApplyLayout()
         {
+            if (isApplyingLayout)
+            {
+                return;
+            }
+
             EnsureReferences();
             if (rectTransform == null || grid == null)
             {
@@ -46,6 +52,12 @@ namespace ChopChop.UI
             }
 
             var width = rectTransform.rect.width;
+            if (forceNextLayout && width <= 1f)
+            {
+                Canvas.ForceUpdateCanvases();
+                width = rectTransform.rect.width;
+            }
+
             var parentRect = rectTransform.parent as RectTransform;
             var parentSize = parentRect == null ? Vector2.zero : parentRect.rect.size;
             if (width <= 1f)
@@ -63,33 +75,42 @@ namespace ChopChop.UI
                 return;
             }
 
-            forceNextLayout = false;
-            lastWidth = width;
-            lastParentSize = parentSize;
-            lastChildCount = childCount;
-            grid.spacing = spacing;
-            var appliedPadding = padding ?? new RectOffset();
-            grid.padding = appliedPadding;
-            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.childAlignment = TextAnchor.UpperLeft;
-
-            var availableWidth = Mathf.Max(1f, width - appliedPadding.left - appliedPadding.right);
-            var columnsByWidth = Mathf.FloorToInt((availableWidth + spacing.x) / (minCellWidth + spacing.x));
-            var columns = Mathf.Clamp(columnsByWidth, 1, preferredColumnCount);
-            var cellWidth = (availableWidth - spacing.x * (columns - 1)) / columns;
-            var cellHeight = cellWidth / cellAspectRatio;
-
-            grid.constraintCount = columns;
-            grid.cellSize = new Vector2(cellWidth, cellHeight);
-
-            var rows = Mathf.Max(1, Mathf.CeilToInt(childCount / (float)columns));
-            var contentHeight = appliedPadding.top + appliedPadding.bottom + rows * cellHeight + Mathf.Max(0, rows - 1) * spacing.y;
-            if (!Mathf.Approximately(rectTransform.sizeDelta.y, contentHeight))
+            isApplyingLayout = true;
+            try
             {
-                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, contentHeight);
-            }
+                forceNextLayout = false;
+                lastWidth = width;
+                lastParentSize = parentSize;
+                lastChildCount = childCount;
+                grid.spacing = spacing;
+                var appliedPadding = padding ?? new RectOffset();
+                grid.padding = appliedPadding;
+                grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+                grid.childAlignment = TextAnchor.UpperLeft;
 
-            LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
+                var availableWidth = Mathf.Max(1f, width - appliedPadding.left - appliedPadding.right);
+                var columnsByWidth = Mathf.FloorToInt((availableWidth + spacing.x) / (minCellWidth + spacing.x));
+                var columns = Mathf.Clamp(columnsByWidth, 1, preferredColumnCount);
+                var cellWidth = (availableWidth - spacing.x * (columns - 1)) / columns;
+                var cellHeight = cellWidth / cellAspectRatio;
+
+                grid.constraintCount = columns;
+                grid.cellSize = new Vector2(cellWidth, cellHeight);
+
+                var rows = Mathf.Max(1, Mathf.CeilToInt(childCount / (float)columns));
+                var contentHeight = appliedPadding.top + appliedPadding.bottom + rows * cellHeight + Mathf.Max(0, rows - 1) * spacing.y;
+                if (!Mathf.Approximately(rectTransform.sizeDelta.y, contentHeight))
+                {
+                    rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, contentHeight);
+                }
+
+                LayoutRebuilder.ForceRebuildLayoutImmediate(rectTransform);
+                Canvas.ForceUpdateCanvases();
+            }
+            finally
+            {
+                isApplyingLayout = false;
+            }
         }
 
         public void RequestLayout()
@@ -106,6 +127,11 @@ namespace ChopChop.UI
 
         private void OnRectTransformDimensionsChange()
         {
+            if (isApplyingLayout)
+            {
+                return;
+            }
+
             RequestLayout();
         }
 
