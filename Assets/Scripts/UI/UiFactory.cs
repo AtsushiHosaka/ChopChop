@@ -8,9 +8,11 @@ namespace ChopChop.UI
 {
     public static class UiFactory
     {
+        private const string PreferredFontResourcePath = "Fonts/YujiSyuku-Regular";
         private const string RegularFontResourcePath = "Fonts/ZenKakuGothicNew-Regular";
         private const string BoldFontResourcePath = "Fonts/ZenKakuGothicNew-Bold";
 
+        private static Font preferredFont;
         private static Font defaultRegularFont;
         private static Font defaultBoldFont;
         private static Font fallbackFont;
@@ -95,6 +97,68 @@ namespace ChopChop.UI
             return button;
         }
 
+        public static Button CreateSpriteButton(
+            Transform parent,
+            string name,
+            Sprite normalSprite,
+            Sprite highlightedSprite = null,
+            Sprite pressedSprite = null,
+            Sprite disabledSprite = null)
+        {
+            var buttonObject = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            buttonObject.transform.SetParent(parent, false);
+
+            var image = buttonObject.GetComponent<Image>();
+            image.sprite = normalSprite;
+            image.type = Image.Type.Simple;
+            image.color = Color.white;
+            image.raycastTarget = true;
+
+            var button = buttonObject.GetComponent<Button>();
+            button.transition = Selectable.Transition.SpriteSwap;
+            button.targetGraphic = image;
+            button.spriteState = new SpriteState
+            {
+                highlightedSprite = highlightedSprite != null ? highlightedSprite : normalSprite,
+                pressedSprite = pressedSprite != null ? pressedSprite : highlightedSprite != null ? highlightedSprite : normalSprite,
+                disabledSprite = disabledSprite != null ? disabledSprite : normalSprite
+            };
+
+            var colors = button.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = Color.white;
+            colors.pressedColor = Color.white;
+            colors.selectedColor = Color.white;
+            colors.disabledColor = new Color(1f, 1f, 1f, 0.74f);
+            button.colors = colors;
+
+            buttonObject.AddComponent<UiButtonAnimator>();
+            buttonObject.AddComponent<UiButtonAudio>();
+            return button;
+        }
+
+        public static Image CreateSpriteImage(Transform parent, string name, Sprite sprite, bool preserveAspect = true)
+        {
+            var imageObject = new GameObject(name, typeof(RectTransform), typeof(Image));
+            imageObject.transform.SetParent(parent, false);
+            var image = imageObject.GetComponent<Image>();
+            ApplySprite(image, sprite, preserveAspect);
+            image.raycastTarget = false;
+            return image;
+        }
+
+        public static void ApplySprite(Image image, Sprite sprite, bool preserveAspect = true)
+        {
+            if (image == null)
+            {
+                return;
+            }
+
+            image.sprite = sprite;
+            image.color = sprite == null ? new Color(1f, 1f, 1f, 0f) : Color.white;
+            image.preserveAspect = preserveAspect;
+        }
+
         public static Slider CreateProgressBar(Transform parent, string name, Color background, Color fill)
         {
             var sliderObject = new GameObject(name, typeof(RectTransform), typeof(Slider));
@@ -169,7 +233,6 @@ namespace ChopChop.UI
             rectTransform.sizeDelta = new Vector2(width, height);
 
             var layoutElement = EnsureLayoutElement(rectTransform);
-
             layoutElement.minWidth = width;
             layoutElement.minHeight = height;
             layoutElement.preferredWidth = width;
@@ -217,6 +280,13 @@ namespace ChopChop.UI
 
         private static Font FontForStyle(FontStyle requestedStyle, out FontStyle appliedStyle)
         {
+            var preferred = PreferredFont();
+            if (preferred != null)
+            {
+                appliedStyle = requestedStyle;
+                return preferred;
+            }
+
             var isBold = requestedStyle == FontStyle.Bold || requestedStyle == FontStyle.BoldAndItalic;
             var projectFont = isBold ? ProjectBoldFont() : ProjectRegularFont();
             if (projectFont != null)
@@ -227,6 +297,17 @@ namespace ChopChop.UI
 
             appliedStyle = requestedStyle;
             return FallbackFont();
+        }
+
+        private static Font PreferredFont()
+        {
+            if (preferredFont != null)
+            {
+                return preferredFont;
+            }
+
+            preferredFont = Resources.Load<Font>(PreferredFontResourcePath);
+            return preferredFont;
         }
 
         private static Font ProjectRegularFont()
@@ -349,16 +430,34 @@ namespace ChopChop.UI
             var inputSystemModule = Type.GetType("UnityEngine.InputSystem.UI.InputSystemUIInputModule, Unity.InputSystem");
             if (inputSystemModule != null)
             {
-                var module = eventSystem.AddComponent(inputSystemModule);
-                var assignDefaults = inputSystemModule.GetMethod(
-                    "AssignDefaultActions",
-                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
-                assignDefaults?.Invoke(module, null);
+                Component module = null;
+                try
+                {
+                    module = eventSystem.AddComponent(inputSystemModule);
+                    var assignDefaults = inputSystemModule.GetMethod(
+                        "AssignDefaultActions",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+                    assignDefaults?.Invoke(module, null);
+                    return;
+                }
+                catch (Exception exception)
+                {
+                    Debug.Log($"[UI] Falling back to StandaloneInputModule: {exception.GetBaseException().Message}");
+                    if (module != null)
+                    {
+                        if (Application.isPlaying)
+                        {
+                            UnityEngine.Object.Destroy(module);
+                        }
+                        else
+                        {
+                            UnityEngine.Object.DestroyImmediate(module);
+                        }
+                    }
+                }
             }
-            else
-            {
-                eventSystem.AddComponent<StandaloneInputModule>();
-            }
+
+            eventSystem.AddComponent<StandaloneInputModule>();
         }
     }
 }

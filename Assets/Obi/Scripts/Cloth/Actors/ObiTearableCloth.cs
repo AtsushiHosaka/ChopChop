@@ -119,12 +119,23 @@ namespace Obi
 
                 if (dc != null && sc != null)
                 {
+                    var distanceOffsets = solverBatchOffsets[(int)Oni.ConstraintType.Distance];
+
                     // iterate up to the amount of entries in solverBatchOffsets, insteaf of dc.batchCount. This ensures
                     // the batches we access have been added to the solver, as solver.UpdateConstraints() could have not been called yet on a newly added actor.
-                    for (int j = 0; j < solverBatchOffsets[(int)Oni.ConstraintType.Distance].Count; ++j)
+                    for (int j = 0; j < distanceOffsets.Count; ++j)
                     {
+                        if (j >= dc.batches.Count || j >= sc.batches.Count)
+                            break;
+
                         var batch = dc.batches[j] as ObiDistanceConstraintsBatch;
                         var solverBatch = sc.batches[j] as ObiDistanceConstraintsBatch;
+                        if (batch == null || solverBatch == null)
+                            continue;
+
+                        int offset = distanceOffsets[j];
+                        if (offset < 0 || solverBatch.lambdas == null || solverBatch.lambdas.count <= offset)
+                            continue;
 
                         for (int i = 0; i < batch.activeConstraintCount; i++)
                         {
@@ -135,7 +146,8 @@ namespace Obi
                             float resistance = (p1Resistance + p2Resistance) * 0.5f * tearResistanceMultiplier;
 
                             // divide lambda by squared delta time to get force in newtons:
-                            int offset = solverBatchOffsets[(int)Oni.ConstraintType.Distance][j];
+                            if (offset + i >= solverBatch.lambdas.count)
+                                break;
                             float force = solverBatch.lambdas[offset + i] / sqrTime;
 
                             if (-force > resistance)
