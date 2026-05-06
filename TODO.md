@@ -51,6 +51,7 @@
 - [x] `ResultScene` にBackボタンがあり、押すと `LevelSelectScene` に戻れる。
 - [x] Start/ResultのボタンがLayoutGroupで潰れないよう、UIサイズがLayoutElementへ反映される。
 - [x] 共通ボタンは単色の四角ではなく、丸み、金アクセント、highlight/shadowを持つ共通surfaceになっている。
+- [x] `UiFactory` の標準UIフォントがZen Kaku Gothic New Regular/Boldを優先して使う。
 
 ## 1.5 Level Roadmap And Scene Split
 
@@ -705,6 +706,7 @@
 - [x] Start/Level Selectの新背景spriteと主要ボタン生成をUnity MCPで検証する。
 - [x] Settings画面とLevel SelectのレスポンシブViewport生成をUnity MCPで検証する。
 - [x] 共通ボタンのhover/press対象Imageがsliced rounded surfaceになっていることをUnity MCPで検証する。
+- [x] 主要なランタイムUIテキストがZen Kaku Gothic Newを使って生成されることをUnity MCPで検証する。
 - [x] Level Selectのカード一覧が2列Gridで生成され、狭い画面では1列へ落ちるレスポンシブ実装になっている。
 - [x] Level SelectのGrid content高さは `UiResponsiveGridLayout` が計算し、ScrollRect/ContentSizeFitter依存でカードが欠けない。
 - [x] Level SelectのScrollRectにはプレイヤーに見える縦Scrollbarがある。

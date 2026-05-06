@@ -8,7 +8,12 @@ namespace ChopChop.UI
 {
     public static class UiFactory
     {
-        private static Font defaultFont;
+        private const string RegularFontResourcePath = "Fonts/ZenKakuGothicNew-Regular";
+        private const string BoldFontResourcePath = "Fonts/ZenKakuGothicNew-Bold";
+
+        private static Font defaultRegularFont;
+        private static Font defaultBoldFont;
+        private static Font fallbackFont;
         private static Sprite roundedSurfaceSprite;
 
         public static GameObject CreateScreen(string name, Color background, bool drawBackground)
@@ -50,9 +55,9 @@ namespace ChopChop.UI
             var textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
             textObject.transform.SetParent(parent, false);
             var text = textObject.GetComponent<Text>();
-            text.font = DefaultFont();
+            text.font = FontForStyle(style, out var appliedStyle);
             text.fontSize = fontSize;
-            text.fontStyle = style;
+            text.fontStyle = appliedStyle;
             text.alignment = anchor;
             text.color = color;
             text.raycastTarget = false;
@@ -210,20 +215,56 @@ namespace ChopChop.UI
             rectTransform.offsetMax = offsetMax;
         }
 
-        private static Font DefaultFont()
+        private static Font FontForStyle(FontStyle requestedStyle, out FontStyle appliedStyle)
         {
-            if (defaultFont != null)
+            var isBold = requestedStyle == FontStyle.Bold || requestedStyle == FontStyle.BoldAndItalic;
+            var projectFont = isBold ? ProjectBoldFont() : ProjectRegularFont();
+            if (projectFont != null)
             {
-                return defaultFont;
+                appliedStyle = FontStyle.Normal;
+                return projectFont;
             }
 
-            defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (defaultFont == null)
+            appliedStyle = requestedStyle;
+            return FallbackFont();
+        }
+
+        private static Font ProjectRegularFont()
+        {
+            if (defaultRegularFont != null)
             {
-                defaultFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
+                return defaultRegularFont;
             }
 
-            return defaultFont;
+            defaultRegularFont = Resources.Load<Font>(RegularFontResourcePath);
+            return defaultRegularFont;
+        }
+
+        private static Font ProjectBoldFont()
+        {
+            if (defaultBoldFont != null)
+            {
+                return defaultBoldFont;
+            }
+
+            defaultBoldFont = Resources.Load<Font>(BoldFontResourcePath);
+            return defaultBoldFont != null ? defaultBoldFont : ProjectRegularFont();
+        }
+
+        private static Font FallbackFont()
+        {
+            if (fallbackFont != null)
+            {
+                return fallbackFont;
+            }
+
+            fallbackFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (fallbackFont == null)
+            {
+                fallbackFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            }
+
+            return fallbackFont;
         }
 
         private static LayoutElement EnsureLayoutElement(RectTransform rectTransform)

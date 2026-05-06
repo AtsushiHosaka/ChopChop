@@ -47,6 +47,13 @@ This document records third-party and generated assets currently used or evaluat
 - Current usage: start background, level thumbnails, countdown images, sukiyaki cue/feedback images.
 - Modifications: imported as Unity sprites and used by runtime UI. Start/Level Select use generated Japanese-style backgrounds at `Assets/Resources/UI/Start/start_background_wafu.png` and `Assets/Resources/UI/LevelSelect/level_select_background_wafu.png`.
 
+### Fonts
+
+- Project path: `Assets/Resources/Fonts`
+- Current usage: Zen Kaku Gothic New Regular/Bold as the default runtime UI font family.
+- Modifications: imported as Unity Font assets and loaded through `UiFactory`; Medium/Light/Black are kept for future typography tuning.
+- Release license status: verify the bundled Zen Kaku Gothic New license before public distribution.
+
 ### Audio
 
 - Project path: `Assets/Resources/Audio`
