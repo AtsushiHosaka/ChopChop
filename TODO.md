@@ -41,6 +41,8 @@
 - [x] `ResultScene` にSpeed、Care、失敗回数、完了時間が表示される。
 - [x] `ResultScene` のRetryでLv.5を再開始できる。
 - [x] `ResultScene` のLevel Selectで `LevelSelectScene` に戻れる。
+- [x] `ResultScene` にBackボタンがあり、押すと `LevelSelectScene` に戻れる。
+- [x] Start/ResultのボタンがLayoutGroupで潰れないよう、UIサイズがLayoutElementへ反映される。
 
 ## 1.5 Level Roadmap And Scene Split
 
@@ -487,6 +489,8 @@
 - [x] `TearReasonClassifier` のreason分類testがある。
 - [x] `SukiyakiStageController` の工程遷移testがある。
 - [x] `SukiyakiStageController` の肉破れretry testがある。
+- [x] Start画面のStart/Language/Quitボタン生成testがある。
+- [x] Result画面のRetry/Back/Languageボタン生成testがある。
 - [x] `ChopChopMvpValidator` がBuild Settingsを検証する。
 - [x] `ChopChopMvpValidator` がLevelCatalogを検証する。
 - [x] `ChopChopMvpValidator` がLocalization key欠落を検証する。

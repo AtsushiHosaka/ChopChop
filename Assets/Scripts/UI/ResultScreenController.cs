@@ -55,7 +55,7 @@ namespace ChopChop.UI
             retryText = retryButton.GetComponentInChildren<Text>();
             retryButton.onClick.AddListener(() => navigator.LoadLevel(retrySceneName));
 
-            var levelSelectButton = UiFactory.CreateButton(panel, "Level Select Button", string.Empty, new Color(0.19f, 0.21f, 0.22f, 1f), Color.white);
+            var levelSelectButton = UiFactory.CreateButton(panel, "Back Button", string.Empty, new Color(0.19f, 0.21f, 0.22f, 1f), Color.white);
             UiFactory.SetSize(levelSelectButton.GetComponent<RectTransform>(), 380f, 66f);
             levelSelectText = levelSelectButton.GetComponentInChildren<Text>();
             levelSelectButton.onClick.AddListener(navigator.LoadLevelSelect);
@@ -87,7 +87,7 @@ namespace ChopChop.UI
             titleText.text = localization.Text(LocalizationKeys.Result.Title);
             statsText.text = hasVersusResult ? VersusStatsText() : SinglePlayerStatsText(result);
             retryText.text = localization.Text(LocalizationKeys.Result.Retry);
-            levelSelectText.text = localization.Text(LocalizationKeys.Result.LevelSelect);
+            levelSelectText.text = localization.Text(LocalizationKeys.App.Back);
             languageText.text = localization.Text(LocalizationKeys.App.Language);
         }
 

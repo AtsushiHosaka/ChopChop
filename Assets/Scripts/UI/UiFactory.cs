@@ -155,6 +155,17 @@ namespace ChopChop.UI
         public static void SetSize(RectTransform rectTransform, float width, float height)
         {
             rectTransform.sizeDelta = new Vector2(width, height);
+
+            var layoutElement = rectTransform.GetComponent<LayoutElement>();
+            if (layoutElement == null)
+            {
+                layoutElement = rectTransform.gameObject.AddComponent<LayoutElement>();
+            }
+
+            layoutElement.minWidth = width;
+            layoutElement.minHeight = height;
+            layoutElement.preferredWidth = width;
+            layoutElement.preferredHeight = height;
         }
 
         public static void Stretch(RectTransform rectTransform, float margin)
