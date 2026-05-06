@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,7 +18,9 @@ namespace ChopChop.UI
         private RectTransform rectTransform;
         private GridLayoutGroup grid;
         private float lastWidth = -1f;
+        private Vector2 lastParentSize = Vector2.negativeInfinity;
         private int lastChildCount = -1;
+        private bool forceNextLayout = true;
 
         public void Configure(
             int preferredColumns,
@@ -31,7 +34,7 @@ namespace ChopChop.UI
             cellAspectRatio = Mathf.Max(0.2f, aspectRatio);
             spacing = gridSpacing;
             padding = gridPadding ?? new RectOffset();
-            ApplyLayout();
+            RequestLayout();
         }
 
         public void ApplyLayout()
@@ -43,20 +46,26 @@ namespace ChopChop.UI
             }
 
             var width = rectTransform.rect.width;
+            var parentRect = rectTransform.parent as RectTransform;
+            var parentSize = parentRect == null ? Vector2.zero : parentRect.rect.size;
             if (width <= 1f)
             {
                 return;
             }
 
             var childCount = rectTransform.childCount;
-            if (Mathf.Approximately(width, lastWidth) &&
+            if (!forceNextLayout &&
+                Mathf.Approximately(width, lastWidth) &&
+                Approximately(parentSize, lastParentSize) &&
                 childCount == lastChildCount &&
                 grid.constraint == GridLayoutGroup.Constraint.FixedColumnCount)
             {
                 return;
             }
 
+            forceNextLayout = false;
             lastWidth = width;
+            lastParentSize = parentSize;
             lastChildCount = childCount;
             grid.spacing = spacing;
             var appliedPadding = padding ?? new RectOffset();
@@ -79,21 +88,38 @@ namespace ChopChop.UI
             {
                 rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, contentHeight);
             }
+
+            LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
+        }
+
+        public void RequestLayout()
+        {
+            forceNextLayout = true;
+            ApplyLayout();
         }
 
         private void OnEnable()
         {
-            ApplyLayout();
+            RequestLayout();
+            StartCoroutine(RebuildAfterCanvasLayout());
         }
 
         private void OnRectTransformDimensionsChange()
         {
-            ApplyLayout();
+            RequestLayout();
         }
 
         private void LateUpdate()
         {
             ApplyLayout();
+        }
+
+        private IEnumerator RebuildAfterCanvasLayout()
+        {
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            RequestLayout();
+            Canvas.ForceUpdateCanvases();
         }
 
         private void EnsureReferences()
@@ -107,6 +133,11 @@ namespace ChopChop.UI
             {
                 grid = GetComponent<GridLayoutGroup>();
             }
+        }
+
+        private static bool Approximately(Vector2 a, Vector2 b)
+        {
+            return Mathf.Approximately(a.x, b.x) && Mathf.Approximately(a.y, b.y);
         }
     }
 }

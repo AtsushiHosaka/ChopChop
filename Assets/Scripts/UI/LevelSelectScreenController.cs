@@ -77,7 +77,8 @@ namespace ChopChop.UI
             UiFactory.Anchor(gridRect, new Vector2(0f, 1f), Vector2.one, Vector2.zero, Vector2.zero);
             gridRect.pivot = new Vector2(0.5f, 1f);
 
-            gridObject.GetComponent<UiResponsiveGridLayout>().Configure(
+            var responsiveGrid = gridObject.GetComponent<UiResponsiveGridLayout>();
+            responsiveGrid.Configure(
                 2,
                 360f,
                 2.35f,
@@ -100,6 +101,7 @@ namespace ChopChop.UI
                 cards.Add(CreateCard(gridObject.transform, level));
             }
 
+            responsiveGrid.RequestLayout();
             scrollRect.verticalNormalizedPosition = 1f;
 
             localization.LanguageChanged += UpdateTexts;

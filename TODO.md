@@ -710,6 +710,7 @@
 - [x] 主要なランタイムUIテキストがZen Kaku Gothic Newを使って生成されることをUnity MCPで検証する。
 - [x] Level Selectのカード一覧が2列Gridで生成され、狭い画面では1列へ落ちるレスポンシブ実装になっている。
 - [x] Level SelectのGrid content高さは `UiResponsiveGridLayout` が計算し、ScrollRect/ContentSizeFitter依存でカードが欠けない。
+- [x] Level SelectのGridは初回表示時にもCanvasレイアウト後に再計算され、ウィンドウリサイズなしで重ならず表示される。
 - [x] Level SelectのScrollRectにはプレイヤーに見える縦Scrollbarがある。
 - [x] Sukiyaki HUDが上から軽く入り、工程変更時にStep textが軽くpopする。
 - [x] 失敗数が変化した時、Failures textが軽くpopする。
