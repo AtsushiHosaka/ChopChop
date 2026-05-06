@@ -63,11 +63,13 @@ namespace ChopChop.UI
             var viewportObject = new GameObject("Level Viewport", typeof(RectTransform), typeof(Image), typeof(Mask), typeof(ScrollRect));
             viewportObject.transform.SetParent(menuPanel, false);
             var viewportRect = viewportObject.GetComponent<RectTransform>();
-            UiFactory.Anchor(viewportRect, new Vector2(0f, 0.055f), new Vector2(1f, 0.705f), new Vector2(22f, 0f), new Vector2(-22f, 0f));
+            UiFactory.Anchor(viewportRect, new Vector2(0f, 0.055f), new Vector2(1f, 0.705f), new Vector2(22f, 0f), new Vector2(-46f, 0f));
             var viewportImage = viewportObject.GetComponent<Image>();
             viewportImage.color = new Color(0f, 0f, 0f, 0.01f);
             viewportImage.raycastTarget = true;
             viewportObject.GetComponent<Mask>().showMaskGraphic = false;
+
+            var scrollbar = CreateScrollbar(menuPanel);
 
             var gridObject = new GameObject("Level Grid", typeof(RectTransform), typeof(GridLayoutGroup), typeof(UiResponsiveGridLayout));
             gridObject.transform.SetParent(viewportObject.transform, false);
@@ -78,8 +80,8 @@ namespace ChopChop.UI
             gridObject.GetComponent<UiResponsiveGridLayout>().Configure(
                 2,
                 360f,
-                3.75f,
-                new Vector2(18f, 14f),
+                2.35f,
+                new Vector2(18f, 18f),
                 new RectOffset(0, 0, 0, 0));
 
             var scrollRect = viewportObject.GetComponent<ScrollRect>();
@@ -89,11 +91,16 @@ namespace ChopChop.UI
             scrollRect.vertical = true;
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
             scrollRect.scrollSensitivity = 34f;
+            scrollRect.verticalScrollbar = scrollbar;
+            scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
+            scrollRect.verticalScrollbarSpacing = 10f;
 
             foreach (var level in catalog.Levels)
             {
                 cards.Add(CreateCard(gridObject.transform, level));
             }
+
+            scrollRect.verticalNormalizedPosition = 1f;
 
             localization.LanguageChanged += UpdateTexts;
             UpdateTexts();
@@ -120,7 +127,7 @@ namespace ChopChop.UI
             thumbnail.transform.SetAsFirstSibling();
 
             var textBand = UiFactory.CreatePanel(button.transform, "Text Band", new Color(0.02f, 0.015f, 0.012f, 0.74f));
-            UiFactory.Anchor(textBand, Vector2.zero, new Vector2(1f, 0.43f), Vector2.zero, Vector2.zero);
+            UiFactory.Anchor(textBand, Vector2.zero, new Vector2(1f, 0.32f), Vector2.zero, Vector2.zero);
             textBand.GetComponent<Image>().raycastTarget = false;
 
             var accent = UiFactory.CreatePanel(button.transform, "Accent", definition.isUnlocked
@@ -130,14 +137,14 @@ namespace ChopChop.UI
             accent.GetComponent<Image>().raycastTarget = false;
 
             var label = button.GetComponentInChildren<Text>();
-            label.fontSize = 26;
+            label.fontSize = 28;
             label.alignment = TextAnchor.MiddleLeft;
-            UiFactory.Anchor(label.rectTransform, new Vector2(0f, 0.18f), new Vector2(1f, 0.42f), new Vector2(18f, 0f), new Vector2(-18f, 0f));
+            UiFactory.Anchor(label.rectTransform, new Vector2(0f, 0.13f), new Vector2(1f, 0.31f), new Vector2(18f, 0f), new Vector2(-18f, 0f));
             label.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
             label.transform.SetAsLastSibling();
 
-            var description = UiFactory.CreateText(button.transform, "Description", 15, FontStyle.Normal, TextAnchor.MiddleLeft, new Color(0.92f, 0.86f, 0.74f, 0.92f));
-            UiFactory.Anchor(description.rectTransform, new Vector2(0f, 0.05f), new Vector2(1f, 0.22f), new Vector2(18f, 0f), new Vector2(-18f, 0f));
+            var description = UiFactory.CreateText(button.transform, "Description", 16, FontStyle.Normal, TextAnchor.MiddleLeft, new Color(0.92f, 0.86f, 0.74f, 0.92f));
+            UiFactory.Anchor(description.rectTransform, new Vector2(0f, 0.035f), new Vector2(1f, 0.15f), new Vector2(18f, 0f), new Vector2(-18f, 0f));
             description.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.5f);
             description.transform.SetAsLastSibling();
 
@@ -155,7 +162,7 @@ namespace ChopChop.UI
             var thumbnailObject = new GameObject("Thumbnail", typeof(RectTransform), typeof(Image));
             thumbnailObject.transform.SetParent(parent, false);
             var rectTransform = thumbnailObject.GetComponent<RectTransform>();
-            UiFactory.Anchor(rectTransform, new Vector2(0f, 0.43f), Vector2.one, new Vector2(8f, 8f), new Vector2(-8f, -8f));
+            UiFactory.Anchor(rectTransform, new Vector2(0f, 0.32f), Vector2.one, new Vector2(8f, 8f), new Vector2(-8f, -8f));
 
             var image = thumbnailObject.GetComponent<Image>();
             image.sprite = sprite;
@@ -165,6 +172,35 @@ namespace ChopChop.UI
             image.raycastTarget = false;
             image.preserveAspect = false;
             return rectTransform;
+        }
+
+        private Scrollbar CreateScrollbar(Transform parent)
+        {
+            var scrollbarObject = new GameObject("Level Scrollbar", typeof(RectTransform), typeof(Image), typeof(Scrollbar));
+            scrollbarObject.transform.SetParent(parent, false);
+            var scrollbarRect = scrollbarObject.GetComponent<RectTransform>();
+            UiFactory.Anchor(scrollbarRect, new Vector2(1f, 0.055f), new Vector2(1f, 0.705f), new Vector2(-32f, 0f), new Vector2(-18f, 0f));
+
+            var trackImage = scrollbarObject.GetComponent<Image>();
+            trackImage.color = new Color(0.035f, 0.026f, 0.018f, 0.86f);
+
+            var slidingArea = new GameObject("Sliding Area", typeof(RectTransform));
+            slidingArea.transform.SetParent(scrollbarObject.transform, false);
+            UiFactory.Stretch(slidingArea.GetComponent<RectTransform>(), 2f);
+
+            var handle = new GameObject("Handle", typeof(RectTransform), typeof(Image));
+            handle.transform.SetParent(slidingArea.transform, false);
+            var handleRect = handle.GetComponent<RectTransform>();
+            UiFactory.Stretch(handleRect, 0f);
+            var handleImage = handle.GetComponent<Image>();
+            handleImage.color = new Color(0.94f, 0.64f, 0.22f, 0.95f);
+
+            var scrollbar = scrollbarObject.GetComponent<Scrollbar>();
+            scrollbar.direction = Scrollbar.Direction.BottomToTop;
+            scrollbar.targetGraphic = handleImage;
+            scrollbar.handleRect = handleRect;
+            scrollbar.size = 0.55f;
+            return scrollbar;
         }
 
         private static Sprite ResolveThumbnail(LevelDefinition definition)
