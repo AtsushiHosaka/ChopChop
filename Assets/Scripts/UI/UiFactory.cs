@@ -9,6 +9,7 @@ namespace ChopChop.UI
     public static class UiFactory
     {
         private static Font defaultFont;
+        private static Sprite roundedSurfaceSprite;
 
         public static GameObject CreateScreen(string name, Color background, bool drawBackground)
         {
@@ -64,15 +65,21 @@ namespace ChopChop.UI
         {
             var buttonObject = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
             buttonObject.transform.SetParent(parent, false);
-            buttonObject.GetComponent<Image>().color = background;
+            var image = buttonObject.GetComponent<Image>();
+            image.sprite = RoundedSurfaceSprite();
+            image.type = Image.Type.Sliced;
+            image.color = background;
 
             var button = buttonObject.GetComponent<Button>();
             var colors = button.colors;
             colors.normalColor = background;
-            colors.highlightedColor = background * 1.12f;
-            colors.pressedColor = background * 0.82f;
-            colors.disabledColor = new Color(0.2f, 0.2f, 0.2f, 0.55f);
+            colors.highlightedColor = Blend(background, new Color(1f, 0.82f, 0.44f, background.a), 0.18f);
+            colors.pressedColor = Blend(background, Color.black, 0.2f);
+            colors.disabledColor = new Color(0.12f, 0.105f, 0.09f, 0.58f);
             button.colors = colors;
+            button.targetGraphic = image;
+
+            AddButtonChrome(buttonObject.transform);
 
             var text = CreateText(buttonObject.transform, "Label", 28, FontStyle.Bold, TextAnchor.MiddleCenter, foreground);
             text.text = label;
@@ -156,16 +163,35 @@ namespace ChopChop.UI
         {
             rectTransform.sizeDelta = new Vector2(width, height);
 
-            var layoutElement = rectTransform.GetComponent<LayoutElement>();
-            if (layoutElement == null)
-            {
-                layoutElement = rectTransform.gameObject.AddComponent<LayoutElement>();
-            }
+            var layoutElement = EnsureLayoutElement(rectTransform);
 
             layoutElement.minWidth = width;
             layoutElement.minHeight = height;
             layoutElement.preferredWidth = width;
             layoutElement.preferredHeight = height;
+        }
+
+        public static void SetPreferredHeight(RectTransform rectTransform, float height)
+        {
+            rectTransform.sizeDelta = new Vector2(rectTransform.sizeDelta.x, height);
+
+            var layoutElement = EnsureLayoutElement(rectTransform);
+            layoutElement.minWidth = 0f;
+            layoutElement.preferredWidth = -1f;
+            layoutElement.flexibleWidth = 1f;
+            layoutElement.minHeight = height;
+            layoutElement.preferredHeight = height;
+        }
+
+        public static void SetFlexibleFill(RectTransform rectTransform)
+        {
+            var layoutElement = EnsureLayoutElement(rectTransform);
+            layoutElement.minWidth = 0f;
+            layoutElement.preferredWidth = -1f;
+            layoutElement.flexibleWidth = 1f;
+            layoutElement.minHeight = 0f;
+            layoutElement.preferredHeight = -1f;
+            layoutElement.flexibleHeight = 1f;
         }
 
         public static void Stretch(RectTransform rectTransform, float margin)
@@ -198,6 +224,77 @@ namespace ChopChop.UI
             }
 
             return defaultFont;
+        }
+
+        private static LayoutElement EnsureLayoutElement(RectTransform rectTransform)
+        {
+            var layoutElement = rectTransform.GetComponent<LayoutElement>();
+            if (layoutElement == null)
+            {
+                layoutElement = rectTransform.gameObject.AddComponent<LayoutElement>();
+            }
+
+            return layoutElement;
+        }
+
+        private static void AddButtonChrome(Transform parent)
+        {
+            var topHighlight = CreatePanel(parent, "Top Highlight", new Color(1f, 0.86f, 0.5f, 0.18f));
+            Anchor(topHighlight, new Vector2(0f, 1f), Vector2.one, new Vector2(12f, -3f), new Vector2(-12f, 0f));
+            topHighlight.GetComponent<Image>().raycastTarget = false;
+
+            var bottomShadow = CreatePanel(parent, "Bottom Shadow", new Color(0f, 0f, 0f, 0.24f));
+            Anchor(bottomShadow, Vector2.zero, new Vector2(1f, 0f), new Vector2(12f, 0f), new Vector2(-12f, 3f));
+            bottomShadow.GetComponent<Image>().raycastTarget = false;
+
+            var accent = CreatePanel(parent, "Gold Accent", new Color(0.94f, 0.64f, 0.22f, 0.9f));
+            Anchor(accent, new Vector2(0f, 0.18f), new Vector2(0f, 0.82f), new Vector2(0f, 0f), new Vector2(5f, 0f));
+            accent.GetComponent<Image>().raycastTarget = false;
+        }
+
+        private static Sprite RoundedSurfaceSprite()
+        {
+            if (roundedSurfaceSprite != null)
+            {
+                return roundedSurfaceSprite;
+            }
+
+            const int size = 64;
+            const int radius = 7;
+            var texture = new Texture2D(size, size, TextureFormat.ARGB32, false)
+            {
+                name = "ChopChop Rounded UI Surface",
+                hideFlags = HideFlags.HideAndDontSave,
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear
+            };
+
+            var pixels = new Color32[size * size];
+            for (var y = 0; y < size; y++)
+            {
+                for (var x = 0; x < size; x++)
+                {
+                    var dx = x < radius ? radius - x : x >= size - radius ? x - (size - radius - 1) : 0;
+                    var dy = y < radius ? radius - y : y >= size - radius ? y - (size - radius - 1) : 0;
+                    var outsideCorner = dx > 0 && dy > 0 && dx * dx + dy * dy > radius * radius;
+                    pixels[y * size + x] = outsideCorner ? new Color32(255, 255, 255, 0) : Color.white;
+                }
+            }
+
+            texture.SetPixels32(pixels);
+            texture.Apply(false, true);
+            roundedSurfaceSprite = Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), 100f, 0u, SpriteMeshType.FullRect, new Vector4(radius, radius, radius, radius));
+            roundedSurfaceSprite.hideFlags = HideFlags.HideAndDontSave;
+            return roundedSurfaceSprite;
+        }
+
+        private static Color Blend(Color from, Color to, float amount)
+        {
+            return new Color(
+                Mathf.Lerp(from.r, to.r, amount),
+                Mathf.Lerp(from.g, to.g, amount),
+                Mathf.Lerp(from.b, to.b, amount),
+                Mathf.Lerp(from.a, to.a, amount));
         }
 
         private static void EnsureEventSystem()

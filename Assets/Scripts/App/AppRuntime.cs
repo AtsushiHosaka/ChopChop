@@ -84,6 +84,10 @@ namespace ChopChop.App
             {
                 currentScreen = LevelSelectScreenController.Create(localization, navigator, levelCatalog);
             }
+            else if (sceneName == AppScenes.Settings)
+            {
+                currentScreen = SettingsScreenController.Create(localization, navigator, audioService);
+            }
             else if (sceneName == AppScenes.SukiyakiLevel)
             {
                 currentScreen = SukiyakiScreenController.Create(localization, navigator);

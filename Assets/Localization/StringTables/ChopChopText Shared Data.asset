@@ -175,6 +175,38 @@ MonoBehaviour:
     m_Key: app.menuSubtitle
     m_Metadata:
       m_Items: []
+  - m_Id: 1713262109384704
+    m_Key: app.settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1713262113579008
+    m_Key: settings.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1713262113579009
+    m_Key: settings.language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1713262113579010
+    m_Key: settings.japanese
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1713262113579011
+    m_Key: settings.english
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1713262113579012
+    m_Key: settings.bgm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1713262113579013
+    m_Key: settings.bgmOn
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1713262113579014
+    m_Key: settings.bgmOff
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

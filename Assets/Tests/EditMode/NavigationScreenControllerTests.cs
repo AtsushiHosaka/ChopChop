@@ -24,7 +24,7 @@ namespace ChopChop.Tests.EditMode
                 }
             }
 
-            foreach (var eventSystem in Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None))
+            foreach (var eventSystem in Object.FindObjectsByType<EventSystem>(FindObjectsInactive.Include))
             {
                 Object.DestroyImmediate(eventSystem.gameObject);
             }
@@ -33,13 +33,13 @@ namespace ChopChop.Tests.EditMode
         }
 
         [Test]
-        public void StartScreenCreatesStartLanguageAndQuitButtons()
+        public void StartScreenCreatesStartSettingsAndQuitButtons()
         {
             var root = StartScreenController.Create(new GameLocalization(), new SceneNavigator());
             createdObjects.Add(root);
 
             AssertButtonExists(root, "Start Button");
-            AssertButtonExists(root, "Language Button");
+            AssertButtonExists(root, "Settings Button");
             AssertButtonExists(root, "Quit Button");
         }
 
@@ -56,14 +56,25 @@ namespace ChopChop.Tests.EditMode
         }
 
         [Test]
-        public void LevelSelectScreenCreatesBackLanguageAndLevelCards()
+        public void LevelSelectScreenCreatesBackSettingsAndLevelCards()
         {
             var root = LevelSelectScreenController.Create(new GameLocalization(), new SceneNavigator(), LevelCatalogLoader.Load());
             createdObjects.Add(root);
 
             AssertButtonExists(root, "Back Button");
-            AssertButtonExists(root, "Language Button");
+            AssertButtonExists(root, "Settings Button");
             Assert.That(CountLevelButtons(root), Is.GreaterThanOrEqualTo(5));
+        }
+
+        [Test]
+        public void SettingsScreenCreatesLanguageBgmAndBackButtons()
+        {
+            var root = SettingsScreenController.Create(new GameLocalization(), new SceneNavigator(), null);
+            createdObjects.Add(root);
+
+            AssertButtonExists(root, "Language Button");
+            AssertButtonExists(root, "BGM Button");
+            AssertButtonExists(root, "Back Button");
         }
 
         private static void AssertButtonExists(GameObject root, string name)

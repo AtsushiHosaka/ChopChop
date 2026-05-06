@@ -178,6 +178,38 @@ MonoBehaviour:
     m_Localized: Hashi Practice
     m_Metadata:
       m_Items: []
+  - m_Id: 1713262109384704
+    m_Localized: Settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1713262113579008
+    m_Localized: Settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1713262113579009
+    m_Localized: Language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1713262113579010
+    m_Localized: Japanese
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1713262113579011
+    m_Localized: English
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1713262113579012
+    m_Localized: BGM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1713262113579013
+    m_Localized: ON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1713262113579014
+    m_Localized: OFF
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

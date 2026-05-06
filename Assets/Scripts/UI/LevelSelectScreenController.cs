@@ -15,7 +15,7 @@ namespace ChopChop.UI
         private SceneNavigator navigator;
         private Text titleText;
         private Text backText;
-        private Text languageText;
+        private Text settingsText;
 
         public static GameObject Create(GameLocalization localization, SceneNavigator navigator, LevelCatalog catalog)
         {
@@ -34,31 +34,67 @@ namespace ChopChop.UI
             CreateReadableScrim();
             CreateLeftShade();
 
-            var header = UiFactory.CreatePanel(transform, "Header", new Color(0.02f, 0.018f, 0.014f, 0.56f));
-            UiFactory.Anchor(header, new Vector2(0f, 1f), new Vector2(0.58f, 1f), new Vector2(56f, -116f), new Vector2(-24f, -28f));
-            UiFactory.AddFadeSlideIn(header.gameObject, 0.34f, 0.04f, new Vector2(0f, 18f), 0.99f);
-            UiFactory.AddHorizontalLayout(header.gameObject, 20f, TextAnchor.MiddleLeft, new RectOffset(24, 24, 12, 12));
+            var menuPanel = UiFactory.CreatePanel(transform, "Level Menu Panel", new Color(0.025f, 0.02f, 0.015f, 0.62f));
+            UiFactory.Anchor(menuPanel, new Vector2(0.035f, 0.075f), new Vector2(0.56f, 0.94f), Vector2.zero, Vector2.zero);
+            UiFactory.AddFadeSlideIn(menuPanel.gameObject, 0.34f, 0.04f, new Vector2(-20f, 0f), 0.99f);
+            UiFactory.AddVerticalLayout(menuPanel.gameObject, 18f, TextAnchor.UpperLeft, new RectOffset(28, 28, 24, 24));
 
-            titleText = UiFactory.CreateText(header, "Title", 44, FontStyle.Bold, TextAnchor.MiddleLeft, Color.white);
-            UiFactory.SetSize(titleText.rectTransform, 560f, 66f);
+            var header = new GameObject("Header", typeof(RectTransform));
+            header.transform.SetParent(menuPanel, false);
+            UiFactory.SetPreferredHeight(header.GetComponent<RectTransform>(), 70f);
+            UiFactory.AddHorizontalLayout(header, 16f, TextAnchor.MiddleLeft, new RectOffset(0, 0, 0, 0));
 
-            var languageButton = UiFactory.CreateButton(header, "Language Button", string.Empty, new Color(0.16f, 0.48f, 0.62f, 1f), Color.white);
-            UiFactory.SetSize(languageButton.GetComponent<RectTransform>(), 220f, 60f);
-            languageText = languageButton.GetComponentInChildren<Text>();
-            languageButton.onClick.AddListener(localization.ToggleLanguage);
+            titleText = UiFactory.CreateText(header.transform, "Title", 44, FontStyle.Bold, TextAnchor.MiddleLeft, Color.white);
+            UiFactory.SetFlexibleFill(titleText.rectTransform);
+            titleText.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
 
-            var backButton = UiFactory.CreateButton(header, "Back Button", string.Empty, new Color(0.19f, 0.21f, 0.22f, 1f), Color.white);
-            UiFactory.SetSize(backButton.GetComponent<RectTransform>(), 180f, 60f);
+            var settingsButton = UiFactory.CreateButton(header.transform, "Settings Button", string.Empty, new Color(0.34f, 0.23f, 0.12f, 0.96f), new Color(0.98f, 0.92f, 0.82f, 1f));
+            UiFactory.SetSize(settingsButton.GetComponent<RectTransform>(), 164f, 56f);
+            settingsText = settingsButton.GetComponentInChildren<Text>();
+            settingsButton.onClick.AddListener(navigator.LoadSettings);
+
+            var backButton = UiFactory.CreateButton(header.transform, "Back Button", string.Empty, new Color(0.11f, 0.105f, 0.095f, 0.94f), new Color(0.95f, 0.89f, 0.78f, 1f));
+            UiFactory.SetSize(backButton.GetComponent<RectTransform>(), 144f, 56f);
             backText = backButton.GetComponentInChildren<Text>();
             backButton.onClick.AddListener(navigator.LoadStart);
 
-            var gridObject = new GameObject("Level List", typeof(RectTransform));
-            gridObject.transform.SetParent(transform, false);
-            var gridRect = gridObject.GetComponent<RectTransform>();
-            UiFactory.Anchor(gridRect, new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(80f, 84f), new Vector2(840f, -146f));
-            UiFactory.AddFadeSlideIn(gridObject, 0.34f, 0.12f, new Vector2(-24f, 0f), 0.99f);
+            var rule = UiFactory.CreatePanel(menuPanel, "Gold Rule", new Color(0.93f, 0.63f, 0.22f, 0.92f));
+            UiFactory.SetPreferredHeight(rule, 2f);
 
-            UiFactory.AddVerticalLayout(gridObject, 14f, TextAnchor.UpperLeft, new RectOffset(0, 0, 0, 0));
+            var viewportObject = new GameObject("Level Viewport", typeof(RectTransform), typeof(Image), typeof(Mask), typeof(ScrollRect));
+            viewportObject.transform.SetParent(menuPanel, false);
+            var viewportRect = viewportObject.GetComponent<RectTransform>();
+            UiFactory.SetFlexibleFill(viewportRect);
+            var viewportImage = viewportObject.GetComponent<Image>();
+            viewportImage.color = new Color(0f, 0f, 0f, 0.01f);
+            viewportImage.raycastTarget = true;
+            viewportObject.GetComponent<Mask>().showMaskGraphic = false;
+
+            var gridObject = new GameObject("Level List", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+            gridObject.transform.SetParent(viewportObject.transform, false);
+            var gridRect = gridObject.GetComponent<RectTransform>();
+            UiFactory.Anchor(gridRect, new Vector2(0f, 1f), Vector2.one, Vector2.zero, Vector2.zero);
+            gridRect.pivot = new Vector2(0.5f, 1f);
+
+            var layout = gridObject.GetComponent<VerticalLayoutGroup>();
+            layout.spacing = 14f;
+            layout.childAlignment = TextAnchor.UpperLeft;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false;
+
+            var fitter = gridObject.GetComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var scrollRect = viewportObject.GetComponent<ScrollRect>();
+            scrollRect.content = gridRect;
+            scrollRect.viewport = viewportRect;
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            scrollRect.scrollSensitivity = 34f;
 
             foreach (var level in catalog.Levels)
             {
@@ -80,11 +116,11 @@ namespace ChopChop.UI
         private LevelCard CreateCard(Transform parent, LevelDefinition definition)
         {
             var color = definition.isUnlocked
-                ? new Color(0.08f, 0.065f, 0.052f, 0.88f)
-                : new Color(0.08f, 0.08f, 0.08f, 0.66f);
+                ? new Color(0.095f, 0.068f, 0.044f, 0.9f)
+                : new Color(0.075f, 0.07f, 0.065f, 0.68f);
             var button = UiFactory.CreateButton(parent, definition.levelId, string.Empty, color, Color.white);
             button.interactable = definition.isUnlocked;
-            UiFactory.SetSize(button.GetComponent<RectTransform>(), 760f, 116f);
+            UiFactory.SetPreferredHeight(button.GetComponent<RectTransform>(), 112f);
             UiFactory.AddFadeSlideIn(button.gameObject, 0.34f, 0.08f + cards.Count * 0.045f, Vector2.zero, 1f);
 
             var thumbnail = CreateThumbnail(button.transform, ResolveThumbnail(definition), definition.isUnlocked);
@@ -93,20 +129,21 @@ namespace ChopChop.UI
             var accent = UiFactory.CreatePanel(button.transform, "Accent", definition.isUnlocked
                 ? new Color(0.95f, 0.36f, 0.22f, 1f)
                 : new Color(0.45f, 0.38f, 0.28f, 0.8f));
-            UiFactory.Anchor(accent, new Vector2(0f, 0f), new Vector2(0f, 1f), Vector2.zero, new Vector2(5f, 0f));
+            UiFactory.Anchor(accent, new Vector2(0f, 0f), new Vector2(0f, 1f), Vector2.zero, new Vector2(4f, 0f));
+            accent.GetComponent<Image>().raycastTarget = false;
 
             var label = button.GetComponentInChildren<Text>();
             label.fontSize = 28;
             label.alignment = TextAnchor.MiddleLeft;
-            UiFactory.Anchor(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(184f, 54f), new Vector2(-140f, -16f));
+            UiFactory.Anchor(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(174f, 54f), new Vector2(-178f, -16f));
             label.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
 
             var description = UiFactory.CreateText(button.transform, "Description", 18, FontStyle.Normal, TextAnchor.MiddleLeft, new Color(0.92f, 0.86f, 0.74f, 0.92f));
-            UiFactory.Anchor(description.rectTransform, Vector2.zero, Vector2.one, new Vector2(184f, 16f), new Vector2(-110f, -58f));
+            UiFactory.Anchor(description.rectTransform, Vector2.zero, Vector2.one, new Vector2(174f, 16f), new Vector2(-178f, -58f));
             description.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.5f);
 
             var state = UiFactory.CreateText(button.transform, "State", 18, FontStyle.Bold, TextAnchor.MiddleRight, new Color(0.94f, 0.73f, 0.36f, 0.92f));
-            UiFactory.Anchor(state.rectTransform, Vector2.zero, Vector2.one, new Vector2(560f, 0f), new Vector2(-24f, 0f));
+            UiFactory.Anchor(state.rectTransform, new Vector2(1f, 0f), Vector2.one, new Vector2(-166f, 0f), new Vector2(-20f, 0f));
             state.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
 
             button.onClick.AddListener(() => navigator.LoadLevel(definition.sceneName));
@@ -203,7 +240,7 @@ namespace ChopChop.UI
         private void UpdateTexts()
         {
             titleText.text = localization.Text(LocalizationKeys.App.LevelSelect);
-            languageText.text = localization.Text(LocalizationKeys.App.Language);
+            settingsText.text = localization.Text(LocalizationKeys.App.Settings);
             backText.text = localization.Text(LocalizationKeys.App.Back);
 
             foreach (var card in cards)

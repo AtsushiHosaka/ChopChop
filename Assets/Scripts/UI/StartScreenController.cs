@@ -12,7 +12,7 @@ namespace ChopChop.UI
         private SceneNavigator navigator;
         private Text titleText;
         private Text subtitleText;
-        private Text languageText;
+        private Text settingsText;
         private Text startText;
         private Text quitText;
 
@@ -61,15 +61,15 @@ namespace ChopChop.UI
             spacer.transform.SetParent(main.transform, false);
             UiFactory.SetSize(spacer.GetComponent<RectTransform>(), 1f, 34f);
 
-            var startButton = UiFactory.CreateButton(main.transform, "Start Button", string.Empty, new Color(0.95f, 0.32f, 0.22f, 1f), Color.white);
+            var startButton = UiFactory.CreateButton(main.transform, "Start Button", string.Empty, new Color(0.72f, 0.18f, 0.11f, 0.98f), Color.white);
             UiFactory.SetSize(startButton.GetComponent<RectTransform>(), 380f, 76f);
             startText = startButton.GetComponentInChildren<Text>();
             startButton.onClick.AddListener(navigator.LoadLevelSelect);
 
-            var languageButton = UiFactory.CreateButton(main.transform, "Language Button", string.Empty, new Color(0.16f, 0.48f, 0.62f, 1f), Color.white);
-            UiFactory.SetSize(languageButton.GetComponent<RectTransform>(), 300f, 58f);
-            languageText = languageButton.GetComponentInChildren<Text>();
-            languageButton.onClick.AddListener(localization.ToggleLanguage);
+            var settingsButton = UiFactory.CreateButton(main.transform, "Settings Button", string.Empty, new Color(0.34f, 0.23f, 0.12f, 0.96f), new Color(0.98f, 0.92f, 0.82f, 1f));
+            UiFactory.SetSize(settingsButton.GetComponent<RectTransform>(), 300f, 58f);
+            settingsText = settingsButton.GetComponentInChildren<Text>();
+            settingsButton.onClick.AddListener(navigator.LoadSettings);
 
             var quitButton = UiFactory.CreateButton(main.transform, "Quit Button", string.Empty, new Color(0.12f, 0.12f, 0.12f, 0.88f), new Color(0.93f, 0.88f, 0.78f, 1f));
             UiFactory.SetSize(quitButton.GetComponent<RectTransform>(), 300f, 58f);
@@ -137,7 +137,7 @@ namespace ChopChop.UI
             subtitleText.text = localization.Text(LocalizationKeys.App.MenuSubtitle);
             titleText.text = localization.Text(LocalizationKeys.App.Title);
             startText.text = localization.Text(LocalizationKeys.App.Start);
-            languageText.text = localization.Text(LocalizationKeys.App.Language);
+            settingsText.text = localization.Text(LocalizationKeys.App.Settings);
             quitText.text = localization.Text(LocalizationKeys.App.Quit);
         }
     }
