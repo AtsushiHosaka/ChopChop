@@ -6,14 +6,12 @@ namespace ChopChop.UI
 {
     public sealed class StartScreenController : MonoBehaviour
     {
-        private const string BackgroundResourcePath = "UI/Start/start_background";
-
         private GameLocalization localization;
         private SceneNavigator navigator;
-        private Text titleText;
-        private Text languageText;
-        private Text startText;
-        private Text quitText;
+        private Image titleImage;
+        private Image languageImage;
+        private Image startImage;
+        private Image quitImage;
 
         public static GameObject Create(GameLocalization localization, SceneNavigator navigator)
         {
@@ -29,37 +27,61 @@ namespace ChopChop.UI
             navigator = sceneNavigator;
 
             ApplyBackgroundImage();
-            CreateReadableScrim();
+            CreateFrame();
 
             var main = new GameObject("Main", typeof(RectTransform));
             main.transform.SetParent(transform, false);
             var mainRect = main.GetComponent<RectTransform>();
-            mainRect.anchorMin = new Vector2(0f, 0.5f);
-            mainRect.anchorMax = new Vector2(0f, 0.5f);
-            mainRect.pivot = new Vector2(0f, 0.5f);
-            mainRect.anchoredPosition = new Vector2(128f, 0f);
-            UiFactory.SetSize(mainRect, 620f, 560f);
-            UiFactory.AddFadeSlideIn(main, 0.42f, 0.08f, new Vector2(-34f, 0f), 0.98f);
+            mainRect.anchorMin = new Vector2(0.5f, 0.5f);
+            mainRect.anchorMax = new Vector2(0.5f, 0.5f);
+            mainRect.pivot = new Vector2(0.5f, 0.5f);
+            mainRect.anchoredPosition = new Vector2(0f, 34f);
+            UiFactory.SetSize(mainRect, 760f, 620f);
+            UiFactory.AddFadeSlideIn(main, 0.42f, 0.08f, new Vector2(0f, -24f), 0.98f);
 
-            UiFactory.AddVerticalLayout(main, 24f, TextAnchor.MiddleLeft, new RectOffset(0, 0, 0, 0));
+            UiFactory.AddVerticalLayout(main, 18f, TextAnchor.UpperCenter, new RectOffset(0, 0, 0, 0));
 
-            titleText = UiFactory.CreateText(main.transform, "Title", 88, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white);
-            UiFactory.SetSize(titleText.rectTransform, 620f, 130f);
-            titleText.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
+            var header = UiFactory.CreateSpriteImage(main.transform, "Header", WaUiCatalog.HeaderPlaque);
+            UiFactory.SetSize(header.rectTransform, 620f, 136f);
 
-            var startButton = UiFactory.CreateButton(main.transform, "Start Button", string.Empty, new Color(0.95f, 0.32f, 0.22f, 1f), Color.white);
-            UiFactory.SetSize(startButton.GetComponent<RectTransform>(), 420f, 78f);
-            startText = startButton.GetComponentInChildren<Text>();
+            titleImage = UiFactory.CreateSpriteImage(header.transform, "Title", null, false);
+            UiFactory.Anchor(titleImage.rectTransform, Vector2.zero, Vector2.one, new Vector2(92f, 24f), new Vector2(-92f, -32f));
+
+            var spacer = new GameObject("Spacer", typeof(RectTransform));
+            spacer.transform.SetParent(main.transform, false);
+            UiFactory.SetSize(spacer.GetComponent<RectTransform>(), 10f, 12f);
+
+            var startButton = UiFactory.CreateSpriteButton(
+                main.transform,
+                "Start Button",
+                WaUiCatalog.ButtonPrimary,
+                WaUiCatalog.ButtonPrimaryHover,
+                WaUiCatalog.ButtonPrimaryPressed);
+            UiFactory.SetSize(startButton.GetComponent<RectTransform>(), 430f, 96f);
+            startImage = UiFactory.CreateSpriteImage(startButton.transform, "Start Label", null, false);
+            UiFactory.Anchor(startImage.rectTransform, Vector2.zero, Vector2.one, new Vector2(48f, 20f), new Vector2(-48f, -20f));
             startButton.onClick.AddListener(navigator.LoadLevelSelect);
 
-            var languageButton = UiFactory.CreateButton(main.transform, "Language Button", string.Empty, new Color(0.16f, 0.48f, 0.62f, 1f), Color.white);
-            UiFactory.SetSize(languageButton.GetComponent<RectTransform>(), 420f, 66f);
-            languageText = languageButton.GetComponentInChildren<Text>();
+            var languageButton = UiFactory.CreateSpriteButton(
+                main.transform,
+                "Language Button",
+                WaUiCatalog.ButtonSecondary,
+                WaUiCatalog.ButtonSecondaryHover,
+                WaUiCatalog.ButtonSecondaryPressed);
+            UiFactory.SetSize(languageButton.GetComponent<RectTransform>(), 430f, 84f);
+            languageImage = UiFactory.CreateSpriteImage(languageButton.transform, "Language Label", null, false);
+            UiFactory.Anchor(languageImage.rectTransform, Vector2.zero, Vector2.one, new Vector2(48f, 20f), new Vector2(-48f, -20f));
             languageButton.onClick.AddListener(localization.ToggleLanguage);
 
-            var quitButton = UiFactory.CreateButton(main.transform, "Quit Button", string.Empty, new Color(0.19f, 0.21f, 0.22f, 1f), Color.white);
-            UiFactory.SetSize(quitButton.GetComponent<RectTransform>(), 420f, 66f);
-            quitText = quitButton.GetComponentInChildren<Text>();
+            var quitButton = UiFactory.CreateSpriteButton(
+                main.transform,
+                "Quit Button",
+                WaUiCatalog.ButtonSecondary,
+                WaUiCatalog.ButtonSecondaryHover,
+                WaUiCatalog.ButtonSecondaryPressed);
+            UiFactory.SetSize(quitButton.GetComponent<RectTransform>(), 430f, 84f);
+            quitImage = UiFactory.CreateSpriteImage(quitButton.transform, "Quit Label", null, false);
+            UiFactory.Anchor(quitImage.rectTransform, Vector2.zero, Vector2.one, new Vector2(48f, 20f), new Vector2(-48f, -20f));
             quitButton.onClick.AddListener(navigator.Quit);
 
             localization.LanguageChanged += UpdateTexts;
@@ -74,26 +96,15 @@ namespace ChopChop.UI
                 return;
             }
 
-            var sprite = Resources.Load<Sprite>(BackgroundResourcePath);
-            if (sprite == null)
-            {
-                Debug.LogWarning($"[Start Screen] Missing background sprite Resources/{BackgroundResourcePath}.png", this);
-                return;
-            }
-
-            background.sprite = sprite;
+            background.sprite = WaUiCatalog.StartBackground;
             background.color = Color.white;
             background.raycastTarget = false;
         }
 
-        private void CreateReadableScrim()
+        private void CreateFrame()
         {
-            var scrim = new GameObject("Readable Scrim", typeof(RectTransform), typeof(Image));
-            scrim.transform.SetParent(transform, false);
-            UiFactory.Stretch(scrim.GetComponent<RectTransform>(), 0f);
-            var image = scrim.GetComponent<Image>();
-            image.color = new Color(0.02f, 0.018f, 0.014f, 0.28f);
-            image.raycastTarget = false;
+            var frame = UiFactory.CreateSpriteImage(transform, "Wa Frame", WaUiCatalog.MainFrame, false);
+            UiFactory.Anchor(frame.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-640f, -380f), new Vector2(640f, 380f));
         }
 
         private void OnDestroy()
@@ -106,10 +117,10 @@ namespace ChopChop.UI
 
         private void UpdateTexts()
         {
-            titleText.text = localization.Text(LocalizationKeys.App.Title);
-            startText.text = localization.Text(LocalizationKeys.App.Start);
-            languageText.text = localization.Text(LocalizationKeys.App.Language);
-            quitText.text = localization.Text(LocalizationKeys.App.Quit);
+            UiFactory.ApplySprite(titleImage, WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.App.Title));
+            UiFactory.ApplySprite(startImage, WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.App.Start));
+            UiFactory.ApplySprite(languageImage, WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.App.Language));
+            UiFactory.ApplySprite(quitImage, WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.App.Quit));
         }
     }
 }

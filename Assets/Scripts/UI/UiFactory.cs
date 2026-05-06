@@ -8,6 +8,7 @@ namespace ChopChop.UI
 {
     public static class UiFactory
     {
+        private const string PreferredFontResourcePath = "Fonts/YujiSyuku-Regular";
         private static Font defaultFont;
 
         public static GameObject CreateScreen(string name, Color background, bool drawBackground)
@@ -81,6 +82,68 @@ namespace ChopChop.UI
             buttonObject.AddComponent<UiButtonAnimator>();
             buttonObject.AddComponent<UiButtonAudio>();
             return button;
+        }
+
+        public static Button CreateSpriteButton(
+            Transform parent,
+            string name,
+            Sprite normalSprite,
+            Sprite highlightedSprite = null,
+            Sprite pressedSprite = null,
+            Sprite disabledSprite = null)
+        {
+            var buttonObject = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            buttonObject.transform.SetParent(parent, false);
+
+            var image = buttonObject.GetComponent<Image>();
+            image.sprite = normalSprite;
+            image.type = Image.Type.Simple;
+            image.color = Color.white;
+            image.raycastTarget = true;
+
+            var button = buttonObject.GetComponent<Button>();
+            button.transition = Selectable.Transition.SpriteSwap;
+            button.targetGraphic = image;
+            button.spriteState = new SpriteState
+            {
+                highlightedSprite = highlightedSprite != null ? highlightedSprite : normalSprite,
+                pressedSprite = pressedSprite != null ? pressedSprite : highlightedSprite != null ? highlightedSprite : normalSprite,
+                disabledSprite = disabledSprite != null ? disabledSprite : normalSprite
+            };
+
+            var colors = button.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = Color.white;
+            colors.pressedColor = Color.white;
+            colors.selectedColor = Color.white;
+            colors.disabledColor = new Color(1f, 1f, 1f, 0.74f);
+            button.colors = colors;
+
+            buttonObject.AddComponent<UiButtonAnimator>();
+            buttonObject.AddComponent<UiButtonAudio>();
+            return button;
+        }
+
+        public static Image CreateSpriteImage(Transform parent, string name, Sprite sprite, bool preserveAspect = true)
+        {
+            var imageObject = new GameObject(name, typeof(RectTransform), typeof(Image));
+            imageObject.transform.SetParent(parent, false);
+            var image = imageObject.GetComponent<Image>();
+            ApplySprite(image, sprite, preserveAspect);
+            image.raycastTarget = false;
+            return image;
+        }
+
+        public static void ApplySprite(Image image, Sprite sprite, bool preserveAspect = true)
+        {
+            if (image == null)
+            {
+                return;
+            }
+
+            image.sprite = sprite;
+            image.color = sprite == null ? new Color(1f, 1f, 1f, 0f) : Color.white;
+            image.preserveAspect = preserveAspect;
         }
 
         public static Slider CreateProgressBar(Transform parent, string name, Color background, Color fill)
@@ -175,6 +238,12 @@ namespace ChopChop.UI
 
         private static Font DefaultFont()
         {
+            if (defaultFont != null)
+            {
+                return defaultFont;
+            }
+
+            defaultFont = Resources.Load<Font>(PreferredFontResourcePath);
             if (defaultFont != null)
             {
                 return defaultFont;

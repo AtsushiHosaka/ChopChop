@@ -3128,7 +3128,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed85fd6f49a2b438eb363c4bff9e25fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChopChop.Levels.Sukiyaki.SukiyakiDemoDriver
-  demoModeEnabled: 0
+  demoModeEnabled: 1
   autoAdvanceSteps: 1
   inputProvider: {fileID: 1147880874}
   stageController: {fileID: 1454876607}

@@ -9,17 +9,16 @@ namespace ChopChop.UI
 {
     public sealed class SukiyakiScreenController : MonoBehaviour
     {
+        private const string StageBackdropName = "Wa Fusuma Backdrop";
+
         private GameLocalization localization;
         private SceneNavigator navigator;
         private SukiyakiStageController stage;
-        private Text stepText;
-        private Text timeText;
-        private Text failureText;
-        private Text languageText;
-        private Text levelSelectText;
-        private Slider progressBar;
+        private Text timeValueText;
+        private Text failureValueText;
+        private Image timeLabelImage;
+        private Image failureLabelImage;
         private SukiyakiCueOverlay cueOverlay;
-        private UiPunchScale stepPunch;
         private UiPunchScale failurePunch;
         private int lastFailureCount = -1;
 
@@ -48,6 +47,7 @@ namespace ChopChop.UI
             stage.StepChanged += HandleStepChanged;
             stage.Completed += HandleCompleted;
 
+            ApplyStageBackdrop();
             CreateHud();
             CreateCueOverlay();
             localization.LanguageChanged += UpdateTexts;
@@ -57,20 +57,19 @@ namespace ChopChop.UI
 
         private void Update()
         {
-            if (stage == null || timeText == null)
+            if (stage == null || timeValueText == null)
             {
                 return;
             }
 
-            timeText.text = $"{localization.Text(LocalizationKeys.Hud.Time)}: {stage.ElapsedSeconds:0.0}s";
-            failureText.text = $"{localization.Text(LocalizationKeys.Hud.Failures)}: {stage.FailureCount}";
+            timeValueText.text = $"{stage.ElapsedSeconds:0.0}s";
+            failureValueText.text = stage.FailureCount.ToString();
             if (lastFailureCount >= 0 && stage.FailureCount != lastFailureCount)
             {
                 failurePunch?.Play();
             }
 
             lastFailureCount = stage.FailureCount;
-            progressBar.value = stage.StepProgress01;
         }
 
         private void OnDestroy()
@@ -89,35 +88,36 @@ namespace ChopChop.UI
 
         private void CreateHud()
         {
-            var top = UiFactory.CreatePanel(transform, "HUD", new Color(0f, 0f, 0f, 0.48f));
-            UiFactory.Anchor(top, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(24f, -110f), new Vector2(-24f, -20f));
-            UiFactory.AddFadeSlideIn(top.gameObject, 0.28f, 0.04f, new Vector2(0f, 18f), 0.99f);
-            UiFactory.AddHorizontalLayout(top.gameObject, 18f, TextAnchor.MiddleLeft, new RectOffset(20, 20, 10, 10));
+            CreateInfoPanel();
+        }
 
-            stepText = UiFactory.CreateText(top, "Step", 32, FontStyle.Bold, TextAnchor.MiddleLeft, Color.white);
-            UiFactory.SetSize(stepText.rectTransform, 620f, 70f);
-            stepPunch = stepText.gameObject.AddComponent<UiPunchScale>();
+        private void CreateInfoPanel()
+        {
+            var panel = new GameObject("HUD Info", typeof(RectTransform));
+            panel.transform.SetParent(transform, false);
+            var panelRect = panel.GetComponent<RectTransform>();
+            panelRect.anchorMin = new Vector2(0f, 1f);
+            panelRect.anchorMax = new Vector2(0f, 1f);
+            panelRect.pivot = new Vector2(0f, 1f);
+            panelRect.anchoredPosition = new Vector2(28f, -28f);
+            UiFactory.SetSize(panelRect, 408f, 132f);
+            UiFactory.AddFadeSlideIn(panel, 0.28f, 0.04f, new Vector2(-12f, 0f), 0.99f);
 
-            timeText = UiFactory.CreateText(top, "Time", 27, FontStyle.Bold, TextAnchor.MiddleLeft, Color.white);
-            UiFactory.SetSize(timeText.rectTransform, 220f, 70f);
+            var panelImage = UiFactory.CreateSpriteImage(panel.transform, "Panel", WaUiCatalog.LevelCard, false);
+            UiFactory.Stretch(panelImage.rectTransform, 0f);
 
-            failureText = UiFactory.CreateText(top, "Failures", 27, FontStyle.Bold, TextAnchor.MiddleLeft, Color.white);
-            UiFactory.SetSize(failureText.rectTransform, 180f, 70f);
-            failurePunch = failureText.gameObject.AddComponent<UiPunchScale>();
+            var statsRow = new GameObject("Stats Row", typeof(RectTransform));
+            statsRow.transform.SetParent(panel.transform, false);
+            var statsRowRect = statsRow.GetComponent<RectTransform>();
+            statsRowRect.anchorMin = new Vector2(0.5f, 0f);
+            statsRowRect.anchorMax = new Vector2(0.5f, 0f);
+            statsRowRect.pivot = new Vector2(0.5f, 0f);
+            statsRowRect.anchoredPosition = new Vector2(0f, 12f);
+            UiFactory.SetSize(statsRowRect, 340f, 52f);
 
-            progressBar = UiFactory.CreateProgressBar(top, "Progress", new Color(1f, 1f, 1f, 0.22f), new Color(0.98f, 0.72f, 0.22f, 1f));
-            UiFactory.SetSize(progressBar.GetComponent<RectTransform>(), 340f, 24f);
-
-            var languageButton = UiFactory.CreateButton(top, "Language Button", string.Empty, new Color(0.16f, 0.48f, 0.62f, 1f), Color.white);
-            UiFactory.SetSize(languageButton.GetComponent<RectTransform>(), 170f, 58f);
-            languageText = languageButton.GetComponentInChildren<Text>();
-            languageButton.onClick.AddListener(localization.ToggleLanguage);
-
-            var levelSelectButton = UiFactory.CreateButton(top, "Level Select Button", string.Empty, new Color(0.19f, 0.21f, 0.22f, 1f), Color.white);
-            UiFactory.SetSize(levelSelectButton.GetComponent<RectTransform>(), 190f, 58f);
-            levelSelectText = levelSelectButton.GetComponentInChildren<Text>();
-            levelSelectButton.onClick.AddListener(navigator.LoadLevelSelect);
-
+            CreateInfoStat(statsRow.transform, "Time", new Vector2(-84f, 0f), LocalizationKeys.Hud.Time, out timeLabelImage, out timeValueText, 108f);
+            CreateInfoStat(statsRow.transform, "Failures", new Vector2(84f, 0f), LocalizationKeys.Hud.Failures, out failureLabelImage, out failureValueText, 82f);
+            failurePunch = failureValueText.gameObject.AddComponent<UiPunchScale>();
         }
 
         private void CreateCueOverlay()
@@ -146,27 +146,37 @@ namespace ChopChop.UI
 
         private void CreateSetupMissingScreen()
         {
-            var panel = UiFactory.CreatePanel(transform, "Setup Missing", new Color(0.04f, 0.045f, 0.05f, 0.92f));
-            panel.anchorMin = new Vector2(0.5f, 0.5f);
-            panel.anchorMax = new Vector2(0.5f, 0.5f);
-            panel.pivot = new Vector2(0.5f, 0.5f);
-            UiFactory.SetSize(panel, 680f, 260f);
+            var panel = new GameObject("Setup Missing", typeof(RectTransform));
+            panel.transform.SetParent(transform, false);
+            var panelRect = panel.GetComponent<RectTransform>();
+            panelRect.anchorMin = new Vector2(0.5f, 0.5f);
+            panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+            panelRect.pivot = new Vector2(0.5f, 0.5f);
+            UiFactory.SetSize(panelRect, 760f, 320f);
             UiFactory.AddFadeSlideIn(panel.gameObject, 0.3f, 0f, new Vector2(0f, -18f), 0.96f);
-            UiFactory.AddVerticalLayout(panel.gameObject, 24f, TextAnchor.MiddleCenter, new RectOffset(36, 36, 34, 34));
+            var panelImage = UiFactory.CreateSpriteImage(panel.transform, "Panel", WaUiCatalog.ResultPanel, false);
+            UiFactory.Stretch(panelImage.rectTransform, 0f);
 
-            var message = UiFactory.CreateText(panel, "Message", 34, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white);
-            UiFactory.SetSize(message.rectTransform, 600f, 92f);
-            message.text = localization.Text(LocalizationKeys.Level.SetupMissing);
+            var content = new GameObject("Content", typeof(RectTransform));
+            content.transform.SetParent(panel.transform, false);
+            UiFactory.Stretch(content.GetComponent<RectTransform>(), 0f);
+            UiFactory.AddVerticalLayout(content, 18f, TextAnchor.MiddleCenter, new RectOffset(48, 48, 40, 40));
 
-            var backButton = UiFactory.CreateButton(panel, "Level Select Button", localization.Text(LocalizationKeys.Result.LevelSelect), new Color(0.19f, 0.21f, 0.22f, 1f), Color.white);
+            var message = UiFactory.CreateSpriteImage(content.transform, "Message", WaUiCatalog.LoadLabel(localization, "setup_missing"));
+            UiFactory.SetSize(message.rectTransform, 620f, 86f);
+
+            var backButton = UiFactory.CreateSpriteButton(content.transform, "Level Select Button",
+                WaUiCatalog.ButtonSecondary, WaUiCatalog.ButtonSecondaryHover, WaUiCatalog.ButtonSecondaryPressed);
             UiFactory.SetSize(backButton.GetComponent<RectTransform>(), 360f, 64f);
+            var backLabel = UiFactory.CreateSpriteImage(backButton.transform, "Back Label",
+                WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.Result.LevelSelect));
+            UiFactory.Anchor(backLabel.rectTransform, Vector2.zero, Vector2.one, new Vector2(32f, 14f), new Vector2(-32f, -14f));
             backButton.onClick.AddListener(navigator.LoadLevelSelect);
         }
 
         private void HandleStepChanged(SukiyakiStep step)
         {
             UpdateTexts();
-            stepPunch?.Play();
         }
 
         private void HandleCompleted(LevelRunResult result)
@@ -176,39 +186,104 @@ namespace ChopChop.UI
 
         private void UpdateTexts()
         {
-            if (stage != null && stepText != null)
-            {
-                stepText.text = StepText(stage.CurrentStep);
-            }
-
-            languageText.text = localization.Text(LocalizationKeys.App.Language);
-            levelSelectText.text = localization.Text(LocalizationKeys.Result.LevelSelect);
+            UiFactory.ApplySprite(timeLabelImage, WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.Hud.Time));
+            UiFactory.ApplySprite(failureLabelImage, WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.Hud.Failures));
         }
 
-        private string StepText(SukiyakiStep step)
+        private void CreateInfoStat(Transform parent, string name, Vector2 anchoredPosition, string localizationKey, out Image labelImage, out Text valueText, float labelWidth)
         {
-            switch (step)
-            {
-                case SukiyakiStep.Calibration:
-                    return localization.Text(LocalizationKeys.Hud.Calibrate);
-                case SukiyakiStep.MixEgg:
-                    return localization.Text(LocalizationKeys.Step.MixEgg);
-                case SukiyakiStep.PickMeat:
-                    return localization.Text(LocalizationKeys.Step.PickMeat);
-                case SukiyakiStep.PutInBroth:
-                    return localization.Text(LocalizationKeys.Step.PutInBroth);
-                case SukiyakiStep.FlipMeat:
-                    return localization.Text(LocalizationKeys.Step.FlipMeat);
-                case SukiyakiStep.DipEgg:
-                    return localization.Text(LocalizationKeys.Step.DipEgg);
-                case SukiyakiStep.DeliverToMouth:
-                    return localization.Text(LocalizationKeys.Step.Deliver);
-                case SukiyakiStep.Result:
-                    return localization.Text(LocalizationKeys.Result.Title);
-                default:
-                    return string.Empty;
-            }
+            var stat = new GameObject(name, typeof(RectTransform));
+            stat.transform.SetParent(parent, false);
+            var statRect = stat.GetComponent<RectTransform>();
+            statRect.anchorMin = new Vector2(0.5f, 0f);
+            statRect.anchorMax = new Vector2(0.5f, 0f);
+            statRect.pivot = new Vector2(0.5f, 0f);
+            statRect.anchoredPosition = anchoredPosition;
+            UiFactory.SetSize(statRect, 148f, 52f);
+
+            labelImage = UiFactory.CreateSpriteImage(stat.transform, "Label", null, false);
+            var labelRect = labelImage.rectTransform;
+            labelRect.anchorMin = new Vector2(0.5f, 1f);
+            labelRect.anchorMax = new Vector2(0.5f, 1f);
+            labelRect.pivot = new Vector2(0.5f, 1f);
+            labelRect.anchoredPosition = new Vector2(0f, 0f);
+            UiFactory.SetSize(labelRect, labelWidth, 22f);
+
+            valueText = UiFactory.CreateText(stat.transform, "Value", 30, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.34f, 0.18f, 0.09f, 1f));
+            var valueRect = valueText.rectTransform;
+            valueRect.anchorMin = new Vector2(0.5f, 0f);
+            valueRect.anchorMax = new Vector2(0.5f, 0f);
+            valueRect.pivot = new Vector2(0.5f, 0f);
+            valueRect.anchoredPosition = new Vector2(0f, 0f);
+            UiFactory.SetSize(valueRect, 136f, 28f);
         }
 
+        private void ApplyStageBackdrop()
+        {
+            var camera = Camera.main;
+            if (camera == null)
+            {
+                camera = FindAnyObjectByType<Camera>();
+            }
+
+            if (camera == null || camera.transform.Find(StageBackdropName) != null)
+            {
+                return;
+            }
+
+            var sprite = WaUiCatalog.SukiyakiStageBackground;
+            if (sprite == null)
+            {
+                return;
+            }
+
+            var backdrop = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            backdrop.name = StageBackdropName;
+            backdrop.transform.SetParent(camera.transform, false);
+            backdrop.transform.localPosition = new Vector3(0f, 0.18f, 7.6f);
+            backdrop.transform.localRotation = Quaternion.identity;
+
+            var collider = backdrop.GetComponent<Collider>();
+            if (collider != null)
+            {
+                Destroy(collider);
+            }
+
+            var renderer = backdrop.GetComponent<MeshRenderer>();
+            var shader = Shader.Find("Sprites/Default")
+                ?? Shader.Find("Universal Render Pipeline/Unlit")
+                ?? Shader.Find("Unlit/Transparent")
+                ?? Shader.Find("Unlit/Texture");
+            if (shader == null)
+            {
+                return;
+            }
+
+            var material = new Material(shader);
+            if (material.HasProperty("_BaseMap"))
+            {
+                material.SetTexture("_BaseMap", sprite.texture);
+            }
+            else if (material.HasProperty("_MainTex"))
+            {
+                material.SetTexture("_MainTex", sprite.texture);
+            }
+
+            if (material.HasProperty("_BaseColor"))
+            {
+                material.SetColor("_BaseColor", Color.white);
+            }
+
+            renderer.sharedMaterial = material;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            renderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+            renderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+
+            var distance = backdrop.transform.localPosition.z;
+            var height = 2f * Mathf.Tan(camera.fieldOfView * 0.5f * Mathf.Deg2Rad) * distance * 1.18f;
+            var width = height * camera.aspect * 1.12f;
+            backdrop.transform.localScale = new Vector3(width, height, 1f);
+        }
     }
 }

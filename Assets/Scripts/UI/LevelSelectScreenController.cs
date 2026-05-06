@@ -8,14 +8,12 @@ namespace ChopChop.UI
 {
     public sealed class LevelSelectScreenController : MonoBehaviour
     {
-        private const string BackgroundResourcePath = "UI/Start/start_background";
-
         private readonly List<LevelCard> cards = new List<LevelCard>();
         private GameLocalization localization;
         private SceneNavigator navigator;
-        private Text titleText;
-        private Text backText;
-        private Text languageText;
+        private Image titleImage;
+        private Image backImage;
+        private Image languageImage;
 
         public static GameObject Create(GameLocalization localization, SceneNavigator navigator, LevelCatalog catalog)
         {
@@ -31,30 +29,60 @@ namespace ChopChop.UI
             navigator = sceneNavigator;
 
             ApplyBackgroundImage();
-            CreateReadableScrim();
+            CreateFrame();
 
-            var header = UiFactory.CreatePanel(transform, "Header", new Color(0f, 0f, 0f, 0.2f));
-            UiFactory.Anchor(header, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(44f, -126f), new Vector2(-44f, -28f));
-            UiFactory.AddFadeSlideIn(header.gameObject, 0.34f, 0.04f, new Vector2(0f, 18f), 0.99f);
-            UiFactory.AddHorizontalLayout(header.gameObject, 20f, TextAnchor.MiddleLeft, new RectOffset(24, 24, 12, 12));
+            var header = new GameObject("Header", typeof(RectTransform));
+            header.transform.SetParent(transform, false);
+            var headerRect = header.GetComponent<RectTransform>();
+            UiFactory.Anchor(headerRect, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-620f, -184f), new Vector2(620f, -28f));
+            UiFactory.AddFadeSlideIn(header, 0.34f, 0.04f, new Vector2(0f, 18f), 0.99f);
 
-            titleText = UiFactory.CreateText(header, "Title", 48, FontStyle.Bold, TextAnchor.MiddleLeft, Color.white);
-            titleText.rectTransform.sizeDelta = new Vector2(900f, 78f);
+            var titlePlaque = UiFactory.CreateSpriteImage(header.transform, "Title Plaque", WaUiCatalog.HeaderPlaque);
+            titlePlaque.rectTransform.anchorMin = new Vector2(0f, 0.5f);
+            titlePlaque.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+            titlePlaque.rectTransform.pivot = new Vector2(0f, 0.5f);
+            titlePlaque.rectTransform.anchoredPosition = new Vector2(22f, 0f);
+            UiFactory.SetSize(titlePlaque.rectTransform, 540f, 128f);
 
-            var languageButton = UiFactory.CreateButton(header, "Language Button", string.Empty, new Color(0.16f, 0.48f, 0.62f, 1f), Color.white);
-            UiFactory.SetSize(languageButton.GetComponent<RectTransform>(), 220f, 60f);
-            languageText = languageButton.GetComponentInChildren<Text>();
+            titleImage = UiFactory.CreateSpriteImage(titlePlaque.transform, "Title Label", null, false);
+            UiFactory.Anchor(titleImage.rectTransform, Vector2.zero, Vector2.one, new Vector2(84f, 28f), new Vector2(-84f, -30f));
+
+            var languageButton = UiFactory.CreateSpriteButton(
+                header.transform,
+                "Language Button",
+                WaUiCatalog.ButtonSmall,
+                WaUiCatalog.ButtonSmallHover,
+                WaUiCatalog.ButtonSmallPressed);
+            var languageRect = languageButton.GetComponent<RectTransform>();
+            languageRect.anchorMin = new Vector2(1f, 0.5f);
+            languageRect.anchorMax = new Vector2(1f, 0.5f);
+            languageRect.pivot = new Vector2(1f, 0.5f);
+            languageRect.anchoredPosition = new Vector2(-250f, 0f);
+            UiFactory.SetSize(languageRect, 220f, 72f);
+            languageImage = UiFactory.CreateSpriteImage(languageButton.transform, "Language Label", null, false);
+            UiFactory.Anchor(languageImage.rectTransform, Vector2.zero, Vector2.one, new Vector2(26f, 18f), new Vector2(-26f, -18f));
             languageButton.onClick.AddListener(localization.ToggleLanguage);
 
-            var backButton = UiFactory.CreateButton(header, "Back Button", string.Empty, new Color(0.19f, 0.21f, 0.22f, 1f), Color.white);
-            UiFactory.SetSize(backButton.GetComponent<RectTransform>(), 180f, 60f);
-            backText = backButton.GetComponentInChildren<Text>();
+            var backButton = UiFactory.CreateSpriteButton(
+                header.transform,
+                "Back Button",
+                WaUiCatalog.ButtonSmall,
+                WaUiCatalog.ButtonSmallHover,
+                WaUiCatalog.ButtonSmallPressed);
+            var backRect = backButton.GetComponent<RectTransform>();
+            backRect.anchorMin = new Vector2(1f, 0.5f);
+            backRect.anchorMax = new Vector2(1f, 0.5f);
+            backRect.pivot = new Vector2(1f, 0.5f);
+            backRect.anchoredPosition = new Vector2(-20f, 0f);
+            UiFactory.SetSize(backRect, 220f, 72f);
+            backImage = UiFactory.CreateSpriteImage(backButton.transform, "Back Label", null, false);
+            UiFactory.Anchor(backImage.rectTransform, Vector2.zero, Vector2.one, new Vector2(26f, 18f), new Vector2(-26f, -18f));
             backButton.onClick.AddListener(navigator.LoadStart);
 
             var gridObject = new GameObject("Level Grid", typeof(RectTransform), typeof(GridLayoutGroup));
             gridObject.transform.SetParent(transform, false);
             var gridRect = gridObject.GetComponent<RectTransform>();
-            UiFactory.Anchor(gridRect, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(80f, 90f), new Vector2(-80f, -170f));
+            UiFactory.Anchor(gridRect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-560f, -248f), new Vector2(560f, 208f));
 
             var grid = gridObject.GetComponent<GridLayoutGroup>();
             grid.cellSize = new Vector2(520f, 230f);
@@ -82,10 +110,12 @@ namespace ChopChop.UI
 
         private LevelCard CreateCard(Transform parent, LevelDefinition definition)
         {
-            var color = definition.isUnlocked
-                ? new Color(0.95f, 0.32f, 0.22f, 1f)
-                : new Color(0.22f, 0.24f, 0.25f, 1f);
-            var button = UiFactory.CreateButton(parent, definition.levelId, string.Empty, color, Color.white);
+            var button = UiFactory.CreateSpriteButton(
+                parent,
+                definition.levelId,
+                WaUiCatalog.LevelCard,
+                WaUiCatalog.LevelCard,
+                WaUiCatalog.LevelCard);
             button.interactable = definition.isUnlocked;
             UiFactory.AddFadeSlideIn(button.gameObject, 0.34f, 0.08f + cards.Count * 0.045f, Vector2.zero, 1f);
 
@@ -93,24 +123,19 @@ namespace ChopChop.UI
             thumbnail.transform.SetAsFirstSibling();
 
             var overlay = UiFactory.CreatePanel(button.transform, "Thumbnail Tint", definition.isUnlocked
-                ? new Color(0f, 0f, 0f, 0.36f)
-                : new Color(0f, 0f, 0f, 0.58f));
+                ? new Color(0.29f, 0.14f, 0.06f, 0.20f)
+                : new Color(0.18f, 0.10f, 0.08f, 0.50f));
             UiFactory.Stretch(overlay, 0f);
             overlay.transform.SetSiblingIndex(1);
 
-            var label = button.GetComponentInChildren<Text>();
-            label.fontSize = 34;
-            label.alignment = TextAnchor.UpperLeft;
-            UiFactory.Anchor(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(26f, 104f), new Vector2(-26f, -22f));
-            label.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
+            var label = UiFactory.CreateSpriteImage(button.transform, "Label", null, false);
+            UiFactory.Anchor(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(22f, 116f), new Vector2(-22f, -22f));
 
-            var description = UiFactory.CreateText(button.transform, "Description", 23, FontStyle.Normal, TextAnchor.UpperLeft, new Color(1f, 1f, 1f, 0.86f));
-            UiFactory.Anchor(description.rectTransform, Vector2.zero, Vector2.one, new Vector2(26f, 40f), new Vector2(-26f, -94f));
-            description.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.5f);
+            var description = UiFactory.CreateSpriteImage(button.transform, "Description", null, false);
+            UiFactory.Anchor(description.rectTransform, Vector2.zero, Vector2.one, new Vector2(24f, 54f), new Vector2(-24f, -94f));
 
-            var state = UiFactory.CreateText(button.transform, "State", 22, FontStyle.Bold, TextAnchor.LowerRight, new Color(1f, 1f, 1f, 0.8f));
-            UiFactory.Anchor(state.rectTransform, Vector2.zero, Vector2.one, new Vector2(26f, 20f), new Vector2(-26f, -20f));
-            state.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
+            var state = UiFactory.CreateSpriteImage(button.transform, "State", null, false);
+            UiFactory.Anchor(state.rectTransform, Vector2.zero, Vector2.one, new Vector2(320f, 154f), new Vector2(-30f, -36f));
 
             button.onClick.AddListener(() => navigator.LoadLevel(definition.sceneName));
             return new LevelCard(definition, label, description, state);
@@ -167,50 +192,41 @@ namespace ChopChop.UI
                 return;
             }
 
-            var sprite = Resources.Load<Sprite>(BackgroundResourcePath);
-            if (sprite == null)
-            {
-                Debug.LogWarning($"[Level Select] Missing background sprite Resources/{BackgroundResourcePath}.png", this);
-                return;
-            }
-
-            background.sprite = sprite;
+            background.sprite = WaUiCatalog.LevelSelectBackground;
             background.color = Color.white;
             background.raycastTarget = false;
         }
 
-        private void CreateReadableScrim()
+        private void CreateFrame()
         {
-            var scrim = new GameObject("Readable Scrim", typeof(RectTransform), typeof(Image));
-            scrim.transform.SetParent(transform, false);
-            UiFactory.Stretch(scrim.GetComponent<RectTransform>(), 0f);
-            var image = scrim.GetComponent<Image>();
-            image.color = new Color(0.02f, 0.018f, 0.014f, 0.56f);
-            image.raycastTarget = false;
+            var frame = UiFactory.CreateSpriteImage(transform, "Wa Frame", WaUiCatalog.MainFrame, false);
+            UiFactory.Anchor(frame.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-640f, -380f), new Vector2(640f, 380f));
         }
 
         private void UpdateTexts()
         {
-            titleText.text = localization.Text(LocalizationKeys.App.LevelSelect);
-            languageText.text = localization.Text(LocalizationKeys.App.Language);
-            backText.text = localization.Text(LocalizationKeys.App.Back);
+            UiFactory.ApplySprite(titleImage, WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.App.LevelSelect));
+            UiFactory.ApplySprite(languageImage, WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.App.Language));
+            UiFactory.ApplySprite(backImage, WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.App.Back));
 
             foreach (var card in cards)
             {
-                card.Name.text = localization.Text(card.Definition.displayNameKey);
-                card.Description.text = localization.Text(card.Definition.descriptionKey);
-                card.State.text = card.Definition.isUnlocked ? string.Empty : localization.Text(LocalizationKeys.Level.Locked);
+                UiFactory.ApplySprite(card.Name, WaUiCatalog.LoadLocalizedKey(localization, card.Definition.displayNameKey));
+                UiFactory.ApplySprite(card.Description, WaUiCatalog.LoadLocalizedKey(localization, card.Definition.descriptionKey));
+                UiFactory.ApplySprite(card.State, card.Definition.isUnlocked
+                    ? null
+                    : WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.Level.Locked));
             }
         }
 
         private readonly struct LevelCard
         {
             public readonly LevelDefinition Definition;
-            public readonly Text Name;
-            public readonly Text Description;
-            public readonly Text State;
+            public readonly Image Name;
+            public readonly Image Description;
+            public readonly Image State;
 
-            public LevelCard(LevelDefinition definition, Text name, Text description, Text state)
+            public LevelCard(LevelDefinition definition, Image name, Image description, Image state)
             {
                 Definition = definition;
                 Name = name;
