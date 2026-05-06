@@ -6,6 +6,8 @@ namespace ChopChop.App
 {
     public sealed class SceneNavigator
     {
+        private static string settingsReturnSceneName = AppScenes.Start;
+
         public void LoadStart()
         {
             Load(AppScenes.Start);
@@ -14,6 +16,20 @@ namespace ChopChop.App
         public void LoadLevelSelect()
         {
             Load(AppScenes.LevelSelect);
+        }
+
+        public void LoadSettings()
+        {
+            var activeSceneName = SceneManager.GetActiveScene().name;
+            settingsReturnSceneName = string.IsNullOrWhiteSpace(activeSceneName) || activeSceneName == AppScenes.Settings
+                ? AppScenes.LevelSelect
+                : activeSceneName;
+            Load(AppScenes.Settings);
+        }
+
+        public void LoadSettingsReturn()
+        {
+            Load(string.IsNullOrWhiteSpace(settingsReturnSceneName) ? AppScenes.LevelSelect : settingsReturnSceneName);
         }
 
         public void LoadLevel(string sceneName)

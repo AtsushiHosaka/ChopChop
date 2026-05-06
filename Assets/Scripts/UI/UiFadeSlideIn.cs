@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ChopChop.UI
 {
@@ -17,6 +18,7 @@ namespace ChopChop.UI
         private Vector2 targetPosition;
         private float startedAt;
         private bool playing;
+        private bool animatePosition;
 
         public void Configure(float animationDuration, float animationDelay, Vector2 offset, float initialScale = 0.98f)
         {
@@ -30,6 +32,7 @@ namespace ChopChop.UI
         {
             Resolve();
             targetPosition = rectTransform.anchoredPosition;
+            animatePosition = startOffset.sqrMagnitude > 0.001f && !IsLayoutControlled();
             startedAt = Time.unscaledTime;
             playing = true;
             Apply(0f);
@@ -59,7 +62,11 @@ namespace ChopChop.UI
 
         private void Apply(float t)
         {
-            rectTransform.anchoredPosition = Vector2.LerpUnclamped(targetPosition + startOffset, targetPosition, t);
+            if (animatePosition)
+            {
+                rectTransform.anchoredPosition = Vector2.LerpUnclamped(targetPosition + startOffset, targetPosition, t);
+            }
+
             rectTransform.localScale = Vector3.one * Mathf.LerpUnclamped(startScale, 1f, t);
             canvasGroup.alpha = t;
         }
@@ -75,6 +82,11 @@ namespace ChopChop.UI
             {
                 canvasGroup = GetComponent<CanvasGroup>();
             }
+        }
+
+        private bool IsLayoutControlled()
+        {
+            return transform.parent != null && transform.parent.GetComponent<LayoutGroup>() != null;
         }
 
         private static float Smooth(float t)

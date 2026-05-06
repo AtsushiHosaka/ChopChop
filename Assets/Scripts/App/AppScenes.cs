@@ -4,6 +4,7 @@ namespace ChopChop.App
     {
         public const string Start = "StartScene";
         public const string LevelSelect = "LevelSelectScene";
+        public const string Settings = "SettingsScene";
         public const string TutorialTempura = "Tutorial_TempuraScene";
         public const string Level01Sashimi = "Level01_SashimiScene";
         public const string Level02TamagoKakeGohan = "Level02_TamagoKakeGohanScene";
