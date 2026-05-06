@@ -34,8 +34,8 @@ namespace ChopChop.UI
             CreateReadableScrim();
             CreateLeftShade();
 
-            var menuPanel = UiFactory.CreatePanel(transform, "Level Menu Panel", new Color(0.025f, 0.02f, 0.015f, 0.62f));
-            UiFactory.Anchor(menuPanel, new Vector2(0.035f, 0.075f), new Vector2(0.56f, 0.94f), Vector2.zero, Vector2.zero);
+            var menuPanel = UiFactory.CreatePanel(transform, "Level Menu Panel", new Color(0.025f, 0.02f, 0.015f, 0.64f));
+            UiFactory.Anchor(menuPanel, new Vector2(0.035f, 0.075f), new Vector2(0.68f, 0.94f), Vector2.zero, Vector2.zero);
             UiFactory.AddFadeSlideIn(menuPanel.gameObject, 0.34f, 0.04f, new Vector2(-20f, 0f), 0.99f);
             UiFactory.AddVerticalLayout(menuPanel.gameObject, 18f, TextAnchor.UpperLeft, new RectOffset(28, 28, 24, 24));
 
@@ -70,19 +70,18 @@ namespace ChopChop.UI
             viewportImage.raycastTarget = true;
             viewportObject.GetComponent<Mask>().showMaskGraphic = false;
 
-            var gridObject = new GameObject("Level List", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+            var gridObject = new GameObject("Level Grid", typeof(RectTransform), typeof(GridLayoutGroup), typeof(ContentSizeFitter), typeof(UiResponsiveGridLayout));
             gridObject.transform.SetParent(viewportObject.transform, false);
             var gridRect = gridObject.GetComponent<RectTransform>();
             UiFactory.Anchor(gridRect, new Vector2(0f, 1f), Vector2.one, Vector2.zero, Vector2.zero);
             gridRect.pivot = new Vector2(0.5f, 1f);
 
-            var layout = gridObject.GetComponent<VerticalLayoutGroup>();
-            layout.spacing = 14f;
-            layout.childAlignment = TextAnchor.UpperLeft;
-            layout.childControlWidth = true;
-            layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
+            gridObject.GetComponent<UiResponsiveGridLayout>().Configure(
+                2,
+                390f,
+                2.12f,
+                new Vector2(20f, 18f),
+                new RectOffset(0, 0, 0, 0));
 
             var fitter = gridObject.GetComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
@@ -120,7 +119,6 @@ namespace ChopChop.UI
                 : new Color(0.075f, 0.07f, 0.065f, 0.68f);
             var button = UiFactory.CreateButton(parent, definition.levelId, string.Empty, color, Color.white);
             button.interactable = definition.isUnlocked;
-            UiFactory.SetPreferredHeight(button.GetComponent<RectTransform>(), 112f);
             UiFactory.AddFadeSlideIn(button.gameObject, 0.34f, 0.08f + cards.Count * 0.045f, Vector2.zero, 1f);
 
             var thumbnail = CreateThumbnail(button.transform, ResolveThumbnail(definition), definition.isUnlocked);
@@ -129,21 +127,21 @@ namespace ChopChop.UI
             var accent = UiFactory.CreatePanel(button.transform, "Accent", definition.isUnlocked
                 ? new Color(0.95f, 0.36f, 0.22f, 1f)
                 : new Color(0.45f, 0.38f, 0.28f, 0.8f));
-            UiFactory.Anchor(accent, new Vector2(0f, 0f), new Vector2(0f, 1f), Vector2.zero, new Vector2(4f, 0f));
+            UiFactory.Anchor(accent, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(14f, 0f), new Vector2(-14f, 4f));
             accent.GetComponent<Image>().raycastTarget = false;
 
             var label = button.GetComponentInChildren<Text>();
-            label.fontSize = 28;
+            label.fontSize = 30;
             label.alignment = TextAnchor.MiddleLeft;
-            UiFactory.Anchor(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(174f, 54f), new Vector2(-178f, -16f));
+            UiFactory.Anchor(label.rectTransform, new Vector2(0f, 0.18f), new Vector2(1f, 0.42f), new Vector2(18f, 0f), new Vector2(-18f, 0f));
             label.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
 
-            var description = UiFactory.CreateText(button.transform, "Description", 18, FontStyle.Normal, TextAnchor.MiddleLeft, new Color(0.92f, 0.86f, 0.74f, 0.92f));
-            UiFactory.Anchor(description.rectTransform, Vector2.zero, Vector2.one, new Vector2(174f, 16f), new Vector2(-178f, -58f));
+            var description = UiFactory.CreateText(button.transform, "Description", 17, FontStyle.Normal, TextAnchor.MiddleLeft, new Color(0.92f, 0.86f, 0.74f, 0.92f));
+            UiFactory.Anchor(description.rectTransform, new Vector2(0f, 0.05f), new Vector2(1f, 0.22f), new Vector2(18f, 0f), new Vector2(-18f, 0f));
             description.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.5f);
 
             var state = UiFactory.CreateText(button.transform, "State", 18, FontStyle.Bold, TextAnchor.MiddleRight, new Color(0.94f, 0.73f, 0.36f, 0.92f));
-            UiFactory.Anchor(state.rectTransform, new Vector2(1f, 0f), Vector2.one, new Vector2(-166f, 0f), new Vector2(-20f, 0f));
+            UiFactory.Anchor(state.rectTransform, new Vector2(0.46f, 0.78f), Vector2.one, new Vector2(0f, 0f), new Vector2(-18f, -12f));
             state.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
 
             button.onClick.AddListener(() => navigator.LoadLevel(definition.sceneName));
@@ -155,7 +153,7 @@ namespace ChopChop.UI
             var thumbnailObject = new GameObject("Thumbnail", typeof(RectTransform), typeof(Image));
             thumbnailObject.transform.SetParent(parent, false);
             var rectTransform = thumbnailObject.GetComponent<RectTransform>();
-            UiFactory.Anchor(rectTransform, new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(5f, 0f), new Vector2(166f, 0f));
+            UiFactory.Anchor(rectTransform, new Vector2(0f, 0.43f), Vector2.one, new Vector2(8f, 8f), new Vector2(-8f, -8f));
 
             var image = thumbnailObject.GetComponent<Image>();
             image.sprite = sprite;
@@ -229,7 +227,7 @@ namespace ChopChop.UI
             shade.transform.SetParent(transform, false);
             var rect = shade.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0f, 0f);
-            rect.anchorMax = new Vector2(0.52f, 1f);
+            rect.anchorMax = new Vector2(0.7f, 1f);
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
             var image = shade.GetComponent<Image>();

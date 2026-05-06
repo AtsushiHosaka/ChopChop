@@ -64,6 +64,8 @@ namespace ChopChop.Tests.EditMode
             AssertButtonExists(root, "Back Button");
             AssertButtonExists(root, "Settings Button");
             Assert.That(CountLevelButtons(root), Is.GreaterThanOrEqualTo(5));
+            Assert.That(root.transform.Find("Level Menu Panel/Level Viewport/Level Grid")?.GetComponent<GridLayoutGroup>(), Is.Not.Null);
+            Assert.That(root.transform.Find("Level Menu Panel/Level Viewport/Level Grid")?.GetComponent<UiResponsiveGridLayout>(), Is.Not.Null);
         }
 
         [Test]
