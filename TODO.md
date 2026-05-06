@@ -31,8 +31,10 @@
 
 - [x] `StartScene` を起動するとタイトル、Start、Language、Quitが表示される。
 - [x] `StartScene` に生成済み背景画像が表示され、UIテキストとボタンがその上に重なる。
+- [x] `StartScene` に和風の生成背景画像と漆/金基調のメニューUIが表示される。
 - [x] `Start` を押すと `LevelSelectScene` に遷移する。
 - [x] `LevelSelectScene` でTutorial/Lv.1-Lv.5が現在の学習順で表示される。
+- [x] `LevelSelectScene` に和紙/料理の生成背景画像と縦型レベルカードUIが表示される。
 - [x] 各レベルカードを押すと、対応する分割Sceneへ遷移する。
 - [x] Lv.5カードを押すと `Level05_SukiyakiScene` に遷移する。
 - [x] Lv.5カードに生成済みすき焼きサムネイル画像が表示される。
@@ -490,6 +492,7 @@
 - [x] `SukiyakiStageController` の工程遷移testがある。
 - [x] `SukiyakiStageController` の肉破れretry testがある。
 - [x] Start画面のStart/Language/Quitボタン生成testがある。
+- [x] Level Select画面のBack/Language/Level Card生成testがある。
 - [x] Result画面のRetry/Back/Languageボタン生成testがある。
 - [x] `ChopChopMvpValidator` がBuild Settingsを検証する。
 - [x] `ChopChopMvpValidator` がLevelCatalogを検証する。
@@ -691,6 +694,7 @@
 - [x] `UiSliderValueAnimator` により、HUD progress barが瞬間変化ではなく滑らかに追従する。
 - [x] Start画面のMain UIが左から軽く入る。
 - [x] Level SelectのHeaderが上から軽く入り、Level Cardが順番にfade-inする。
+- [x] Start/Level Selectの新背景spriteと主要ボタン生成をUnity MCPで検証する。
 - [x] Sukiyaki HUDが上から軽く入り、工程変更時にStep textが軽くpopする。
 - [x] 失敗数が変化した時、Failures textが軽くpopする。
 - [x] カウントダウン画像が数字ごとにpopし、次工程開始前にfadeする。

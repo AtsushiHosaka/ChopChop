@@ -45,7 +45,7 @@ This document records third-party and generated assets currently used or evaluat
 
 - Project path: `Assets/Resources/UI`
 - Current usage: start background, level thumbnails, countdown images, sukiyaki cue/feedback images.
-- Modifications: imported as Unity sprites and used by runtime UI.
+- Modifications: imported as Unity sprites and used by runtime UI. Start/Level Select use generated Japanese-style backgrounds at `Assets/Resources/UI/Start/start_background_wafu.png` and `Assets/Resources/UI/LevelSelect/level_select_background_wafu.png`.
 
 ### Audio
 

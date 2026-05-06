@@ -10,6 +10,7 @@ namespace ChopChop.App
             public const string Language = "app.language";
             public const string Quit = "app.quit";
             public const string Back = "app.back";
+            public const string MenuSubtitle = "app.menuSubtitle";
         }
 
         public static class Level

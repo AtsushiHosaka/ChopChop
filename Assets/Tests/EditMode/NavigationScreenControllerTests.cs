@@ -55,6 +55,17 @@ namespace ChopChop.Tests.EditMode
             AssertButtonExists(root, "Language Button");
         }
 
+        [Test]
+        public void LevelSelectScreenCreatesBackLanguageAndLevelCards()
+        {
+            var root = LevelSelectScreenController.Create(new GameLocalization(), new SceneNavigator(), LevelCatalogLoader.Load());
+            createdObjects.Add(root);
+
+            AssertButtonExists(root, "Back Button");
+            AssertButtonExists(root, "Language Button");
+            Assert.That(CountLevelButtons(root), Is.GreaterThanOrEqualTo(5));
+        }
+
         private static void AssertButtonExists(GameObject root, string name)
         {
             var button = FindButton(root, name);
@@ -74,6 +85,20 @@ namespace ChopChop.Tests.EditMode
             }
 
             return null;
+        }
+
+        private static int CountLevelButtons(GameObject root)
+        {
+            var count = 0;
+            foreach (var button in root.GetComponentsInChildren<Button>(true))
+            {
+                if (button.name.StartsWith("level") || button.name.StartsWith("tutorial"))
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
     }
 }
