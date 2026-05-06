@@ -10,6 +10,19 @@ namespace ChopChop.App
             public const string Language = "app.language";
             public const string Quit = "app.quit";
             public const string Back = "app.back";
+            public const string MenuSubtitle = "app.menuSubtitle";
+            public const string Settings = "app.settings";
+        }
+
+        public static class Settings
+        {
+            public const string Title = "settings.title";
+            public const string Language = "settings.language";
+            public const string Japanese = "settings.japanese";
+            public const string English = "settings.english";
+            public const string Bgm = "settings.bgm";
+            public const string BgmOn = "settings.bgmOn";
+            public const string BgmOff = "settings.bgmOff";
         }
 
         public static class Level

@@ -35,6 +35,7 @@ namespace ChopChop.Editor
             {
                 "Assets/Scenes/StartScene.unity",
                 "Assets/Scenes/LevelSelectScene.unity",
+                "Assets/Scenes/SettingsScene.unity",
                 "Assets/Scenes/Levels/Tutorial_TempuraScene.unity",
                 "Assets/Scenes/Levels/Level01_SashimiScene.unity",
                 "Assets/Scenes/Levels/Level02_TamagoKakeGohanScene.unity",

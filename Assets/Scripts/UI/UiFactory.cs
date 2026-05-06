@@ -9,7 +9,14 @@ namespace ChopChop.UI
     public static class UiFactory
     {
         private const string PreferredFontResourcePath = "Fonts/YujiSyuku-Regular";
-        private static Font defaultFont;
+        private const string RegularFontResourcePath = "Fonts/ZenKakuGothicNew-Regular";
+        private const string BoldFontResourcePath = "Fonts/ZenKakuGothicNew-Bold";
+
+        private static Font preferredFont;
+        private static Font defaultRegularFont;
+        private static Font defaultBoldFont;
+        private static Font fallbackFont;
+        private static Sprite roundedSurfaceSprite;
 
         public static GameObject CreateScreen(string name, Color background, bool drawBackground)
         {
@@ -50,9 +57,9 @@ namespace ChopChop.UI
             var textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
             textObject.transform.SetParent(parent, false);
             var text = textObject.GetComponent<Text>();
-            text.font = DefaultFont();
+            text.font = FontForStyle(style, out var appliedStyle);
             text.fontSize = fontSize;
-            text.fontStyle = style;
+            text.fontStyle = appliedStyle;
             text.alignment = anchor;
             text.color = color;
             text.raycastTarget = false;
@@ -65,15 +72,21 @@ namespace ChopChop.UI
         {
             var buttonObject = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
             buttonObject.transform.SetParent(parent, false);
-            buttonObject.GetComponent<Image>().color = background;
+            var image = buttonObject.GetComponent<Image>();
+            image.sprite = RoundedSurfaceSprite();
+            image.type = Image.Type.Sliced;
+            image.color = background;
 
             var button = buttonObject.GetComponent<Button>();
             var colors = button.colors;
             colors.normalColor = background;
-            colors.highlightedColor = background * 1.12f;
-            colors.pressedColor = background * 0.82f;
-            colors.disabledColor = new Color(0.2f, 0.2f, 0.2f, 0.55f);
+            colors.highlightedColor = Blend(background, new Color(1f, 0.82f, 0.44f, background.a), 0.18f);
+            colors.pressedColor = Blend(background, Color.black, 0.2f);
+            colors.disabledColor = new Color(0.12f, 0.105f, 0.09f, 0.58f);
             button.colors = colors;
+            button.targetGraphic = image;
+
+            AddButtonChrome(buttonObject.transform);
 
             var text = CreateText(buttonObject.transform, "Label", 28, FontStyle.Bold, TextAnchor.MiddleCenter, foreground);
             text.text = label;
@@ -218,6 +231,35 @@ namespace ChopChop.UI
         public static void SetSize(RectTransform rectTransform, float width, float height)
         {
             rectTransform.sizeDelta = new Vector2(width, height);
+
+            var layoutElement = EnsureLayoutElement(rectTransform);
+            layoutElement.minWidth = width;
+            layoutElement.minHeight = height;
+            layoutElement.preferredWidth = width;
+            layoutElement.preferredHeight = height;
+        }
+
+        public static void SetPreferredHeight(RectTransform rectTransform, float height)
+        {
+            rectTransform.sizeDelta = new Vector2(rectTransform.sizeDelta.x, height);
+
+            var layoutElement = EnsureLayoutElement(rectTransform);
+            layoutElement.minWidth = 0f;
+            layoutElement.preferredWidth = -1f;
+            layoutElement.flexibleWidth = 1f;
+            layoutElement.minHeight = height;
+            layoutElement.preferredHeight = height;
+        }
+
+        public static void SetFlexibleFill(RectTransform rectTransform)
+        {
+            var layoutElement = EnsureLayoutElement(rectTransform);
+            layoutElement.minWidth = 0f;
+            layoutElement.preferredWidth = -1f;
+            layoutElement.flexibleWidth = 1f;
+            layoutElement.minHeight = 0f;
+            layoutElement.preferredHeight = -1f;
+            layoutElement.flexibleHeight = 1f;
         }
 
         public static void Stretch(RectTransform rectTransform, float margin)
@@ -236,26 +278,145 @@ namespace ChopChop.UI
             rectTransform.offsetMax = offsetMax;
         }
 
-        private static Font DefaultFont()
+        private static Font FontForStyle(FontStyle requestedStyle, out FontStyle appliedStyle)
         {
-            if (defaultFont != null)
+            var preferred = PreferredFont();
+            if (preferred != null)
             {
-                return defaultFont;
+                appliedStyle = requestedStyle;
+                return preferred;
             }
 
-            defaultFont = Resources.Load<Font>(PreferredFontResourcePath);
-            if (defaultFont != null)
+            var isBold = requestedStyle == FontStyle.Bold || requestedStyle == FontStyle.BoldAndItalic;
+            var projectFont = isBold ? ProjectBoldFont() : ProjectRegularFont();
+            if (projectFont != null)
             {
-                return defaultFont;
+                appliedStyle = FontStyle.Normal;
+                return projectFont;
             }
 
-            defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (defaultFont == null)
+            appliedStyle = requestedStyle;
+            return FallbackFont();
+        }
+
+        private static Font PreferredFont()
+        {
+            if (preferredFont != null)
             {
-                defaultFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
+                return preferredFont;
             }
 
-            return defaultFont;
+            preferredFont = Resources.Load<Font>(PreferredFontResourcePath);
+            return preferredFont;
+        }
+
+        private static Font ProjectRegularFont()
+        {
+            if (defaultRegularFont != null)
+            {
+                return defaultRegularFont;
+            }
+
+            defaultRegularFont = Resources.Load<Font>(RegularFontResourcePath);
+            return defaultRegularFont;
+        }
+
+        private static Font ProjectBoldFont()
+        {
+            if (defaultBoldFont != null)
+            {
+                return defaultBoldFont;
+            }
+
+            defaultBoldFont = Resources.Load<Font>(BoldFontResourcePath);
+            return defaultBoldFont != null ? defaultBoldFont : ProjectRegularFont();
+        }
+
+        private static Font FallbackFont()
+        {
+            if (fallbackFont != null)
+            {
+                return fallbackFont;
+            }
+
+            fallbackFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (fallbackFont == null)
+            {
+                fallbackFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            }
+
+            return fallbackFont;
+        }
+
+        private static LayoutElement EnsureLayoutElement(RectTransform rectTransform)
+        {
+            var layoutElement = rectTransform.GetComponent<LayoutElement>();
+            if (layoutElement == null)
+            {
+                layoutElement = rectTransform.gameObject.AddComponent<LayoutElement>();
+            }
+
+            return layoutElement;
+        }
+
+        private static void AddButtonChrome(Transform parent)
+        {
+            var topHighlight = CreatePanel(parent, "Top Highlight", new Color(1f, 0.86f, 0.5f, 0.18f));
+            Anchor(topHighlight, new Vector2(0f, 1f), Vector2.one, new Vector2(12f, -3f), new Vector2(-12f, 0f));
+            topHighlight.GetComponent<Image>().raycastTarget = false;
+
+            var bottomShadow = CreatePanel(parent, "Bottom Shadow", new Color(0f, 0f, 0f, 0.24f));
+            Anchor(bottomShadow, Vector2.zero, new Vector2(1f, 0f), new Vector2(12f, 0f), new Vector2(-12f, 3f));
+            bottomShadow.GetComponent<Image>().raycastTarget = false;
+
+            var accent = CreatePanel(parent, "Gold Accent", new Color(0.94f, 0.64f, 0.22f, 0.9f));
+            Anchor(accent, new Vector2(0f, 0.18f), new Vector2(0f, 0.82f), new Vector2(0f, 0f), new Vector2(5f, 0f));
+            accent.GetComponent<Image>().raycastTarget = false;
+        }
+
+        private static Sprite RoundedSurfaceSprite()
+        {
+            if (roundedSurfaceSprite != null)
+            {
+                return roundedSurfaceSprite;
+            }
+
+            const int size = 64;
+            const int radius = 7;
+            var texture = new Texture2D(size, size, TextureFormat.ARGB32, false)
+            {
+                name = "ChopChop Rounded UI Surface",
+                hideFlags = HideFlags.HideAndDontSave,
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear
+            };
+
+            var pixels = new Color32[size * size];
+            for (var y = 0; y < size; y++)
+            {
+                for (var x = 0; x < size; x++)
+                {
+                    var dx = x < radius ? radius - x : x >= size - radius ? x - (size - radius - 1) : 0;
+                    var dy = y < radius ? radius - y : y >= size - radius ? y - (size - radius - 1) : 0;
+                    var outsideCorner = dx > 0 && dy > 0 && dx * dx + dy * dy > radius * radius;
+                    pixels[y * size + x] = outsideCorner ? new Color32(255, 255, 255, 0) : Color.white;
+                }
+            }
+
+            texture.SetPixels32(pixels);
+            texture.Apply(false, true);
+            roundedSurfaceSprite = Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), 100f, 0u, SpriteMeshType.FullRect, new Vector4(radius, radius, radius, radius));
+            roundedSurfaceSprite.hideFlags = HideFlags.HideAndDontSave;
+            return roundedSurfaceSprite;
+        }
+
+        private static Color Blend(Color from, Color to, float amount)
+        {
+            return new Color(
+                Mathf.Lerp(from.r, to.r, amount),
+                Mathf.Lerp(from.g, to.g, amount),
+                Mathf.Lerp(from.b, to.b, amount),
+                Mathf.Lerp(from.a, to.a, amount));
         }
 
         private static void EnsureEventSystem()
@@ -269,16 +430,34 @@ namespace ChopChop.UI
             var inputSystemModule = Type.GetType("UnityEngine.InputSystem.UI.InputSystemUIInputModule, Unity.InputSystem");
             if (inputSystemModule != null)
             {
-                var module = eventSystem.AddComponent(inputSystemModule);
-                var assignDefaults = inputSystemModule.GetMethod(
-                    "AssignDefaultActions",
-                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
-                assignDefaults?.Invoke(module, null);
+                Component module = null;
+                try
+                {
+                    module = eventSystem.AddComponent(inputSystemModule);
+                    var assignDefaults = inputSystemModule.GetMethod(
+                        "AssignDefaultActions",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+                    assignDefaults?.Invoke(module, null);
+                    return;
+                }
+                catch (Exception exception)
+                {
+                    Debug.Log($"[UI] Falling back to StandaloneInputModule: {exception.GetBaseException().Message}");
+                    if (module != null)
+                    {
+                        if (Application.isPlaying)
+                        {
+                            UnityEngine.Object.Destroy(module);
+                        }
+                        else
+                        {
+                            UnityEngine.Object.DestroyImmediate(module);
+                        }
+                    }
+                }
             }
-            else
-            {
-                eventSystem.AddComponent<StandaloneInputModule>();
-            }
+
+            eventSystem.AddComponent<StandaloneInputModule>();
         }
     }
 }

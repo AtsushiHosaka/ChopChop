@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,6 +8,7 @@ namespace ChopChop.Audio
     public sealed class AudioService : MonoBehaviour
     {
         private const string ResourceRoot = "Audio/";
+        private const string BgmEnabledPrefsKey = "ChopChop.BgmEnabled";
 
         private static AudioService instance;
 
@@ -23,6 +25,7 @@ namespace ChopChop.Audio
         private AudioSource gameplaySource;
         private AudioBgmId currentBgm = AudioBgmId.None;
         private float targetBgmVolume;
+        private bool bgmEnabled = true;
 
         public static AudioService Instance
         {
@@ -37,6 +40,9 @@ namespace ChopChop.Audio
             }
         }
 
+        public bool BgmEnabled => bgmEnabled;
+        public event Action BgmSettingsChanged;
+
         public void Initialize()
         {
             if (instance != null && instance != this)
@@ -47,6 +53,7 @@ namespace ChopChop.Audio
 
             instance = this;
             EnsureSources();
+            bgmEnabled = PlayerPrefs.GetInt(BgmEnabledPrefsKey, 1) == 1;
         }
 
         public void PlayBgm(AudioBgmId bgmId)
@@ -61,7 +68,7 @@ namespace ChopChop.Audio
 
             if (currentBgm == bgmId && bgmSource.isPlaying)
             {
-                targetBgmVolume = bgmVolume;
+                targetBgmVolume = EffectiveBgmVolume();
                 return;
             }
 
@@ -75,8 +82,33 @@ namespace ChopChop.Audio
             bgmSource.clip = clip;
             bgmSource.loop = true;
             bgmSource.volume = 0f;
-            targetBgmVolume = bgmVolume;
+            targetBgmVolume = EffectiveBgmVolume();
             bgmSource.Play();
+        }
+
+        public void SetBgmEnabled(bool enabled)
+        {
+            if (bgmEnabled == enabled)
+            {
+                return;
+            }
+
+            bgmEnabled = enabled;
+            PlayerPrefs.SetInt(BgmEnabledPrefsKey, enabled ? 1 : 0);
+            PlayerPrefs.Save();
+            targetBgmVolume = currentBgm == AudioBgmId.None ? 0f : EffectiveBgmVolume();
+
+            if (enabled && bgmSource != null && bgmSource.clip != null && !bgmSource.isPlaying)
+            {
+                bgmSource.Play();
+            }
+
+            BgmSettingsChanged?.Invoke();
+        }
+
+        public void ToggleBgmEnabled()
+        {
+            SetBgmEnabled(!bgmEnabled);
         }
 
         public void PlayCue(AudioCueId cueId)
@@ -115,6 +147,11 @@ namespace ChopChop.Audio
                 bgmSource.Stop();
                 bgmSource.clip = null;
             }
+        }
+
+        private float EffectiveBgmVolume()
+        {
+            return bgmEnabled ? bgmVolume : 0f;
         }
 
         private void OnDestroy()

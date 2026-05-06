@@ -29,10 +29,18 @@
 
 ## 1. Scene Flow
 
-- [x] `StartScene` を起動するとタイトル、Start、Language、Quitが表示される。
+- [x] `StartScene` を起動するとタイトル、Start、Settings、Quitが表示される。
 - [x] `StartScene` に生成済み背景画像が表示され、UIテキストとボタンがその上に重なる。
+- [x] `StartScene` に和風の生成背景画像と漆/金基調のメニューUIが表示される。
 - [x] `Start` を押すと `LevelSelectScene` に遷移する。
+- [x] `Settings` を押すと `SettingsScene` に遷移し、Backで遷移元Sceneへ戻れる。
 - [x] `LevelSelectScene` でTutorial/Lv.1-Lv.5が現在の学習順で表示される。
+- [x] `LevelSelectScene` に和紙/料理の生成背景画像と2列Gridの大きなレベルカードUIが表示される。
+- [x] `LevelSelectScene` のレベルカードは固定幅ではなく、Viewport/ScrollRect/ResponsiveGridLayoutで画面外にはみ出さない。
+- [x] `LevelSelectScene` のTutorial/Lv.1-Lv.5全6カードがGridに生成され、常時表示スクロールバーで全カードへアクセスできる。
+- [x] `LevelSelectScene` のレベルカード画像は小さな帯ではなく、カード面積の過半を使って大きく表示される。
+- [x] `LevelSelectScene` のレベルカード画像は `preserveAspect` を有効にし、元画像の縦横比を変えない。
+- [x] `LevelSelectScene` から `SettingsScene` へ遷移できる。
 - [x] 各レベルカードを押すと、対応する分割Sceneへ遷移する。
 - [x] Lv.5カードを押すと `Level05_SukiyakiScene` に遷移する。
 - [x] Lv.5カードに生成済みすき焼きサムネイル画像が表示される。
@@ -41,6 +49,10 @@
 - [x] `ResultScene` にSpeed、Care、失敗回数、完了時間が表示される。
 - [x] `ResultScene` のRetryでLv.5を再開始できる。
 - [x] `ResultScene` のLevel Selectで `LevelSelectScene` に戻れる。
+- [x] `ResultScene` にBackボタンがあり、押すと `LevelSelectScene` に戻れる。
+- [x] Start/ResultのボタンがLayoutGroupで潰れないよう、UIサイズがLayoutElementへ反映される。
+- [x] 共通ボタンは単色の四角ではなく、丸み、金アクセント、highlight/shadowを持つ共通surfaceになっている。
+- [x] `UiFactory` の標準UIフォントがZen Kaku Gothic New Regular/Boldを優先して使う。
 
 ## 1.5 Level Roadmap And Scene Split
 
@@ -60,7 +72,8 @@
 - [x] `Assets/Scenes/Levels/Level03_TofuScene.unity` が存在する。
 - [x] `Assets/Scenes/Levels/Level04_GrilledFishScene.unity` が存在する。
 - [x] `Assets/Scenes/Levels/Level05_SukiyakiScene.unity` が存在する。
-- [x] Build Settingsが `Start -> LevelSelect -> Tutorial -> Lv.1 -> Lv.2 -> Lv.3 -> Lv.4 -> Lv.5 -> Result` の順になっている。
+- [x] `Assets/Scenes/SettingsScene.unity` が存在する。
+- [x] Build Settingsが `Start -> LevelSelect -> Settings -> Tutorial -> Lv.1 -> Lv.2 -> Lv.3 -> Lv.4 -> Lv.5 -> Result` の順になっている。
 - [x] 非すき焼きSceneでも `AppRuntime` がPrototype Level画面を生成し、戻る導線を持つ。
 - [ ] 各レベルSceneに本番用 `ILevelController` 実装を接続する。
 - [ ] 各レベルSceneにデモ専用Driverを別GameObjectとして接続する。
@@ -75,8 +88,8 @@
 - [x] `Assets/Localization/StringTables/ChopChopText_ja.asset` が存在する。
 - [x] `Assets/Localization/StringTables/ChopChopText_en.asset` が存在する。
 - [x] すべてのUIテキストが `ChopChopText` String Table経由で表示される。
-- [x] Start画面でLanguageを押すと日本語/英語が切り替わる。
-- [x] Level Select画面でLanguageを押すと日本語/英語が切り替わる。
+- [x] Settings画面でLanguageを押すと日本語/英語が切り替わる。
+- [x] Settings画面でBGM ON/OFFを切り替えられる。
 - [x] Sukiyaki画面でLanguageを押すとHUDと工程表示が切り替わる。
 - [x] Result画面でLanguageを押すと結果ラベルとボタンが切り替わる。
 - [x] 日本語/英語のString Tableで欠けているkeyがない。
@@ -487,6 +500,10 @@
 - [x] `TearReasonClassifier` のreason分類testがある。
 - [x] `SukiyakiStageController` の工程遷移testがある。
 - [x] `SukiyakiStageController` の肉破れretry testがある。
+- [x] Start画面のStart/Settings/Quitボタン生成testがある。
+- [x] Level Select画面のBack/Settings/Level Card生成testがある。
+- [x] Settings画面のLanguage/BGM/Backボタン生成testがある。
+- [x] Result画面のRetry/Back/Languageボタン生成testがある。
 - [x] `ChopChopMvpValidator` がBuild Settingsを検証する。
 - [x] `ChopChopMvpValidator` がLevelCatalogを検証する。
 - [x] `ChopChopMvpValidator` がLocalization key欠落を検証する。
@@ -687,6 +704,15 @@
 - [x] `UiSliderValueAnimator` により、HUD progress barが瞬間変化ではなく滑らかに追従する。
 - [x] Start画面のMain UIが左から軽く入る。
 - [x] Level SelectのHeaderが上から軽く入り、Level Cardが順番にfade-inする。
+- [x] Start/Level Selectの新背景spriteと主要ボタン生成をUnity MCPで検証する。
+- [x] Settings画面とLevel SelectのレスポンシブViewport生成をUnity MCPで検証する。
+- [x] 共通ボタンのhover/press対象Imageがsliced rounded surfaceになっていることをUnity MCPで検証する。
+- [x] 主要なランタイムUIテキストがZen Kaku Gothic Newを使って生成されることをUnity MCPで検証する。
+- [x] Level Selectのカード一覧が2列Gridで生成され、狭い画面では1列へ落ちるレスポンシブ実装になっている。
+- [x] Level SelectのGrid content高さは `UiResponsiveGridLayout` が計算し、ScrollRect/ContentSizeFitter依存でカードが欠けない。
+- [x] Level SelectのGridは初回表示時にもCanvasレイアウト後に再計算され、ウィンドウリサイズなしで重ならず表示される。
+- [x] Level Selectのカード入場アニメーションはGridLayoutGroupの座標を上書きせず、StartSceneから遷移した直後もカードが重ならない。
+- [x] Level SelectのScrollRectにはプレイヤーに見える縦Scrollbarがある。
 - [x] Sukiyaki HUDが上から軽く入り、工程変更時にStep textが軽くpopする。
 - [x] 失敗数が変化した時、Failures textが軽くpopする。
 - [x] カウントダウン画像が数字ごとにpopし、次工程開始前にfadeする。
@@ -704,6 +730,7 @@
 - [x] `AudioService` がAppRuntime配下で永続化され、Sceneを跨いでBGM/SEを管理する。
 - [x] Start/Level Select/Result/PrototypeではMenu BGM、Lv.5 SukiyakiではSukiyaki BGMが自動で切り替わる。
 - [x] BGM切り替え時に短いfade-inを行い、Scene遷移時に唐突に鳴らさない。
+- [x] Settings画面でBGM ON/OFFを切り替え、PlayerPrefsへ保存できる。
 - [x] 全 `UiFactory.CreateButton` ボタンにclick SEが付いている。
 - [x] 全 `UiFactory.CreateButton` ボタンにhover SEが付いている。
 - [x] カウントダウンの3/2/1表示ごとにtick SEが鳴る。

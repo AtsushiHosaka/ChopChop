@@ -159,14 +159,6 @@ namespace ChopChop.UI
             background.raycastTarget = false;
         }
 
-        private string SinglePlayerStatsText(LevelRunResult runResult)
-        {
-            return $"{localization.Text(LocalizationKeys.Hud.Time)}: {runResult.CompletionTime:0.0}s\n"
-                + $"{localization.Text(LocalizationKeys.Hud.Speed)}: {runResult.SpeedScore:0}\n"
-                + $"{localization.Text(LocalizationKeys.Hud.Care)}: {runResult.CareScore:0}\n"
-                + $"{localization.Text(LocalizationKeys.Hud.Failures)}: {runResult.FailureCount}";
-        }
-
         private string VersusStatsText()
         {
             var playerOneLabel = localization.Text(LocalizationKeys.Result.PlayerOne);

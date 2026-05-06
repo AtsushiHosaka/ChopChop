@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/LevelSelectScene.unity
     guid: 02fe30d29f4b4402aa96de9a04d44a0b
   - enabled: 1
+    path: Assets/Scenes/SettingsScene.unity
+    guid: b544a1003aa76411c8fa5f3454b92219
+  - enabled: 1
     path: Assets/Scenes/Levels/Tutorial_TempuraScene.unity
     guid: 8e93e9bd8a3984a10a9f95364cf49d4f
   - enabled: 1
