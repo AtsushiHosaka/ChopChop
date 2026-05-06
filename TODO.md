@@ -37,6 +37,7 @@
 - [x] `LevelSelectScene` でTutorial/Lv.1-Lv.5が現在の学習順で表示される。
 - [x] `LevelSelectScene` に和紙/料理の生成背景画像と2列Gridの大きなレベルカードUIが表示される。
 - [x] `LevelSelectScene` のレベルカードは固定幅ではなく、Viewport/ScrollRect/ResponsiveGridLayoutで画面外にはみ出さない。
+- [x] `LevelSelectScene` のTutorial/Lv.1-Lv.5全6カードが初期表示の2列x3段Gridに収まり、各カードにレベル名と説明が表示される。
 - [x] `LevelSelectScene` から `SettingsScene` へ遷移できる。
 - [x] 各レベルカードを押すと、対応する分割Sceneへ遷移する。
 - [x] Lv.5カードを押すと `Level05_SukiyakiScene` に遷移する。
@@ -704,6 +705,7 @@
 - [x] Settings画面とLevel SelectのレスポンシブViewport生成をUnity MCPで検証する。
 - [x] 共通ボタンのhover/press対象Imageがsliced rounded surfaceになっていることをUnity MCPで検証する。
 - [x] Level Selectのカード一覧が2列Gridで生成され、狭い画面では1列へ落ちるレスポンシブ実装になっている。
+- [x] Level SelectのGrid content高さは `UiResponsiveGridLayout` が計算し、ScrollRect/ContentSizeFitter依存でカードが欠けない。
 - [x] Sukiyaki HUDが上から軽く入り、工程変更時にStep textが軽くpopする。
 - [x] 失敗数が変化した時、Failures textが軽くpopする。
 - [x] カウントダウン画像が数字ごとにpopし、次工程開始前にfadeする。

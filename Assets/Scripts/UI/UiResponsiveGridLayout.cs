@@ -17,6 +17,7 @@ namespace ChopChop.UI
         private RectTransform rectTransform;
         private GridLayoutGroup grid;
         private float lastWidth = -1f;
+        private int lastChildCount = -1;
 
         public void Configure(
             int preferredColumns,
@@ -47,12 +48,16 @@ namespace ChopChop.UI
                 return;
             }
 
-            if (Mathf.Approximately(width, lastWidth) && grid.constraint == GridLayoutGroup.Constraint.FixedColumnCount)
+            var childCount = rectTransform.childCount;
+            if (Mathf.Approximately(width, lastWidth) &&
+                childCount == lastChildCount &&
+                grid.constraint == GridLayoutGroup.Constraint.FixedColumnCount)
             {
                 return;
             }
 
             lastWidth = width;
+            lastChildCount = childCount;
             grid.spacing = spacing;
             var appliedPadding = padding ?? new RectOffset();
             grid.padding = appliedPadding;
@@ -67,6 +72,13 @@ namespace ChopChop.UI
 
             grid.constraintCount = columns;
             grid.cellSize = new Vector2(cellWidth, cellHeight);
+
+            var rows = Mathf.Max(1, Mathf.CeilToInt(childCount / (float)columns));
+            var contentHeight = appliedPadding.top + appliedPadding.bottom + rows * cellHeight + Mathf.Max(0, rows - 1) * spacing.y;
+            if (!Mathf.Approximately(rectTransform.sizeDelta.y, contentHeight))
+            {
+                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, contentHeight);
+            }
         }
 
         private void OnEnable()
