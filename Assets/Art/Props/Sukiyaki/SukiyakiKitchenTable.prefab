@@ -11,7 +11,7 @@ PrefabInstance:
     - target: {fileID: 5559144471196079610, guid: 5b64bcaaa6de77345bb5f15d719356d7, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 7d91aeebd595d41f9b17bd61d30fe445, type: 2}
+      objectReference: {fileID: 2100000, guid: f3f36af712a246da9b51e65cb6518d80, type: 2}
     - target: {fileID: 6207913024839726127, guid: 5b64bcaaa6de77345bb5f15d719356d7, type: 3}
       propertyPath: m_Name
       value: SukiyakiKitchenTable

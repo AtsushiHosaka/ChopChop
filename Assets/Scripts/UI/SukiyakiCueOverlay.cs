@@ -7,8 +7,10 @@ namespace ChopChop.UI
 {
     public sealed class SukiyakiCueOverlay : MonoBehaviour
     {
-        [SerializeField] private Vector2 bannerSize = new Vector2(640f, 92f);
-        [SerializeField] private Vector2 bannerOffset = new Vector2(0f, -86f);
+        [SerializeField] private Vector2 headingSize = new Vector2(356f, 48f);
+        [SerializeField] private Vector2 headingOffset = new Vector2(0f, -40f);
+        [SerializeField] private Vector2 bannerSize = new Vector2(760f, 94f);
+        [SerializeField] private Vector2 bannerOffset = new Vector2(0f, -90f);
         [SerializeField] private float feedbackSeconds = 1.2f;
         [SerializeField] private float popScale = 0.06f;
         [SerializeField] private float popSeconds = 0.22f;
@@ -19,12 +21,13 @@ namespace ChopChop.UI
         private GameLocalization localization;
         private SukiyakiStageController stageController;
 
-        // 指示バナー（上部）
+        private Image headingLabel;
+        private CanvasGroup headingGroup;
+
         private Image bannerLabel;
         private CanvasGroup bannerGroup;
         private float bannerShownAt;
 
-        // フィードバック（中央）
         private RectTransform feedbackRoot;
         private Image feedbackLabel;
         private CanvasGroup feedbackGroup;
@@ -71,6 +74,24 @@ namespace ChopChop.UI
 
         private void CreateBanner()
         {
+            var heading = new GameObject("Cue Heading", typeof(RectTransform), typeof(CanvasGroup));
+            heading.transform.SetParent(transform, false);
+
+            var headingRect = heading.GetComponent<RectTransform>();
+            headingRect.anchorMin = new Vector2(0.5f, 1f);
+            headingRect.anchorMax = new Vector2(0.5f, 1f);
+            headingRect.pivot = new Vector2(0.5f, 1f);
+            headingRect.anchoredPosition = headingOffset;
+            headingRect.sizeDelta = headingSize;
+
+            headingGroup = heading.GetComponent<CanvasGroup>();
+            headingGroup.alpha = 1f;
+            headingGroup.blocksRaycasts = false;
+            headingGroup.interactable = false;
+
+            headingLabel = UiFactory.CreateSpriteImage(heading.transform, "Heading Label", null, true);
+            UiFactory.Stretch(headingLabel.rectTransform, 0f);
+
             var bg = new GameObject("Cue Banner", typeof(RectTransform), typeof(CanvasGroup));
             bg.transform.SetParent(transform, false);
 
@@ -101,6 +122,12 @@ namespace ChopChop.UI
         private void ShowInstruction(SukiyakiStep step)
         {
             if (bannerLabel == null) return;
+            UiFactory.ApplySprite(headingLabel, WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.Hud.NextStep));
+            if (headingGroup != null)
+            {
+                headingGroup.alpha = headingLabel != null && headingLabel.sprite != null ? 1f : 0f;
+            }
+
             var sprite = LoadStepSprite(step);
             UiFactory.ApplySprite(bannerLabel, sprite);
             bannerGroup.alpha = sprite == null ? 0f : 1f;
@@ -118,8 +145,8 @@ namespace ChopChop.UI
             feedbackRoot.anchorMin = new Vector2(0.5f, 0.5f);
             feedbackRoot.anchorMax = new Vector2(0.5f, 0.5f);
             feedbackRoot.pivot = new Vector2(0.5f, 0.5f);
-            feedbackRoot.anchoredPosition = new Vector2(0f, 88f);
-            feedbackRoot.sizeDelta = new Vector2(420f, 120f);
+            feedbackRoot.anchoredPosition = new Vector2(0f, 144f);
+            feedbackRoot.sizeDelta = new Vector2(520f, 148f);
 
             feedbackGroup = root.GetComponent<CanvasGroup>();
             feedbackGroup.alpha = 0f;
@@ -139,6 +166,10 @@ namespace ChopChop.UI
             if (secondsRemaining <= 0f)
             {
                 feedbackGroup.alpha = Mathf.MoveTowards(feedbackGroup.alpha, 0f, Time.unscaledDeltaTime * 5f);
+                if (feedbackGroup.alpha <= 0.001f)
+                {
+                    feedbackRoot.localScale = Vector3.one;
+                }
                 return;
             }
 
@@ -158,6 +189,8 @@ namespace ChopChop.UI
             feedbackEndsAt = Time.unscaledTime + feedbackSeconds;
             feedbackAnimTime = 0f;
             feedbackGroup.alpha = 1f;
+            feedbackRoot.localScale = Vector3.one * 0.84f;
+            feedbackRoot.SetAsLastSibling();
         }
 
         private void Subscribe()

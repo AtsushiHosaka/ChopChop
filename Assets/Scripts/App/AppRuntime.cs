@@ -1,3 +1,4 @@
+using System.Collections;
 using ChopChop.Levels;
 using ChopChop.Audio;
 using ChopChop.UI;
@@ -16,6 +17,7 @@ namespace ChopChop.App
         private LevelCatalog levelCatalog;
         private GameObject currentScreen;
         private string builtSceneName;
+        private Coroutine bgmUpdateCoroutine;
 
         public static AppRuntime Instance => instance;
         public SceneNavigator Navigator => navigator;
@@ -105,9 +107,28 @@ namespace ChopChop.App
                 return;
             }
 
-            audioService.PlayBgm(sceneName == AppScenes.SukiyakiLevel
-                ? AudioBgmId.Sukiyaki
-                : AudioBgmId.Menu);
+            if (bgmUpdateCoroutine != null)
+            {
+                StopCoroutine(bgmUpdateCoroutine);
+            }
+
+            bgmUpdateCoroutine = StartCoroutine(ApplyBgmAfterSceneLoad(sceneName));
+        }
+
+        private IEnumerator ApplyBgmAfterSceneLoad(string sceneName)
+        {
+            // Delay playback until the loaded scene and audio stack have fully settled.
+            yield return null;
+            yield return new WaitForEndOfFrame();
+
+            if (audioService != null)
+            {
+                audioService.PlayBgm(sceneName == AppScenes.SukiyakiLevel
+                    ? AudioBgmId.Sukiyaki
+                    : AudioBgmId.Menu);
+            }
+
+            bgmUpdateCoroutine = null;
         }
 
         private void DestroyCurrentScreen()

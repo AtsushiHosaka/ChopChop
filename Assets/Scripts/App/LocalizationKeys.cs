@@ -25,6 +25,7 @@ namespace ChopChop.App
             public const string Failures = "hud.failures";
             public const string Speed = "hud.speed";
             public const string Care = "hud.care";
+            public const string NextStep = "hud.nextStep";
         }
 
         public static class Step

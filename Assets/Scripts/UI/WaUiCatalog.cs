@@ -1,4 +1,5 @@
 using ChopChop.App;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ChopChop.UI
@@ -7,6 +8,7 @@ namespace ChopChop.UI
     {
         private const string Root = "UI/Wa/";
         private const string LabelRoot = Root + "Labels/";
+        private static readonly Dictionary<string, Sprite> RuntimeSpriteCache = new Dictionary<string, Sprite>();
 
         public static Sprite StartBackground => Load(Root + "background_start");
         public static Sprite LevelSelectBackground => Load(Root + "background_level_select");
@@ -68,6 +70,8 @@ namespace ChopChop.UI
                     return LoadLabel(localization, "hud_care");
                 case LocalizationKeys.Hud.Failures:
                     return LoadLabel(localization, "hud_failures");
+                case LocalizationKeys.Hud.NextStep:
+                    return LoadLabel(localization, "hud_next_step");
                 default:
                     return LoadLabel(localization, SanitizeKey(localizationKey));
             }
@@ -75,7 +79,38 @@ namespace ChopChop.UI
 
         private static Sprite Load(string resourcePath)
         {
-            return Resources.Load<Sprite>(resourcePath);
+            if (string.IsNullOrWhiteSpace(resourcePath))
+            {
+                return null;
+            }
+
+            var sprite = Resources.Load<Sprite>(resourcePath);
+            if (sprite != null)
+            {
+                return sprite;
+            }
+
+            if (RuntimeSpriteCache.TryGetValue(resourcePath, out var cachedSprite) && cachedSprite != null)
+            {
+                return cachedSprite;
+            }
+
+            var texture = Resources.Load<Texture2D>(resourcePath);
+            if (texture == null)
+            {
+                return null;
+            }
+
+            sprite = Sprite.Create(
+                texture,
+                new Rect(0f, 0f, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f),
+                100f,
+                0u,
+                SpriteMeshType.FullRect);
+            sprite.name = texture.name;
+            RuntimeSpriteCache[resourcePath] = sprite;
+            return sprite;
         }
 
         private static string SanitizeKey(string key)
