@@ -39,6 +39,7 @@
 - [x] `LevelSelectScene` のレベルカードは固定幅ではなく、Viewport/ScrollRect/ResponsiveGridLayoutで画面外にはみ出さない。
 - [x] `LevelSelectScene` のTutorial/Lv.1-Lv.5全6カードがGridに生成され、常時表示スクロールバーで全カードへアクセスできる。
 - [x] `LevelSelectScene` のレベルカード画像は小さな帯ではなく、カード面積の過半を使って大きく表示される。
+- [x] `LevelSelectScene` のレベルカード画像は `preserveAspect` を有効にし、元画像の縦横比を変えない。
 - [x] `LevelSelectScene` から `SettingsScene` へ遷移できる。
 - [x] 各レベルカードを押すと、対応する分割Sceneへ遷移する。
 - [x] Lv.5カードを押すと `Level05_SukiyakiScene` に遷移する。

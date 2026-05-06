@@ -159,10 +159,14 @@ namespace ChopChop.UI
 
         private RectTransform CreateThumbnail(Transform parent, Sprite sprite, bool isUnlocked)
         {
+            var frame = UiFactory.CreatePanel(parent, "Thumbnail Frame", new Color(0.035f, 0.026f, 0.018f, 0.92f));
+            UiFactory.Anchor(frame, new Vector2(0f, 0.32f), Vector2.one, new Vector2(8f, 8f), new Vector2(-8f, -8f));
+            frame.GetComponent<Image>().raycastTarget = false;
+
             var thumbnailObject = new GameObject("Thumbnail", typeof(RectTransform), typeof(Image));
-            thumbnailObject.transform.SetParent(parent, false);
+            thumbnailObject.transform.SetParent(frame, false);
             var rectTransform = thumbnailObject.GetComponent<RectTransform>();
-            UiFactory.Anchor(rectTransform, new Vector2(0f, 0.32f), Vector2.one, new Vector2(8f, 8f), new Vector2(-8f, -8f));
+            UiFactory.Stretch(rectTransform, 0f);
 
             var image = thumbnailObject.GetComponent<Image>();
             image.sprite = sprite;
@@ -170,8 +174,8 @@ namespace ChopChop.UI
                 ? new Color(0.18f, 0.18f, 0.18f, 1f)
                 : (isUnlocked ? Color.white : new Color(0.48f, 0.48f, 0.48f, 0.72f));
             image.raycastTarget = false;
-            image.preserveAspect = false;
-            return rectTransform;
+            image.preserveAspect = true;
+            return frame;
         }
 
         private Scrollbar CreateScrollbar(Transform parent)
