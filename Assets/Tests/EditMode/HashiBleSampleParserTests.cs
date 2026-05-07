@@ -57,5 +57,45 @@ namespace ChopChop.Tests.EditMode
             Assert.That(BleHashiInputSource.ShouldAutoReconnect("Unsupported platform"), Is.False);
             Assert.That(BleHashiInputSource.ShouldAutoReconnect("Unauthorized: Bluetooth permission denied"), Is.False);
         }
+
+        [Test]
+        public void ParserOutputMatchesUdpCompatiblePayloadRequirements()
+        {
+            var json = "{\"theta\":12.3,\"pinch\":80,\"ax\":0.1,\"ay\":-0.9,\"az\":0.2,\"gx\":1.2,\"gy\":0.0,\"gz\":-0.4}";
+
+            Assert.That(HashiBleSampleParser.TryParse(json, out var sample, out var error), Is.True, error);
+            Assert.That(sample.HasTheta, Is.True);
+            Assert.That(sample.HasPinch, Is.True);
+            Assert.That(sample.HasAccelerationVector, Is.True);
+            Assert.That(sample.HasGyroVector, Is.True);
+        }
+
+        [Test]
+        public void SixFieldCsvPayloadParsesCurrentEsp32Format()
+        {
+            var csv = "0.1,-0.9,0.2,1.2,0.0,-0.4";
+
+            Assert.That(HashiBleSampleParser.TryParse(csv, out var sample, out var error), Is.True, error);
+            Assert.That(sample.HasTheta, Is.False);
+            Assert.That(sample.HasPinch, Is.False);
+            Assert.That(sample.AxValue, Is.EqualTo(0.1f).Within(0.001f));
+            Assert.That(sample.AyValue, Is.EqualTo(-0.9f).Within(0.001f));
+            Assert.That(sample.AzValue, Is.EqualTo(0.2f).Within(0.001f));
+            Assert.That(sample.GxValue, Is.EqualTo(1.2f).Within(0.001f));
+            Assert.That(sample.GyValue, Is.EqualTo(0f).Within(0.001f));
+            Assert.That(sample.GzValue, Is.EqualTo(-0.4f).Within(0.001f));
+        }
+
+        [Test]
+        public void EightFieldCsvPayloadParsesThetaAndPinch()
+        {
+            var csv = "12.3,80,0.1,-0.9,0.2,1.2,0.0,-0.4";
+
+            Assert.That(HashiBleSampleParser.TryParse(csv, out var sample, out var error), Is.True, error);
+            Assert.That(sample.ThetaValue, Is.EqualTo(12.3f).Within(0.001f));
+            Assert.That(sample.PinchValue, Is.EqualTo(80f).Within(0.001f));
+            Assert.That(sample.HasAccelerationVector, Is.True);
+            Assert.That(sample.HasGyroVector, Is.True);
+        }
     }
 }

@@ -16,6 +16,7 @@ namespace ChopChop.BLE
         public static bool SupportsConcurrentReceivers => false;
         public bool IsRunning { get; private set; }
         public string Status { get; private set; } = "Stopped";
+        private bool awaitingInitialScanState;
 
 #if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
         private static readonly NativeStringCallback DataCallback = HandleNativeData;
@@ -45,11 +46,13 @@ namespace ChopChop.BLE
 
                 IsRunning = true;
                 Status = "Starting";
+                awaitingInitialScanState = true;
             }
             catch (DllNotFoundException exception)
             {
                 IsRunning = false;
                 Status = "Native plugin missing";
+                awaitingInitialScanState = false;
                 ClearActiveReceiver();
                 EnqueueLog($"Native BLE plugin was not found: {exception.Message}");
             }
@@ -57,6 +60,7 @@ namespace ChopChop.BLE
             {
                 IsRunning = false;
                 Status = "Native plugin entry point missing";
+                awaitingInitialScanState = false;
                 ClearActiveReceiver();
                 EnqueueLog($"Native BLE plugin entry point was not found: {exception.Message}");
             }
@@ -64,6 +68,7 @@ namespace ChopChop.BLE
             {
                 IsRunning = false;
                 Status = "Native plugin start failed";
+                awaitingInitialScanState = false;
                 ClearActiveReceiver();
                 EnqueueLog($"Native BLE plugin failed to start: {exception.Message}");
             }
@@ -89,6 +94,7 @@ namespace ChopChop.BLE
             {
                 IsRunning = false;
                 Status = "Stopped";
+                awaitingInitialScanState = false;
                 ClearActiveReceiver();
             }
         }
@@ -168,12 +174,33 @@ namespace ChopChop.BLE
         private void SetNativeState(int state, string message)
         {
             var nativeState = (NativeBleState)state;
+            var isInitialResetStop = awaitingInitialScanState
+                && nativeState == NativeBleState.Stopped
+                && string.Equals(message, "Stopped", StringComparison.OrdinalIgnoreCase);
+
+            if (isInitialResetStop)
+            {
+                EnqueueLog("Ignoring native reset stop during BLE startup.");
+                return;
+            }
+
+            if (nativeState == NativeBleState.Scanning
+                || nativeState == NativeBleState.Connecting
+                || nativeState == NativeBleState.DiscoveringServices
+                || nativeState == NativeBleState.DiscoveringCharacteristics
+                || nativeState == NativeBleState.Subscribed)
+            {
+                awaitingInitialScanState = false;
+                IsRunning = true;
+            }
+
             Status = string.IsNullOrEmpty(message)
                 ? nativeState.ToString()
                 : $"{nativeState}: {message}";
 
             if (IsTerminalState(nativeState))
             {
+                awaitingInitialScanState = false;
                 IsRunning = false;
                 ClearActiveReceiver();
             }

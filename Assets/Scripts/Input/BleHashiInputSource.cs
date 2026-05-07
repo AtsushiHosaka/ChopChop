@@ -15,11 +15,14 @@ namespace ChopChop.Input
         private readonly string characteristicUuid;
         private readonly string ownerLabel;
         private readonly float accelerometerCorrection;
+        private readonly bool logRawPayloads;
+        private readonly float rawPayloadLogIntervalSeconds;
         private readonly MacHashiBleReceiver receiver = new MacHashiBleReceiver();
         private Quaternion rotation = Quaternion.identity;
         private bool blockedByActiveSource;
         private bool blockedLogEmitted;
         private float lastMalformedPayloadWarningAt = -999f;
+        private float lastRawPayloadLogAt = -999f;
         private int suppressedMalformedPayloadWarnings;
         private bool staleSampleLogEmitted;
         private float nextReconnectAttemptAt;
@@ -33,13 +36,17 @@ namespace ChopChop.Input
             string serviceUuid,
             string characteristicUuid,
             string ownerLabel = "",
-            float accelerometerCorrection = 0.015f)
+            float accelerometerCorrection = 0.015f,
+            bool logRawPayloads = false,
+            float rawPayloadLogIntervalSeconds = 0.1f)
         {
             this.deviceNameFilter = deviceNameFilter;
             this.serviceUuid = serviceUuid;
             this.characteristicUuid = characteristicUuid;
             this.ownerLabel = string.IsNullOrWhiteSpace(ownerLabel) ? "Hashi" : ownerLabel.Trim();
             this.accelerometerCorrection = Mathf.Clamp01(accelerometerCorrection);
+            this.logRawPayloads = logRawPayloads;
+            this.rawPayloadLogIntervalSeconds = Mathf.Max(0.02f, rawPayloadLogIntervalSeconds);
         }
 
         public void StartInput()
@@ -99,9 +106,11 @@ namespace ChopChop.Input
 
             while (receiver.TryDequeueRawPayload(out var rawPayload))
             {
+                LogRawPayload(rawPayload);
+
                 if (!HashiBleSampleParser.TryParse(rawPayload, out var sample, out var error))
                 {
-                    LogMalformedPayload(error);
+                    LogMalformedPayload(rawPayload, error);
                     continue;
                 }
 
@@ -234,7 +243,24 @@ namespace ChopChop.Input
             return Quaternion.Slerp(currentRotation, correctedRotation, accelerometerCorrection);
         }
 
-        private void LogMalformedPayload(string error)
+        private void LogRawPayload(string rawPayload)
+        {
+            if (!logRawPayloads || string.IsNullOrWhiteSpace(rawPayload))
+            {
+                return;
+            }
+
+            var now = Time.realtimeSinceStartup;
+            if (now - lastRawPayloadLogAt < rawPayloadLogIntervalSeconds)
+            {
+                return;
+            }
+
+            lastRawPayloadLogAt = now;
+            Debug.Log($"[Hashi BLE/{ownerLabel}] payload={rawPayload}");
+        }
+
+        private void LogMalformedPayload(string rawPayload, string error)
         {
             var now = Time.realtimeSinceStartup;
             if (now - lastMalformedPayloadWarningAt < 2f)
@@ -246,7 +272,7 @@ namespace ChopChop.Input
             var suffix = suppressedMalformedPayloadWarnings > 0
                 ? $" Suppressed {suppressedMalformedPayloadWarnings} similar malformed payload warning(s)."
                 : string.Empty;
-            Debug.LogWarning($"[Hashi Input/{ownerLabel}] Ignored BLE payload: {error}.{suffix}");
+            Debug.LogWarning($"[Hashi Input/{ownerLabel}] Ignored BLE payload '{rawPayload}': {error}.{suffix}");
             lastMalformedPayloadWarningAt = now;
             suppressedMalformedPayloadWarnings = 0;
         }

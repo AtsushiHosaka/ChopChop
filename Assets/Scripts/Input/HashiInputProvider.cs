@@ -12,11 +12,18 @@ namespace ChopChop.Input
         [SerializeField] private string deviceNameFilter = string.Empty;
         [SerializeField] private string serviceUuid = string.Empty;
         [SerializeField] private string characteristicUuid = string.Empty;
+        [SerializeField] private int udpPort = 5005;
+        [SerializeField] private string udpBindAddress = string.Empty;
         [SerializeField] private bool captureNeutralOnStart;
         [SerializeField, Range(0f, 1f)] private float accelerometerCorrection = 0.015f;
+        [SerializeField] private bool logImuSamples = true;
+        [SerializeField, Min(0.02f)] private float imuLogIntervalSeconds = 0.1f;
+        [SerializeField] private bool logRawBlePayloads = true;
+        [SerializeField, Min(0.02f)] private float rawBleLogIntervalSeconds = 0.1f;
 
         private IHashiInputSource source;
         private readonly HashiCalibration calibration = new HashiCalibration();
+        private float lastImuLogAt = -999f;
 
         public HashiInputFrame CurrentFrame { get; private set; } = HashiInputFrame.Empty;
         public bool HasNeutral => calibration.HasNeutral;
@@ -39,6 +46,18 @@ namespace ChopChop.Input
             deviceNameFilter = deviceName ?? string.Empty;
             serviceUuid = service ?? string.Empty;
             characteristicUuid = characteristic ?? string.Empty;
+            captureNeutralOnStart = captureNeutral;
+
+            if (isActiveAndEnabled)
+            {
+                StartSource();
+            }
+        }
+
+        public void ConfigureUdp(int port, string bindAddress = "", bool captureNeutral = false)
+        {
+            udpPort = Mathf.Max(1, port);
+            udpBindAddress = bindAddress ?? string.Empty;
             captureNeutralOnStart = captureNeutral;
 
             if (isActiveAndEnabled)
@@ -91,9 +110,27 @@ namespace ChopChop.Input
         private void StartSource()
         {
             source?.StopInput();
-            source = inputMode == HashiInputMode.Demo
-                ? new DemoHashiInputSource()
-                : new BleHashiInputSource(deviceNameFilter, serviceUuid, characteristicUuid, PlayerLabel, accelerometerCorrection);
+
+            switch (inputMode)
+            {
+                case HashiInputMode.Demo:
+                    source = new DemoHashiInputSource();
+                    break;
+                case HashiInputMode.Udp:
+                    source = new UdpHashiInputSource(udpPort, udpBindAddress, PlayerLabel, accelerometerCorrection);
+                    break;
+                default:
+                    source = new BleHashiInputSource(
+                        deviceNameFilter,
+                        serviceUuid,
+                        characteristicUuid,
+                        PlayerLabel,
+                        accelerometerCorrection,
+                        logRawBlePayloads,
+                        rawBleLogIntervalSeconds);
+                    break;
+            }
+
             source.StartInput();
         }
 
@@ -107,12 +144,35 @@ namespace ChopChop.Input
             }
 
             var frame = source.CurrentFrame;
-            if (captureNeutralOnStart && inputMode == HashiInputMode.Ble && frame.HasSample && !calibration.HasNeutral)
+            if (captureNeutralOnStart && inputMode != HashiInputMode.Demo && frame.HasSample && !calibration.HasNeutral)
             {
                 calibration.Capture(frame);
             }
 
+            LogImuFrame(frame);
             CurrentFrame = calibration.Apply(frame);
+        }
+
+        private void LogImuFrame(HashiInputFrame frame)
+        {
+            if (!logImuSamples || !frame.HasSample)
+            {
+                return;
+            }
+
+            var interval = Mathf.Max(0.02f, imuLogIntervalSeconds);
+            if (Time.realtimeSinceStartup - lastImuLogAt < interval)
+            {
+                return;
+            }
+
+            lastImuLogAt = Time.realtimeSinceStartup;
+            var acceleration = frame.Acceleration;
+            var gyro = frame.GyroDegreesPerSecond;
+            Debug.Log(
+                $"[Hashi IMU/{PlayerLabel}] acc=({acceleration.x:F2}, {acceleration.y:F2}, {acceleration.z:F2}) " +
+                $"gyro=({gyro.x:F2}, {gyro.y:F2}, {gyro.z:F2}) " +
+                $"theta={frame.ThetaDegrees:F2} pinch={frame.PinchNormalized:F2}");
         }
     }
 }

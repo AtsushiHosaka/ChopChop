@@ -5617,10 +5617,17 @@ MonoBehaviour:
     value: 0
   playerLabel: P1
   inputMode: 0
-  deviceNameFilter: 
-  serviceUuid: 
-  characteristicUuid: 
+  deviceNameFilter: ESP32_IMU_BLE
+  serviceUuid: 12345678-1234-1234-1234-1234567890ab
+  characteristicUuid: abcd1234-1234-1234-1234-abcdef123456
+  udpPort: 5005
+  udpBindAddress: 
   captureNeutralOnStart: 1
+  accelerometerCorrection: 0.015
+  logImuSamples: 1
+  imuLogIntervalSeconds: 0.1
+  logRawBlePayloads: 1
+  rawBleLogIntervalSeconds: 0.1
 --- !u!4 &1147880875
 Transform:
   m_ObjectHideFlags: 0

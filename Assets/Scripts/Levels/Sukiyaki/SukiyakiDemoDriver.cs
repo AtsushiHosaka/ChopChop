@@ -109,7 +109,10 @@ namespace ChopChop.Levels.Sukiyaki
                 return;
             }
 
-            inputProvider.SetInputMode(demoModeEnabled ? HashiInputMode.Demo : HashiInputMode.Ble);
+            if (demoModeEnabled)
+            {
+                inputProvider.SetInputMode(HashiInputMode.Demo);
+            }
         }
 
         private void HandleStepChanged(SukiyakiStep step)
