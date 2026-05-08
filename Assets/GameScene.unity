@@ -294,9 +294,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ChopChop.BLE.HashiBleController
   lowerChopstick: {fileID: 1615578954}
   upperChopstick: {fileID: 866015870}
-  deviceNameFilter: 
-  serviceUuid: 
-  characteristicUuid: 
+  deviceNameFilter: Dual_IMU_ESP32
+  serviceUuid: 12345678-1234-1234-1234-1234567890ab
+  characteristicUuid: abcd1234-5678-90ab-cdef-1234567890ab
   gyroSensitivity: 1
   accelerometerCorrection: 0.35
   smoothing: 12

@@ -168,9 +168,17 @@ namespace ChopChop.BLE
         private void SetNativeState(int state, string message)
         {
             var nativeState = (NativeBleState)state;
-            Status = string.IsNullOrEmpty(message)
+            var nextStatus = string.IsNullOrEmpty(message)
                 ? nativeState.ToString()
                 : $"{nativeState}: {message}";
+
+            if (nativeState == NativeBleState.Stopped && IsRunning && Status == "Starting")
+            {
+                EnqueueLog($"Ignored startup cleanup state: {nextStatus}");
+                return;
+            }
+
+            Status = nextStatus;
 
             if (IsTerminalState(nativeState))
             {

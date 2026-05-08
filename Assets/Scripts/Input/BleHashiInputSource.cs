@@ -26,6 +26,11 @@ namespace ChopChop.Input
         private int reconnectAttemptCount;
 
         public bool IsRunning => receiver.IsRunning;
+        public string Status => blockedByActiveSource
+            ? $"Blocked by active source '{activeOwnerLabel}'"
+            : receiver.Status;
+        public bool HasLatestSample { get; private set; }
+        public HashiBleSample LatestSample { get; private set; }
         public HashiInputFrame CurrentFrame { get; private set; } = HashiInputFrame.Empty;
 
         public BleHashiInputSource(
@@ -35,9 +40,9 @@ namespace ChopChop.Input
             string ownerLabel = "",
             float accelerometerCorrection = 0.015f)
         {
-            this.deviceNameFilter = deviceNameFilter;
-            this.serviceUuid = serviceUuid;
-            this.characteristicUuid = characteristicUuid;
+            this.deviceNameFilter = DefaultIfEmpty(deviceNameFilter, HashiBleDefaults.DeviceNameFilter);
+            this.serviceUuid = DefaultIfEmpty(serviceUuid, HashiBleDefaults.ServiceUuid);
+            this.characteristicUuid = DefaultIfEmpty(characteristicUuid, HashiBleDefaults.CharacteristicUuid);
             this.ownerLabel = string.IsNullOrWhiteSpace(ownerLabel) ? "Hashi" : ownerLabel.Trim();
             this.accelerometerCorrection = Mathf.Clamp01(accelerometerCorrection);
         }
@@ -48,6 +53,7 @@ namespace ChopChop.Input
             blockedLogEmitted = false;
             staleSampleLogEmitted = false;
             suppressedMalformedPayloadWarnings = 0;
+            HasLatestSample = false;
             nextReconnectAttemptAt = 0f;
             reconnectAttemptCount = 0;
 
@@ -58,10 +64,12 @@ namespace ChopChop.Input
                 return;
             }
 
+            Debug.Log($"[Hashi Input/{ownerLabel}] Starting BLE input. deviceName='{deviceNameFilter}' serviceUuid='{serviceUuid}' characteristicUuid='{characteristicUuid}'");
             receiver.Start(deviceNameFilter, serviceUuid, characteristicUuid);
 
             if (!receiver.IsRunning)
             {
+                Debug.LogWarning($"[Hashi Input/{ownerLabel}] BLE receiver did not start. Status: {receiver.Status}");
                 ReleaseRuntimeLock();
             }
         }
@@ -105,6 +113,9 @@ namespace ChopChop.Input
                     continue;
                 }
 
+                LatestSample = sample;
+                HasLatestSample = true;
+
                 var gyro = sample.HasGyroVector ? sample.GyroVector : Vector3.zero;
                 if (deltaTime > 0f)
                 {
@@ -126,7 +137,7 @@ namespace ChopChop.Input
                     pinch,
                     sample.HasAccelerationVector ? sample.AccelerationVector : Vector3.zero,
                     gyro,
-                    rotation,
+                    HashiImuMappingRuntime.ApplyParentRotationWeight(rotation),
                     true,
                     sample.RealtimeReceived);
                 staleSampleLogEmitted = false;
@@ -208,6 +219,11 @@ namespace ChopChop.Input
                 activeSource = null;
                 activeOwnerLabel = string.Empty;
             }
+        }
+
+        private static string DefaultIfEmpty(string value, string fallback)
+        {
+            return string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
         }
 
         private Quaternion ApplyAccelerometerCorrection(Quaternion currentRotation, Vector3 acceleration)

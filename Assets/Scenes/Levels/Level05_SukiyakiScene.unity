@@ -5556,6 +5556,7 @@ GameObject:
   - component: {fileID: 1147880873}
   - component: {fileID: 1147880872}
   - component: {fileID: 1147880876}
+  - component: {fileID: 1147880877}
   m_Layer: 0
   m_Name: Hashi
   m_TagString: Untagged
@@ -5617,10 +5618,11 @@ MonoBehaviour:
     value: 0
   playerLabel: P1
   inputMode: 0
-  deviceNameFilter: 
-  serviceUuid: 
-  characteristicUuid: 
+  deviceNameFilter: Dual_IMU_ESP32
+  serviceUuid: 12345678-1234-1234-1234-1234567890ab
+  characteristicUuid: abcd1234-5678-90ab-cdef-1234567890ab
   captureNeutralOnStart: 1
+  accelerometerCorrection: 0.015
 --- !u!4 &1147880875
 Transform:
   m_ObjectHideFlags: 0
@@ -5653,6 +5655,46 @@ MonoBehaviour:
   inputProvider: {fileID: 1147880874}
   lowerTip: {fileID: 1478005104}
   upperTip: {fileID: 1851624392}
+--- !u!114 &1147880877
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1147880871}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7860257a01ba4548975fe970f0a59ab2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ChopChop.Runtime::ChopChop.Debugging.HashiImuTuningOverlay
+  visible: 1
+  applyProfileOnEnable: 1
+  useTunedTheta: 1
+  thetaMode: 0
+  motionSource: 0
+  imu1Axis: 2
+  imu2Axis: 2
+  invertTheta: 0
+  inputClosed: 95
+  inputOpen: 130
+  outputClosed: 5
+  outputOpen: 35
+  rawAccelerationToG: 0.000061
+  rawGyroToDegreesPerSecond: 0.0175
+  parentRotationWeight: 0
+  useIndependentImuPose: 1
+  autoCaptureIndependentNeutral: 1
+  independentPoseWeight: 1
+  invertImu1Pose: 0
+  invertImu2Pose: 0
+  imu1MapX: 0
+  imu1MapY: 1
+  imu1MapZ: 2
+  imu2MapX: 0
+  imu2MapY: 1
+  imu2MapZ: 2
+  imu1MapSigns: {x: 1, y: 1, z: 1}
+  imu2MapSigns: {x: 1, y: 1, z: 1}
 --- !u!1 &1150448509
 GameObject:
   m_ObjectHideFlags: 0
@@ -5706,9 +5748,9 @@ MonoBehaviour:
     playerId:
       value: 0
     playerLabel: P1
-    deviceNameFilter: 
-    serviceUuid: 
-    characteristicUuid: 
+    deviceNameFilter: Dual_IMU_ESP32
+    serviceUuid: 12345678-1234-1234-1234-1234567890ab
+    characteristicUuid: abcd1234-5678-90ab-cdef-1234567890ab
   playerTwo:
     playerId:
       value: 1
@@ -7498,6 +7540,7 @@ MonoBehaviour:
   eggLiquidSurface: {fileID: 1959975400}
   brothLiquidSurface: {fileID: 1518954016}
   eggFluidMixMonitor: {fileID: 1405094642}
+  targetZones: []
   automaticProgress: 1
 --- !u!4 &1454876608
 Transform:
