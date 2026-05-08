@@ -83,7 +83,7 @@ namespace ChopChop.Presentation
                 {
                     displayedParentRotation = Quaternion.Slerp(
                         displayedParentRotation,
-                        baseParentRotation * HashiImuMappingRuntime.ApplyParentRotationWeight(frame.LocalRotation),
+                        baseParentRotation * frame.LocalRotation,
                         blend);
                     displayedLowerRotation = Quaternion.Slerp(displayedLowerRotation, lowerBaseRotation * lowerImuRotation, blend);
                     displayedUpperRotation = Quaternion.Slerp(displayedUpperRotation, upperBaseRotation * upperImuRotation, blend);
@@ -99,7 +99,7 @@ namespace ChopChop.Presentation
             displayedTheta = Mathf.Lerp(displayedTheta, frame.ThetaDegrees, blend);
             displayedParentRotation = Quaternion.Slerp(
                 displayedParentRotation,
-                baseParentRotation * HashiImuMappingRuntime.ApplyParentRotationWeight(frame.LocalRotation),
+                baseParentRotation * frame.LocalRotation,
                 blend);
             displayedLowerRotation = Quaternion.Slerp(displayedLowerRotation, lowerBaseRotation, blend);
             displayedUpperRotation = Quaternion.Slerp(

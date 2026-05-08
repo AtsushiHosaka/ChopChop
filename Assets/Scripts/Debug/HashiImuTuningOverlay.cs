@@ -49,16 +49,20 @@ namespace ChopChop.Debugging
 
         private void Update()
         {
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F8))
-            {
-                visible = !visible;
-            }
-
             ApplyToRuntime();
         }
 
         private void OnGUI()
         {
+            var currentEvent = Event.current;
+            if (currentEvent != null
+                && currentEvent.type == EventType.KeyDown
+                && currentEvent.keyCode == KeyCode.F8)
+            {
+                visible = !visible;
+                currentEvent.Use();
+            }
+
             if (!visible)
             {
                 return;
