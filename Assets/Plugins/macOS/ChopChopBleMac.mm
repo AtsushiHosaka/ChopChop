@@ -116,6 +116,7 @@ static NSString *CharacteristicPropertiesString(CBCharacteristicProperties prope
 @property(nonatomic, strong) NSMutableSet<NSString *> *loggedDeviceIds;
 @property(nonatomic, strong) NSMutableSet<NSString *> *loggedCharacteristicIds;
 @property(nonatomic, assign) BOOL scanRequested;
+- (void)stopWithStateNotification:(BOOL)notifyState;
 @end
 
 @implementation ChopChopBleCentral
@@ -134,7 +135,7 @@ static NSString *CharacteristicPropertiesString(CBCharacteristicProperties prope
                 serviceUuid:(NSString *)serviceUuid
          characteristicUuid:(NSString *)characteristicUuid
 {
-    [self stop];
+    [self stopWithStateNotification:NO];
 
     self.deviceNameFilter = deviceNameFilter ?: @"";
     self.targetServiceUuid = UuidFromString(serviceUuid ?: @"");
@@ -156,6 +157,11 @@ static NSString *CharacteristicPropertiesString(CBCharacteristicProperties prope
 
 - (void)stop
 {
+    [self stopWithStateNotification:YES];
+}
+
+- (void)stopWithStateNotification:(BOOL)notifyState
+{
     self.scanRequested = NO;
 
     if (self.centralManager != nil) {
@@ -171,7 +177,9 @@ static NSString *CharacteristicPropertiesString(CBCharacteristicProperties prope
     self.centralManager.delegate = nil;
     self.centralManager = nil;
 
-    SendState(ChopChopBleStateStopped, @"Stopped");
+    if (notifyState) {
+        SendState(ChopChopBleStateStopped, @"Stopped");
+    }
 }
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central

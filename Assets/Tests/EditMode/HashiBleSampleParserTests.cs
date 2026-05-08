@@ -6,6 +6,18 @@ namespace ChopChop.Tests.EditMode
 {
     public sealed class HashiBleSampleParserTests
     {
+        [SetUp]
+        public void SetUp()
+        {
+            HashiImuMappingRuntime.ResetDefaults();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            HashiImuMappingRuntime.ResetDefaults();
+        }
+
         [Test]
         public void ScreenshotStylePayloadParsesAllKnownFields()
         {
@@ -34,6 +46,43 @@ namespace ChopChop.Tests.EditMode
             Assert.That(sample.HasGy, Is.False);
             Assert.That(sample.HasGz, Is.False);
             Assert.That(sample.HasAccelerationVector, Is.False);
+        }
+
+        [Test]
+        public void DualImuCsvPayloadParsesEsp32NotifyFormat()
+        {
+            var payload = "IMU1,0,0,2048,0,100,0,3\nIMU2,0,1024,1774,0,200,0,3";
+
+            Assert.That(HashiBleSampleParser.TryParse(payload, out var sample, out var error), Is.True, error);
+            Assert.That(sample.ThetaValue, Is.EqualTo(30f).Within(0.1f));
+            Assert.That(sample.AccelerationVector.z, Is.EqualTo(2048f * HashiBleDefaults.RawAccelerationToG).Within(0.0001f));
+            Assert.That(sample.GyValue, Is.EqualTo(100f * HashiBleDefaults.RawGyroToDegreesPerSecond).Within(0.0001f));
+            Assert.That(sample.AccelerationMagnitudeValue, Is.EqualTo(sample.AccelerationVector.magnitude).Within(0.0001f));
+        }
+
+        [Test]
+        public void DualImuCsvPayloadRequiresBothRows()
+        {
+            Assert.That(HashiBleSampleParser.TryParse("IMU1,0,0,2048,0,100,0,3", out _, out var error), Is.False);
+            Assert.That(error, Does.Contain("both IMU1 and IMU2"));
+        }
+
+        [Test]
+        public void DualImuCsvPayloadCanUseTunedThetaMapping()
+        {
+            HashiImuMappingRuntime.UseTunedTheta = true;
+            HashiImuMappingRuntime.ThetaMode = HashiImuThetaMode.AccelerationAngle;
+            HashiImuMappingRuntime.InputClosed = 0f;
+            HashiImuMappingRuntime.InputOpen = 60f;
+            HashiImuMappingRuntime.OutputClosed = 5f;
+            HashiImuMappingRuntime.OutputOpen = 35f;
+
+            var payload = "IMU1,0,0,2048,0,100,0,3\nIMU2,0,1024,1774,0,200,0,3";
+
+            Assert.That(HashiBleSampleParser.TryParse(payload, out var sample, out var error), Is.True, error);
+            Assert.That(sample.HasDualImu, Is.True);
+            Assert.That(sample.Imu1AccelerationRaw.z, Is.EqualTo(2048f).Within(0.0001f));
+            Assert.That(sample.ThetaValue, Is.EqualTo(20f).Within(0.1f));
         }
 
         [Test]

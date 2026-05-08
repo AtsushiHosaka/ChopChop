@@ -10,9 +10,9 @@ namespace ChopChop.BLE
         public Transform upperChopstick;
 
         [Header("BLE")]
-        public string deviceNameFilter = string.Empty;
-        public string serviceUuid = string.Empty;
-        public string characteristicUuid = string.Empty;
+        public string deviceNameFilter = HashiBleDefaults.DeviceNameFilter;
+        public string serviceUuid = HashiBleDefaults.ServiceUuid;
+        public string characteristicUuid = HashiBleDefaults.CharacteristicUuid;
 
         [Header("Motion")]
         [Min(0f)] public float gyroSensitivity = 1f;
@@ -113,7 +113,10 @@ namespace ChopChop.BLE
             lastSampleRealtime = Time.realtimeSinceStartup;
 
             bleReceiver = new MacHashiBleReceiver();
-            bleReceiver.Start(deviceNameFilter, serviceUuid, characteristicUuid);
+            bleReceiver.Start(
+                DefaultIfEmpty(deviceNameFilter, HashiBleDefaults.DeviceNameFilter),
+                DefaultIfEmpty(serviceUuid, HashiBleDefaults.ServiceUuid),
+                DefaultIfEmpty(characteristicUuid, HashiBleDefaults.CharacteristicUuid));
             FlushBleLogs();
         }
 
@@ -295,6 +298,11 @@ namespace ChopChop.BLE
                 value.y / magnitude,
                 value.z / magnitude,
                 value.w / magnitude);
+        }
+
+        private static string DefaultIfEmpty(string value, string fallback)
+        {
+            return string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
         }
     }
 }

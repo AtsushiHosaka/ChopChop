@@ -1,3 +1,4 @@
+using ChopChop.BLE;
 using ChopChop.Core;
 using UnityEngine;
 
@@ -9,9 +10,9 @@ namespace ChopChop.Input
         [SerializeField] private PlayerId playerId = new PlayerId(0);
         [SerializeField] private string playerLabel = "P1";
         [SerializeField] private HashiInputMode inputMode = HashiInputMode.Ble;
-        [SerializeField] private string deviceNameFilter = string.Empty;
-        [SerializeField] private string serviceUuid = string.Empty;
-        [SerializeField] private string characteristicUuid = string.Empty;
+        [SerializeField] private string deviceNameFilter = HashiBleDefaults.DeviceNameFilter;
+        [SerializeField] private string serviceUuid = HashiBleDefaults.ServiceUuid;
+        [SerializeField] private string characteristicUuid = HashiBleDefaults.CharacteristicUuid;
         [SerializeField] private bool captureNeutralOnStart;
         [SerializeField, Range(0f, 1f)] private float accelerometerCorrection = 0.015f;
 
@@ -23,6 +24,22 @@ namespace ChopChop.Input
         public HashiInputMode InputMode => inputMode;
         public PlayerId PlayerId => playerId;
         public string PlayerLabel => string.IsNullOrWhiteSpace(playerLabel) ? playerId.ToString() : playerLabel.Trim();
+        public bool IsSourceRunning => source?.IsRunning ?? false;
+        public string DebugSourceStatus => source is BleHashiInputSource bleSource
+            ? bleSource.Status
+            : source?.GetType().Name ?? "None";
+
+        public bool TryGetLatestBleSample(out HashiBleSample sample)
+        {
+            if (source is BleHashiInputSource bleSource && bleSource.HasLatestSample)
+            {
+                sample = bleSource.LatestSample;
+                return true;
+            }
+
+            sample = default;
+            return false;
+        }
 
         public void ConfigurePlayer(PlayerId id, string label = "")
         {
