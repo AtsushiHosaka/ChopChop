@@ -95,10 +95,12 @@ namespace ChopChop.BLE
         public static float OutputOpen { get; set; } = 180f;
         public static float RawAccelerationToG { get; set; } = HashiBleDefaults.RawAccelerationToG;
         public static float RawGyroToDegreesPerSecond { get; set; } = HashiBleDefaults.RawGyroToDegreesPerSecond;
-        public static float ParentRotationWeight { get; set; } = 0.7f;
+        public static float ParentRotationWeight { get; set; } = 0.6f;
         public static Vector3 ParentRotationInputEuler { get; set; } = new Vector3(-90f, -90f, 0f);
         public static bool ParentPlanarYawOnly { get; set; } = true;
         public static float ParentPlanarYawDirection { get; set; } = -1f;
+        public static bool ParentVerticalPitchWhenDominant { get; set; } = true;
+        public static float ParentVerticalPitchScale { get; set; } = 0.55f;
         public static float ParentLongAxisTwistWeight { get; set; } = 0f;
         public static bool UseIndependentImuPose { get; set; } = true;
         public static bool AutoCaptureIndependentNeutral { get; set; } = true;
@@ -186,10 +188,12 @@ namespace ChopChop.BLE
             OutputOpen = 180f;
             RawAccelerationToG = HashiBleDefaults.RawAccelerationToG;
             RawGyroToDegreesPerSecond = HashiBleDefaults.RawGyroToDegreesPerSecond;
-            ParentRotationWeight = 0.7f;
+            ParentRotationWeight = 0.6f;
             ParentRotationInputEuler = new Vector3(-90f, -90f, 0f);
             ParentPlanarYawOnly = true;
             ParentPlanarYawDirection = -1f;
+            ParentVerticalPitchWhenDominant = true;
+            ParentVerticalPitchScale = 0.55f;
             ParentLongAxisTwistWeight = 0f;
             UseIndependentImuPose = true;
             AutoCaptureIndependentNeutral = true;
@@ -348,9 +352,12 @@ namespace ChopChop.BLE
 
         public static Quaternion ApplyParentRotationWeight(Quaternion rotation)
         {
-            rotation = ApplyParentLongAxisTwistWeight(rotation);
-            var weight = Mathf.Clamp01(ParentRotationWeight);
-            return Quaternion.Slerp(Quaternion.identity, rotation, weight);
+            return ApplyParentLongAxisTwistWeight(rotation);
+        }
+
+        public static Vector3 ApplyParentRotationRateWeight(Vector3 gyro)
+        {
+            return gyro * Mathf.Clamp01(ParentRotationWeight);
         }
 
         public static Quaternion ApplyParentLongAxisTwistWeight(Quaternion rotation)
@@ -380,10 +387,17 @@ namespace ChopChop.BLE
 
         public static Vector3 FilterParentRotationGyro(Vector3 gyro)
         {
+            if (!ParentPlanarYawOnly)
+            {
+                return gyro;
+            }
+
             var yawDirection = ParentPlanarYawDirection < 0f ? -1f : 1f;
-            return ParentPlanarYawOnly
-                ? new Vector3(0f, yawDirection * gyro.y, 0f)
-                : gyro;
+            var yaw = yawDirection * gyro.y;
+            var pitch = ParentVerticalPitchWhenDominant
+                ? gyro.z * Mathf.Clamp01(ParentVerticalPitchScale)
+                : 0f;
+            return new Vector3(0f, yaw, pitch);
         }
 
         public static void CaptureIndependentNeutral(HashiBleSample sample)

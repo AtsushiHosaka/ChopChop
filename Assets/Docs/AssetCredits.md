@@ -57,7 +57,7 @@ This document records third-party and generated assets currently used or evaluat
 ### Audio
 
 - Project path: `Assets/Resources/Audio`
-- Current usage: generated menu/sukiyaki BGM loops and UI/gameplay SE.
+- Current usage: generated UI/gameplay SE.
 - Modifications: generated inside Unity as WAV files; safe to replace with higher-quality licensed audio later.
 
 ### Prototype Materials And Procedural Food Meshes

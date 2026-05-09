@@ -5603,7 +5603,7 @@ MonoBehaviour:
   upperChopstick: {fileID: 16540100}
   openingAxis: {x: 0, y: 1, z: 0}
   smoothing: 14
-  gripPivotFromTip: 0.67
+  gripPivotFromTip: 0.72
   wholeRotationSensitivity: 1
 --- !u!114 &1147880874
 MonoBehaviour:
@@ -5684,10 +5684,12 @@ MonoBehaviour:
   outputOpen: 35
   rawAccelerationToG: 0.000061
   rawGyroToDegreesPerSecond: 0.0175
-  parentRotationWeight: 0.7
+  parentRotationWeight: 0.6
   parentRotationInputEuler: {x: -90, y: -90, z: 0}
   parentPlanarYawOnly: 1
   parentPlanarYawDirection: -1
+  parentVerticalPitchWhenDominant: 1
+  parentVerticalPitchScale: 0.55
   parentLongAxisTwistWeight: 0
   useIndependentImuPose: 1
   autoCaptureIndependentNeutral: 1

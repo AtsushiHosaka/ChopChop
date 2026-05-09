@@ -69,13 +69,12 @@ namespace ChopChop.Tests.EditMode
         }
 
         [Test]
-        public void SettingsScreenCreatesLanguageBgmAndBackButtons()
+        public void SettingsScreenCreatesLanguageAndBackButtons()
         {
-            var root = SettingsScreenController.Create(new GameLocalization(), new SceneNavigator(), null);
+            var root = SettingsScreenController.Create(new GameLocalization(), new SceneNavigator());
             createdObjects.Add(root);
 
             AssertButtonExists(root, "Language Button");
-            AssertButtonExists(root, "BGM Button");
             AssertButtonExists(root, "Back Button");
         }
 

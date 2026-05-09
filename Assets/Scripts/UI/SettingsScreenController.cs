@@ -1,5 +1,4 @@
 using ChopChop.App;
-using ChopChop.Audio;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,25 +10,22 @@ namespace ChopChop.UI
 
         private GameLocalization localization;
         private SceneNavigator navigator;
-        private AudioService audioService;
         private Text titleText;
         private Text languageText;
-        private Text bgmText;
         private Text backText;
 
-        public static GameObject Create(GameLocalization localization, SceneNavigator navigator, AudioService audioService)
+        public static GameObject Create(GameLocalization localization, SceneNavigator navigator)
         {
             var root = UiFactory.CreateScreen("Settings Screen", new Color(0.045f, 0.05f, 0.05f, 1f), true);
             var controller = root.AddComponent<SettingsScreenController>();
-            controller.Initialize(localization, navigator, audioService);
+            controller.Initialize(localization, navigator);
             return root;
         }
 
-        private void Initialize(GameLocalization appLocalization, SceneNavigator sceneNavigator, AudioService service)
+        private void Initialize(GameLocalization appLocalization, SceneNavigator sceneNavigator)
         {
             localization = appLocalization;
             navigator = sceneNavigator;
-            audioService = service;
 
             ApplyBackgroundImage();
             CreateReadableScrim();
@@ -37,11 +33,6 @@ namespace ChopChop.UI
             CreatePanel();
 
             localization.LanguageChanged += UpdateTexts;
-            if (audioService != null)
-            {
-                audioService.BgmSettingsChanged += UpdateTexts;
-            }
-
             UpdateTexts();
         }
 
@@ -65,13 +56,6 @@ namespace ChopChop.UI
             languageText.alignment = TextAnchor.MiddleLeft;
             UiFactory.Anchor(languageText.rectTransform, Vector2.zero, Vector2.one, new Vector2(34f, 0f), new Vector2(-28f, 0f));
             languageButton.onClick.AddListener(localization.ToggleLanguage);
-
-            var bgmButton = UiFactory.CreateButton(panel, "BGM Button", string.Empty, new Color(0.09f, 0.105f, 0.11f, 0.96f), new Color(0.95f, 0.89f, 0.78f, 1f));
-            UiFactory.SetPreferredHeight(bgmButton.GetComponent<RectTransform>(), 72f);
-            bgmText = bgmButton.GetComponentInChildren<Text>();
-            bgmText.alignment = TextAnchor.MiddleLeft;
-            UiFactory.Anchor(bgmText.rectTransform, Vector2.zero, Vector2.one, new Vector2(34f, 0f), new Vector2(-28f, 0f));
-            bgmButton.onClick.AddListener(() => audioService?.ToggleBgmEnabled());
 
             var spacer = new GameObject("Spacer", typeof(RectTransform));
             spacer.transform.SetParent(panel, false);
@@ -133,11 +117,6 @@ namespace ChopChop.UI
             {
                 localization.LanguageChanged -= UpdateTexts;
             }
-
-            if (audioService != null)
-            {
-                audioService.BgmSettingsChanged -= UpdateTexts;
-            }
         }
 
         private void UpdateTexts()
@@ -146,12 +125,8 @@ namespace ChopChop.UI
             var currentLanguage = localization.CurrentLanguage == AppLanguage.Japanese
                 ? localization.Text(LocalizationKeys.Settings.Japanese)
                 : localization.Text(LocalizationKeys.Settings.English);
-            var bgmState = audioService == null || audioService.BgmEnabled
-                ? localization.Text(LocalizationKeys.Settings.BgmOn)
-                : localization.Text(LocalizationKeys.Settings.BgmOff);
 
             languageText.text = $"{localization.Text(LocalizationKeys.Settings.Language)}    {currentLanguage}";
-            bgmText.text = $"{localization.Text(LocalizationKeys.Settings.Bgm)}    {bgmState}";
             backText.text = localization.Text(LocalizationKeys.App.Back);
         }
     }

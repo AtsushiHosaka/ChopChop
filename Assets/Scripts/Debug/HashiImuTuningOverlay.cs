@@ -24,10 +24,12 @@ namespace ChopChop.Debugging
         [SerializeField] private float outputOpen = 35f;
         [SerializeField] private float rawAccelerationToG = HashiImuMappingRuntime.Esp32Lsm6RawAccelerationToG;
         [SerializeField] private float rawGyroToDegreesPerSecond = HashiBleDefaults.RawGyroToDegreesPerSecond;
-        [SerializeField, Range(0f, 1f)] private float parentRotationWeight = 0.7f;
+        [SerializeField, Range(0f, 1f)] private float parentRotationWeight = 0.6f;
         [SerializeField] private Vector3 parentRotationInputEuler = new Vector3(-90f, -90f, 0f);
         [SerializeField] private bool parentPlanarYawOnly = true;
         [SerializeField] private float parentPlanarYawDirection = -1f;
+        [SerializeField] private bool parentVerticalPitchWhenDominant = true;
+        [SerializeField, Range(0f, 1f)] private float parentVerticalPitchScale = 0.55f;
         [SerializeField, Range(0f, 1f)] private float parentLongAxisTwistWeight;
         [SerializeField] private bool useIndependentImuPose = true;
         [SerializeField] private bool autoCaptureIndependentNeutral = true;
@@ -275,6 +277,8 @@ namespace ChopChop.Debugging
             parentRotationInputEuler = DrawEulerControls("Whole rotation input basis", parentRotationInputEuler);
             parentPlanarYawOnly = GUILayout.Toggle(parentPlanarYawOnly, "Whole rotation planar yaw only");
             parentPlanarYawDirection = DrawSignToggle("Whole yaw dir", parentPlanarYawDirection);
+            parentVerticalPitchWhenDominant = GUILayout.Toggle(parentVerticalPitchWhenDominant, "Whole vertical pitch component");
+            parentVerticalPitchScale = DrawSlider("Whole vertical pitch scale", parentVerticalPitchScale, 0f, 1f);
             parentLongAxisTwistWeight = DrawSlider("Whole rotation long-axis twist", parentLongAxisTwistWeight, 0f, 1f);
             invertImu1Pose = GUILayout.Toggle(invertImu1Pose, "Invert IMU1 upper pose");
             invertImu2Pose = GUILayout.Toggle(invertImu2Pose, "Invert IMU2 lower pose");
@@ -954,7 +958,7 @@ namespace ChopChop.Debugging
             builder.AppendLine($"  AutoCaptureIndependentNeutral={autoCaptureIndependentNeutral}");
             builder.AppendLine($"  IndependentPoseMode={independentPoseMode}");
             builder.AppendLine($"  IndependentPoseWeight={independentPoseWeight:0.###}");
-            builder.AppendLine($"  WholeHashiRotation parentWeight={HashiImuMappingRuntime.ParentRotationWeight:0.###} motionSource={HashiImuMappingRuntime.MotionSource} inputEuler={FormatVectorPrecise(HashiImuMappingRuntime.ParentRotationInputEuler)} planarYaw={HashiImuMappingRuntime.ParentPlanarYawOnly} yawDir={HashiImuMappingRuntime.ParentPlanarYawDirection:0.#} longAxisTwistWeight={HashiImuMappingRuntime.ParentLongAxisTwistWeight:0.###}");
+            builder.AppendLine($"  WholeHashiRotation parentWeight={HashiImuMappingRuntime.ParentRotationWeight:0.###} motionSource={HashiImuMappingRuntime.MotionSource} inputEuler={FormatVectorPrecise(HashiImuMappingRuntime.ParentRotationInputEuler)} planarYaw={HashiImuMappingRuntime.ParentPlanarYawOnly} yawDir={HashiImuMappingRuntime.ParentPlanarYawDirection:0.#} verticalPitch={HashiImuMappingRuntime.ParentVerticalPitchWhenDominant} pitchScale={HashiImuMappingRuntime.ParentVerticalPitchScale:0.###} longAxisTwistWeight={HashiImuMappingRuntime.ParentLongAxisTwistWeight:0.###}");
             builder.AppendLine($"  GyroDeadzoneDegreesPerSecond={gyroDeadzoneDegreesPerSecond:0.###}");
             builder.AppendLine($"  OpeningSensorAxis imu1={imu1OpeningAxis} dir={imu1OpeningDirection:0.#} scale={imu1OpeningScale:0.###} imu2={imu2OpeningAxis} dir={imu2OpeningDirection:0.#} scale={imu2OpeningScale:0.###} clamp=({HashiImuMappingRuntime.OpeningAngleMinDegrees:0.###},{HashiImuMappingRuntime.OpeningAngleMaxDegrees:0.###})");
             builder.AppendLine($"  OpeningNoiseReject jumpDeg={openingAngleStaticJumpRejectDegrees:0.###} staticVelocityDps={openingAngleStaticVelocityThresholdDps:0.###} maxSampleAge={maxBleSampleAgeSeconds:0.###} resumeSettle={bleResumeSettleSeconds:0.###}");
@@ -1043,6 +1047,8 @@ namespace ChopChop.Debugging
             HashiImuMappingRuntime.ParentRotationInputEuler = parentRotationInputEuler;
             HashiImuMappingRuntime.ParentPlanarYawOnly = parentPlanarYawOnly;
             HashiImuMappingRuntime.ParentPlanarYawDirection = parentPlanarYawDirection < 0f ? -1f : 1f;
+            HashiImuMappingRuntime.ParentVerticalPitchWhenDominant = parentVerticalPitchWhenDominant;
+            HashiImuMappingRuntime.ParentVerticalPitchScale = Mathf.Clamp01(parentVerticalPitchScale);
             HashiImuMappingRuntime.ParentLongAxisTwistWeight = Mathf.Clamp01(parentLongAxisTwistWeight);
             HashiImuMappingRuntime.UseIndependentImuPose = useIndependentImuPose;
             HashiImuMappingRuntime.AutoCaptureIndependentNeutral = autoCaptureIndependentNeutral;

@@ -9,7 +9,8 @@ namespace ChopChop.Input
         private static BleHashiInputSource activeSource;
         private static string activeOwnerLabel = string.Empty;
         private const float ReconnectDelaySeconds = 3f;
-        private const float ParentGyroIgnoreAboveDegreesPerSecond = 720f;
+        private const float ParentGyroIgnoreAboveDegreesPerSecond = 1200f;
+        private const float ParentGyroSaturatedClampDegreesPerSecond = 600f;
         private const float ParentAccelerationCorrectionFloor = 0.18f;
         private const float ParentAccelerationFullCorrectionBelowDps = 60f;
         private const float ParentAccelerationZeroCorrectionAboveDps = 260f;
@@ -141,6 +142,7 @@ namespace ChopChop.Input
                 {
                     HashiImuMappingRuntime.ApplyParentRotationInputBasis(ref acceleration, ref gyro);
                     gyro = HashiImuMappingRuntime.FilterParentRotationGyro(gyro);
+                    gyro = HashiImuMappingRuntime.ApplyParentRotationRateWeight(gyro);
                 }
 
                 var rotationDeltaTime = ParentRotationDeltaTime(sample, deltaTime);
@@ -306,12 +308,14 @@ namespace ChopChop.Input
             float deltaTime,
             bool gyroSaturated)
         {
+            gyroDegreesPerSecond = ApplyParentGyroDeadzone(gyroDegreesPerSecond);
             if (gyroSaturated)
             {
-                return currentRotation;
+                gyroDegreesPerSecond = Vector3.ClampMagnitude(
+                    gyroDegreesPerSecond,
+                    ParentGyroSaturatedClampDegreesPerSecond);
             }
 
-            gyroDegreesPerSecond = ApplyParentGyroDeadzone(gyroDegreesPerSecond);
             var angularSpeed = gyroDegreesPerSecond.magnitude;
             if (angularSpeed < 0.0001f || angularSpeed > ParentGyroIgnoreAboveDegreesPerSecond)
             {
