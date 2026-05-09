@@ -81,7 +81,7 @@ namespace ChopChop.BLE
 
     public static class HashiImuMappingRuntime
     {
-        public const float Esp32Lsm6RawAccelerationToG = 0.000061f;
+        public const float Esp32Lsm6RawAccelerationToG = HashiBleDefaults.RawAccelerationToG;
 
         public static bool UseTunedTheta { get; set; }
         public static HashiImuThetaMode ThetaMode { get; set; } = HashiImuThetaMode.AccelerationAngle;

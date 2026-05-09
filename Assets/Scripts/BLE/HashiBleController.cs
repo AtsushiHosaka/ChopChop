@@ -1,43 +1,97 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace ChopChop.BLE
 {
-    [AddComponentMenu("ChopChop/Hashi BLE Controller")]
+    [AddComponentMenu("ChopChop/Hashi Dual IMU BLE Controller")]
     public sealed class HashiBleController : MonoBehaviour
     {
         [Header("Chopsticks")]
         public Transform lowerChopstick;
         public Transform upperChopstick;
+        public Transform lowerPivot;
+        public Transform upperPivot;
 
         [Header("BLE")]
         public string deviceNameFilter = HashiBleDefaults.DeviceNameFilter;
         public string serviceUuid = HashiBleDefaults.ServiceUuid;
         public string characteristicUuid = HashiBleDefaults.CharacteristicUuid;
+        public float staleWarningSeconds = 2f;
 
-        [Header("Motion")]
-        [Min(0f)] public float gyroSensitivity = 1f;
-        [Min(0f)] public float accelerometerCorrection = 0.35f;
-        [Min(0f)] public float smoothing = 12f;
+        [Header("Sensor Scale")]
+        public float rawAccelerationToG = HashiBleDefaults.RawAccelerationToG;
+        public float rawGyroToDegreesPerSecond = HashiBleDefaults.RawGyroToDegreesPerSecond;
 
-        [SerializeField] private Vector3 openingAxis = Vector3.forward;
-        [SerializeField] private float staleWarningSeconds = 2f;
-        [SerializeField] private bool logParsedSamples = false;
+        [Header("IMU Roles and Mounting")]
+        public bool imu1IsUpper = true;
+        public HashiImuAxisMapping imu1Mapping = new HashiImuAxisMapping();
+        public HashiImuAxisMapping imu2Mapping = new HashiImuAxisMapping();
 
-        private MacHashiBleReceiver bleReceiver;
+        [Header("Opening")]
+        public HashiImuAxis sensorOpeningAxis = HashiImuAxis.X;
+        public float sensorOpeningDirection = 1f;
+        [FormerlySerializedAs("openingAxis")] public Vector3 visualOpeningAxis = Vector3.forward;
+        public float minOpeningDegrees = 0f;
+        public float maxOpeningDegrees = 35f;
+        public float openingGyroDeadzoneDegreesPerSecond = 1.5f;
+        public float openingAccelerationCorrectionRate = 10f;
+
+        [Header("Whole Chopstick Rotation")]
+        public HashiParentMotionSource parentMotionSource = HashiParentMotionSource.Lower;
+        public bool invertParentRotation;
+        public Vector3 parentOutputEuler = Vector3.zero;
+        [Range(0f, 1f)] public float wholeRotationSensitivity = 0.7f;
+        public float parentGyroDeadzoneDegreesPerSecond = 1f;
+        public float parentTiltCorrectionRate = 4f;
+
+        [Header("Acceleration Filtering")]
+        public float accelerationMagnitudeToleranceG = 0.35f;
+        public float correctionFullBelowDegreesPerSecond = 50f;
+        public float correctionZeroAboveDegreesPerSecond = 260f;
+        public float maxDeltaTimeSeconds = 0.12f;
+        public float maxSampleGapSeconds = 0.7f;
+
+        [Header("Calibration")]
+        public bool calibrateOnStart = true;
+        [Min(5)] public int calibrationSamples = 50;
+        public KeyCode recalibrateKey = KeyCode.C;
+        public KeyCode zeroPoseKey = KeyCode.Z;
+
+        [Header("Presentation")]
+        public float smoothing = 16f;
+        public bool compensatePivot = true;
+        public float separationPerDegree = 0f;
+        public float maxSeparation = 0.08f;
+        public Vector3 separationAxis = Vector3.right;
+        public bool logParsedSamples;
+
+        private readonly HashiDualImuFusion fusion = new HashiDualImuFusion();
+        private MacHashiBleReceiver receiver;
+
         private Quaternion baseParentLocalRotation;
         private Quaternion displayedParentLocalRotation;
-        private Quaternion sensorLocalRotation = Quaternion.identity;
         private Quaternion lowerBaseLocalRotation;
         private Quaternion upperBaseLocalRotation;
-        private Vector3 normalizedOpeningAxis = Vector3.forward;
-        private float currentTheta;
-        private float targetTheta;
-        private float lastSampleRealtime;
+        private Quaternion displayedLowerLocalRotation;
+        private Quaternion displayedUpperLocalRotation;
+        private Vector3 lowerBaseLocalPosition;
+        private Vector3 upperBaseLocalPosition;
+        private Vector3 lowerPivotLocal;
+        private Vector3 upperPivotLocal;
+        private Vector3 lowerBasePivotParent;
+        private Vector3 upperBasePivotParent;
+        private float displayedOpeningDegrees;
+        private double lastPayloadHostTime = -1.0;
         private bool hasBaseline;
-        private bool hasReceivedSample;
         private bool hasLoggedMissingReferences;
-        private bool hasLoggedStaleSample;
-        private float nextMalformedPayloadWarningTime;
+        private bool hasLoggedStaleSamples;
+        private float nextMalformedPayloadWarningAt;
+        private int suppressedMalformedPayloadWarnings;
+
+        public HashiDualImuPose CurrentPose
+        {
+            get { return fusion.CurrentPose; }
+        }
 
         private void Reset()
         {
@@ -55,6 +109,13 @@ namespace ChopChop.BLE
         private void OnEnable()
         {
             CaptureBaseline();
+            ConfigureFusion();
+            fusion.Reset();
+            if (calibrateOnStart)
+            {
+                fusion.BeginCalibration(calibrationSamples);
+            }
+
             StartInput();
         }
 
@@ -65,55 +126,111 @@ namespace ChopChop.BLE
 
         private void OnValidate()
         {
-            gyroSensitivity = Mathf.Max(0f, gyroSensitivity);
-            accelerometerCorrection = Mathf.Max(0f, accelerometerCorrection);
-            smoothing = Mathf.Max(0f, smoothing);
+            rawAccelerationToG = Mathf.Max(0.0000001f, rawAccelerationToG);
+            rawGyroToDegreesPerSecond = Mathf.Max(0.0000001f, rawGyroToDegreesPerSecond);
             staleWarningSeconds = Mathf.Max(0.25f, staleWarningSeconds);
-            normalizedOpeningAxis = openingAxis.sqrMagnitude > 0.0001f ? openingAxis.normalized : Vector3.forward;
+            minOpeningDegrees = Mathf.Clamp(minOpeningDegrees, -180f, 180f);
+            maxOpeningDegrees = Mathf.Clamp(maxOpeningDegrees, -180f, 180f);
+            openingGyroDeadzoneDegreesPerSecond = Mathf.Max(0f, openingGyroDeadzoneDegreesPerSecond);
+            openingAccelerationCorrectionRate = Mathf.Max(0f, openingAccelerationCorrectionRate);
+            parentGyroDeadzoneDegreesPerSecond = Mathf.Max(0f, parentGyroDeadzoneDegreesPerSecond);
+            parentTiltCorrectionRate = Mathf.Max(0f, parentTiltCorrectionRate);
+            accelerationMagnitudeToleranceG = Mathf.Max(0f, accelerationMagnitudeToleranceG);
+            correctionFullBelowDegreesPerSecond = Mathf.Max(0f, correctionFullBelowDegreesPerSecond);
+            correctionZeroAboveDegreesPerSecond = Mathf.Max(correctionFullBelowDegreesPerSecond + 1f, correctionZeroAboveDegreesPerSecond);
+            maxDeltaTimeSeconds = Mathf.Max(0.001f, maxDeltaTimeSeconds);
+            maxSampleGapSeconds = Mathf.Max(0.05f, maxSampleGapSeconds);
+            calibrationSamples = Mathf.Max(5, calibrationSamples);
+            smoothing = Mathf.Max(0f, smoothing);
+            separationPerDegree = Mathf.Max(0f, separationPerDegree);
+            maxSeparation = Mathf.Max(0f, maxSeparation);
+            wholeRotationSensitivity = Mathf.Clamp01(wholeRotationSensitivity);
         }
 
         private void Update()
         {
             FlushBleLogs();
+            HandleHotkeys();
+            ConfigureFusion();
+            DrainBlePayloads();
+            ApplyTransforms(Time.deltaTime);
+            WarnIfStale();
+        }
 
-            var hasNewSample = TryGetLatestSample(out var sample);
-            if (hasNewSample)
+        public void Recalibrate()
+        {
+            fusion.BeginCalibration(calibrationSamples);
+            displayedOpeningDegrees = 0f;
+            displayedParentLocalRotation = baseParentLocalRotation;
+            displayedLowerLocalRotation = lowerBaseLocalRotation;
+            displayedUpperLocalRotation = upperBaseLocalRotation;
+            hasLoggedStaleSamples = false;
+            Debug.Log("[Hashi BLE] Calibration started. Hold both chopsticks still in the closed neutral pose.", this);
+        }
+
+        public void ZeroPose()
+        {
+            fusion.ZeroPose();
+            displayedOpeningDegrees = 0f;
+            displayedParentLocalRotation = baseParentLocalRotation;
+            displayedLowerLocalRotation = lowerBaseLocalRotation;
+            displayedUpperLocalRotation = upperBaseLocalRotation;
+            Debug.Log("[Hashi BLE] Pose zeroed.", this);
+        }
+
+        private void HandleHotkeys()
+        {
+            if (recalibrateKey != KeyCode.None && UnityEngine.Input.GetKeyDown(recalibrateKey))
             {
-                ConsumeSample(sample, Time.deltaTime);
+                Recalibrate();
             }
 
-            ApplyTransforms(Time.deltaTime);
-            WarnIfBleStale();
+            if (zeroPoseKey != KeyCode.None && UnityEngine.Input.GetKeyDown(zeroPoseKey))
+            {
+                ZeroPose();
+            }
         }
 
         private void CaptureBaseline()
         {
-            normalizedOpeningAxis = openingAxis.sqrMagnitude > 0.0001f ? openingAxis.normalized : Vector3.forward;
             baseParentLocalRotation = transform.localRotation;
-            displayedParentLocalRotation = transform.localRotation;
-            sensorLocalRotation = Quaternion.identity;
+            displayedParentLocalRotation = baseParentLocalRotation;
 
-            if (lowerChopstick != null)
-            {
-                lowerBaseLocalRotation = lowerChopstick.localRotation;
-            }
+            lowerBaseLocalRotation = lowerChopstick != null ? lowerChopstick.localRotation : Quaternion.identity;
+            upperBaseLocalRotation = upperChopstick != null ? upperChopstick.localRotation : Quaternion.identity;
+            displayedLowerLocalRotation = lowerBaseLocalRotation;
+            displayedUpperLocalRotation = upperBaseLocalRotation;
 
-            if (upperChopstick != null)
-            {
-                upperBaseLocalRotation = upperChopstick.localRotation;
-            }
+            lowerBaseLocalPosition = lowerChopstick != null ? lowerChopstick.localPosition : Vector3.zero;
+            upperBaseLocalPosition = upperChopstick != null ? upperChopstick.localPosition : Vector3.zero;
 
+            lowerPivotLocal = ResolvePivotLocal(lowerChopstick, lowerPivot);
+            upperPivotLocal = ResolvePivotLocal(upperChopstick, upperPivot);
+            lowerBasePivotParent = ResolvePivotParentPosition(
+                lowerChopstick,
+                lowerPivot,
+                lowerBaseLocalPosition,
+                lowerBaseLocalRotation,
+                lowerPivotLocal);
+            upperBasePivotParent = ResolvePivotParentPosition(
+                upperChopstick,
+                upperPivot,
+                upperBaseLocalPosition,
+                upperBaseLocalRotation,
+                upperPivotLocal);
+
+            displayedOpeningDegrees = 0f;
             hasBaseline = true;
         }
 
         private void StartInput()
         {
-            hasReceivedSample = false;
-            hasLoggedStaleSample = false;
-            lastSampleRealtime = Time.realtimeSinceStartup;
+            StopInput();
+            lastPayloadHostTime = -1.0;
+            hasLoggedStaleSamples = false;
 
-            bleReceiver = new MacHashiBleReceiver();
-            bleReceiver.Start(
+            receiver = new MacHashiBleReceiver();
+            receiver.Start(
                 DefaultIfEmpty(deviceNameFilter, HashiBleDefaults.DeviceNameFilter),
                 DefaultIfEmpty(serviceUuid, HashiBleDefaults.ServiceUuid),
                 DefaultIfEmpty(characteristicUuid, HashiBleDefaults.CharacteristicUuid));
@@ -122,91 +239,67 @@ namespace ChopChop.BLE
 
         private void StopInput()
         {
-            if (bleReceiver == null)
+            if (receiver == null)
             {
                 return;
             }
 
-            bleReceiver.Dispose();
-            bleReceiver = null;
+            receiver.Dispose();
+            receiver = null;
         }
 
-        private bool TryGetLatestSample(out HashiBleSample latestSample)
+        private void ConfigureFusion()
         {
-            latestSample = default;
-            var hasParsedSample = false;
+            fusion.RawAccelerationToG = rawAccelerationToG;
+            fusion.RawGyroToDegreesPerSecond = rawGyroToDegreesPerSecond;
+            fusion.Imu1IsUpper = imu1IsUpper;
+            fusion.Imu1Mapping = imu1Mapping ?? new HashiImuAxisMapping();
+            fusion.Imu2Mapping = imu2Mapping ?? new HashiImuAxisMapping();
+            fusion.OpeningAxis = sensorOpeningAxis;
+            fusion.OpeningDirection = sensorOpeningDirection;
+            fusion.OpeningMinDegrees = minOpeningDegrees;
+            fusion.OpeningMaxDegrees = maxOpeningDegrees;
+            fusion.OpeningGyroDeadzoneDegreesPerSecond = openingGyroDeadzoneDegreesPerSecond;
+            fusion.OpeningAccelerationCorrectionRate = openingAccelerationCorrectionRate;
+            fusion.ParentMotionSource = parentMotionSource;
+            fusion.ParentGyroDeadzoneDegreesPerSecond = parentGyroDeadzoneDegreesPerSecond;
+            fusion.ParentTiltCorrectionRate = parentTiltCorrectionRate;
+            fusion.AccelerationMagnitudeToleranceG = accelerationMagnitudeToleranceG;
+            fusion.CorrectionFullBelowDegreesPerSecond = correctionFullBelowDegreesPerSecond;
+            fusion.CorrectionZeroAboveDegreesPerSecond = correctionZeroAboveDegreesPerSecond;
+            fusion.MaxDeltaTimeSeconds = maxDeltaTimeSeconds;
+            fusion.MaxSampleGapSeconds = maxSampleGapSeconds;
+        }
 
-            if (bleReceiver == null)
+        private void DrainBlePayloads()
+        {
+            if (receiver == null)
             {
-                return false;
+                return;
             }
 
-            while (bleReceiver.TryDequeueRawPayload(out var rawPayload))
+            while (receiver.TryDequeuePayload(out var payload))
             {
-                if (HashiBleSampleParser.TryParse(rawPayload, out var parsedSample, out var error))
+                lastPayloadHostTime = payload.HostTimeSeconds;
+                if (!HashiBleSampleParser.TryParse(payload, out var sample, out var error))
                 {
-                    latestSample = parsedSample;
-                    hasParsedSample = true;
+                    WarnMalformedPayload(payload.Text, error);
+                    continue;
                 }
-                else
+
+                hasLoggedStaleSamples = false;
+                fusion.Consume(sample, Time.deltaTime);
+
+                if (logParsedSamples)
                 {
-                    WarnMalformedPayload(rawPayload, error);
+                    var pose = fusion.CurrentPose;
+                    Debug.Log(
+                        $"[Hashi BLE] seq={(sample.HasSequence ? sample.Sequence.ToString() : "-")} open={pose.OpeningDegrees:0.0}deg "
+                        + $"upperAcc={pose.UpperAccelerationG} lowerAcc={pose.LowerAccelerationG} "
+                        + $"upperGyro={pose.UpperGyroDps} lowerGyro={pose.LowerGyroDps}",
+                        this);
                 }
             }
-
-            return hasParsedSample;
-        }
-
-        private void ConsumeSample(HashiBleSample sample, float deltaTime)
-        {
-            hasReceivedSample = true;
-            hasLoggedStaleSample = false;
-            lastSampleRealtime = Time.realtimeSinceStartup;
-
-            if (sample.HasTheta)
-            {
-                targetTheta = sample.ThetaValue;
-            }
-
-            IntegrateGyro(sample, deltaTime);
-            CorrectWithAccelerometer(sample, deltaTime);
-
-            if (logParsedSamples)
-            {
-                Debug.Log($"[Hashi BLE] theta={sample.ThetaValue:F2}, gyro={sample.GyroVector}, acc={sample.AccelerationVector}", this);
-            }
-        }
-
-        private void IntegrateGyro(HashiBleSample sample, float deltaTime)
-        {
-            if (!sample.HasGyroVector || deltaTime <= 0f || gyroSensitivity <= 0f)
-            {
-                return;
-            }
-
-            var gyroDegrees = sample.GyroVector * gyroSensitivity * deltaTime;
-            sensorLocalRotation *= Quaternion.Euler(gyroDegrees);
-            sensorLocalRotation = Normalize(sensorLocalRotation);
-        }
-
-        private void CorrectWithAccelerometer(HashiBleSample sample, float deltaTime)
-        {
-            if (!sample.HasAccelerationVector || deltaTime <= 0f || accelerometerCorrection <= 0f)
-            {
-                return;
-            }
-
-            var acceleration = sample.AccelerationVector;
-            if (acceleration.sqrMagnitude < 0.0001f)
-            {
-                return;
-            }
-
-            var measuredDownInParent = sensorLocalRotation * acceleration.normalized;
-            var correction = Quaternion.FromToRotation(measuredDownInParent, Vector3.down);
-            var blend = 1f - Mathf.Exp(-accelerometerCorrection * deltaTime);
-            sensorLocalRotation = Quaternion.Slerp(sensorLocalRotation, correction * sensorLocalRotation, blend);
-            sensorLocalRotation = Normalize(sensorLocalRotation);
         }
 
         private void ApplyTransforms(float deltaTime)
@@ -220,84 +313,192 @@ namespace ChopChop.BLE
             {
                 if (!hasLoggedMissingReferences)
                 {
-                    Debug.LogWarning("[Hashi BLE] Assign lowerChopstick and upperChopstick to animate the Hashi cubes.", this);
+                    Debug.LogWarning("[Hashi BLE] Assign lowerChopstick and upperChopstick.", this);
                     hasLoggedMissingReferences = true;
                 }
 
                 return;
             }
 
-            var blend = smoothing <= 0f || deltaTime <= 0f
-                ? 1f
-                : 1f - Mathf.Exp(-smoothing * deltaTime);
+            var pose = fusion.CurrentPose;
+            if (!pose.HasPose)
+            {
+                ApplyBasePose();
+                return;
+            }
 
-            currentTheta = Mathf.Lerp(currentTheta, targetTheta, blend);
-            var targetParentRotation = baseParentLocalRotation * sensorLocalRotation;
+            var blend = smoothing <= 0f || deltaTime <= 0f ? 1f : 1f - Mathf.Exp(-smoothing * deltaTime);
+            displayedOpeningDegrees = Mathf.Lerp(displayedOpeningDegrees, pose.OpeningDegrees, blend);
+
+            var targetParentRotation = baseParentLocalRotation * BuildParentOutputRotation(pose.ParentRotation);
             displayedParentLocalRotation = Quaternion.Slerp(displayedParentLocalRotation, targetParentRotation, blend);
+            displayedLowerLocalRotation = Quaternion.Slerp(displayedLowerLocalRotation, lowerBaseLocalRotation, blend);
+            displayedUpperLocalRotation = Quaternion.Slerp(
+                displayedUpperLocalRotation,
+                upperBaseLocalRotation * Quaternion.AngleAxis(displayedOpeningDegrees, NormalizedVisualOpeningAxis()),
+                blend);
 
             transform.localRotation = displayedParentLocalRotation;
-            lowerChopstick.localRotation = lowerBaseLocalRotation;
-            upperChopstick.localRotation = upperBaseLocalRotation * Quaternion.AngleAxis(currentTheta, normalizedOpeningAxis);
+            ApplyChopstickLocalPoses(displayedOpeningDegrees);
         }
 
-        private void FlushBleLogs()
+        private void ApplyBasePose()
         {
-            if (bleReceiver == null)
+            transform.localRotation = baseParentLocalRotation;
+            if (lowerChopstick != null)
+            {
+                lowerChopstick.localPosition = lowerBaseLocalPosition;
+                lowerChopstick.localRotation = lowerBaseLocalRotation;
+            }
+
+            if (upperChopstick != null)
+            {
+                upperChopstick.localPosition = upperBaseLocalPosition;
+                upperChopstick.localRotation = upperBaseLocalRotation;
+            }
+        }
+
+        private Quaternion BuildParentOutputRotation(Quaternion sensorRotation)
+        {
+            var rotation = invertParentRotation ? Quaternion.Inverse(sensorRotation) : sensorRotation;
+            var basis = Quaternion.Euler(parentOutputEuler);
+            rotation = basis * rotation * Quaternion.Inverse(basis);
+            return Quaternion.Slerp(Quaternion.identity, rotation, Mathf.Clamp01(wholeRotationSensitivity));
+        }
+
+        private void ApplyChopstickLocalPoses(float openingDegrees)
+        {
+            var separation = Mathf.Min(
+                Mathf.Abs(openingDegrees) * Mathf.Max(0f, separationPerDegree),
+                Mathf.Max(0f, maxSeparation));
+            var axis = separationAxis.sqrMagnitude > 0.0001f ? separationAxis.normalized : Vector3.right;
+            var halfOffset = axis * (separation * 0.5f);
+
+            if (compensatePivot)
+            {
+                ApplyLocalPoseAroundPivot(
+                    lowerChopstick,
+                    displayedLowerLocalRotation,
+                    lowerPivotLocal,
+                    lowerBasePivotParent - halfOffset,
+                    lowerBaseLocalPosition);
+                ApplyLocalPoseAroundPivot(
+                    upperChopstick,
+                    displayedUpperLocalRotation,
+                    upperPivotLocal,
+                    upperBasePivotParent + halfOffset,
+                    upperBaseLocalPosition);
+                return;
+            }
+
+            lowerChopstick.localRotation = displayedLowerLocalRotation;
+            upperChopstick.localRotation = displayedUpperLocalRotation;
+            lowerChopstick.localPosition = lowerBaseLocalPosition - halfOffset;
+            upperChopstick.localPosition = upperBaseLocalPosition + halfOffset;
+        }
+
+        private static void ApplyLocalPoseAroundPivot(
+            Transform target,
+            Quaternion localRotation,
+            Vector3 pivotLocal,
+            Vector3 pivotParentPosition,
+            Vector3 fallbackBaseLocalPosition)
+        {
+            if (target == null)
             {
                 return;
             }
 
-            while (bleReceiver.TryDequeueLog(out var message))
+            target.localRotation = localRotation;
+            if (pivotLocal.sqrMagnitude < 0.000001f)
             {
-                Debug.Log($"[Hashi BLE] {message}", this);
+                target.localPosition = fallbackBaseLocalPosition;
+                return;
+            }
+
+            target.localPosition = pivotParentPosition - localRotation * Vector3.Scale(pivotLocal, target.localScale);
+        }
+
+        private static Vector3 ResolvePivotLocal(Transform chopstick, Transform pivot)
+        {
+            if (chopstick == null || pivot == null)
+            {
+                return Vector3.zero;
+            }
+
+            return chopstick.InverseTransformPoint(pivot.position);
+        }
+
+        private static Vector3 ResolvePivotParentPosition(
+            Transform chopstick,
+            Transform pivot,
+            Vector3 baseLocalPosition,
+            Quaternion baseLocalRotation,
+            Vector3 pivotLocal)
+        {
+            if (chopstick == null)
+            {
+                return Vector3.zero;
+            }
+
+            if (pivot != null && chopstick.parent != null)
+            {
+                return chopstick.parent.InverseTransformPoint(pivot.position);
+            }
+
+            return baseLocalPosition + baseLocalRotation * Vector3.Scale(pivotLocal, chopstick.localScale);
+        }
+
+        private Vector3 NormalizedVisualOpeningAxis()
+        {
+            return visualOpeningAxis.sqrMagnitude > 0.0001f ? visualOpeningAxis.normalized : Vector3.forward;
+        }
+
+        private void FlushBleLogs()
+        {
+            if (receiver == null)
+            {
+                return;
+            }
+
+            while (receiver.TryDequeueLog(out var message))
+            {
+                Debug.Log("[Hashi BLE] " + message, this);
             }
         }
 
         private void WarnMalformedPayload(string rawPayload, string error)
         {
-            if (Time.realtimeSinceStartup < nextMalformedPayloadWarningTime)
+            var now = Time.realtimeSinceStartup;
+            if (now < nextMalformedPayloadWarningAt)
             {
+                suppressedMalformedPayloadWarnings++;
                 return;
             }
 
-            nextMalformedPayloadWarningTime = Time.realtimeSinceStartup + 1f;
-            Debug.LogWarning($"[Hashi BLE] Ignored malformed BLE payload: {error} Payload: {rawPayload}", this);
+            var suffix = suppressedMalformedPayloadWarnings > 0
+                ? $" Suppressed {suppressedMalformedPayloadWarnings} similar payload warning(s)."
+                : string.Empty;
+            nextMalformedPayloadWarningAt = now + 1.5f;
+            suppressedMalformedPayloadWarnings = 0;
+            Debug.LogWarning($"[Hashi BLE] Ignored malformed payload: {error}. Payload: {rawPayload}{suffix}", this);
         }
 
-        private void WarnIfBleStale()
+        private void WarnIfStale()
         {
-            if (!hasReceivedSample || hasLoggedStaleSample)
+            if (lastPayloadHostTime <= 0.0 || hasLoggedStaleSamples)
             {
                 return;
             }
 
-            if (Time.realtimeSinceStartup - lastSampleRealtime < staleWarningSeconds)
+            var age = HashiBleClock.NowSeconds - lastPayloadHostTime;
+            if (age < staleWarningSeconds)
             {
                 return;
             }
 
-            hasLoggedStaleSample = true;
-            Debug.LogWarning("[Hashi BLE] BLE samples stopped arriving. Holding the last Hashi pose.", this);
-        }
-
-        private static Quaternion Normalize(Quaternion value)
-        {
-            var magnitude = Mathf.Sqrt(
-                value.x * value.x +
-                value.y * value.y +
-                value.z * value.z +
-                value.w * value.w);
-
-            if (magnitude <= 0.0001f)
-            {
-                return Quaternion.identity;
-            }
-
-            return new Quaternion(
-                value.x / magnitude,
-                value.y / magnitude,
-                value.z / magnitude,
-                value.w / magnitude);
+            hasLoggedStaleSamples = true;
+            Debug.LogWarning($"[Hashi BLE] No BLE sample received for {age:0.0}s. Holding the last valid pose.", this);
         }
 
         private static string DefaultIfEmpty(string value, string fallback)
