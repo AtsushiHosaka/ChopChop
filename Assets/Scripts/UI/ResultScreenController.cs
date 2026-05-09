@@ -13,7 +13,7 @@ namespace ChopChop.UI
         private VersusLevelRunResult versusResult;
         private bool hasVersusResult;
         private string retrySceneName;
-        private Image titleImage;
+        private Text titleText;
         private Text totalLabelText;
         private Text totalValueText;
         private Text statsText;
@@ -21,8 +21,8 @@ namespace ChopChop.UI
         private StatRow speedRow;
         private StatRow careRow;
         private StatRow failureRow;
-        private Image retryImage;
-        private Image levelSelectImage;
+        private Text retryText;
+        private Text levelSelectText;
 
         public static GameObject Create(GameLocalization localization, SceneNavigator navigator, LevelRunResult result, string retrySceneName)
         {
@@ -61,13 +61,14 @@ namespace ChopChop.UI
             content.transform.SetParent(panel.transform, false);
             UiFactory.Stretch(content.GetComponent<RectTransform>(), 0f);
 
-            titleImage = UiFactory.CreateSpriteImage(content.transform, "Title Label", null, true);
-            var titleRect = titleImage.rectTransform;
+            titleText = UiFactory.CreateText(content.transform, "Title Label", 64, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.34f, 0.18f, 0.09f, 1f));
+            var titleRect = titleText.rectTransform;
             titleRect.anchorMin = new Vector2(0.5f, 1f);
             titleRect.anchorMax = new Vector2(0.5f, 1f);
             titleRect.pivot = new Vector2(0.5f, 1f);
             titleRect.anchoredPosition = new Vector2(0f, -46f);
             UiFactory.SetSize(titleRect, 340f, 82f);
+            titleText.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.22f);
 
             var summary = new GameObject("Summary", typeof(RectTransform));
             summary.transform.SetParent(content.transform, false);
@@ -144,10 +145,9 @@ namespace ChopChop.UI
             {
                 Destroy(retryAnimator);
             }
-            var retryRect = retryButton.GetComponent<RectTransform>();
-            UiFactory.SetSize(retryRect, 320f, 96f);
-            retryImage = UiFactory.CreateSpriteImage(retryButton.transform, "Retry Label", null, false);
-            UiFactory.Anchor(retryImage.rectTransform, Vector2.zero, Vector2.one, new Vector2(18f, 10f), new Vector2(-18f, -8f));
+            UiFactory.SetSize(retryButton.GetComponent<RectTransform>(), 320f, 96f);
+            retryText = UiFactory.CreateText(retryButton.transform, "Retry Label", 34, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.18f, 0.1f, 0.05f, 1f));
+            UiFactory.Stretch(retryText.rectTransform, 8f);
             retryButton.onClick.AddListener(() => navigator.LoadLevel(retrySceneName));
 
             var levelSelectButton = UiFactory.CreateSpriteButton(
@@ -162,10 +162,9 @@ namespace ChopChop.UI
             {
                 Destroy(levelSelectAnimator);
             }
-            var levelSelectRect = levelSelectButton.GetComponent<RectTransform>();
-            UiFactory.SetSize(levelSelectRect, 320f, 96f);
-            levelSelectImage = UiFactory.CreateSpriteImage(levelSelectButton.transform, "Level Select Label", null, false);
-            UiFactory.Anchor(levelSelectImage.rectTransform, Vector2.zero, Vector2.one, new Vector2(18f, 10f), new Vector2(-18f, -8f));
+            UiFactory.SetSize(levelSelectButton.GetComponent<RectTransform>(), 320f, 96f);
+            levelSelectText = UiFactory.CreateText(levelSelectButton.transform, "Level Select Label", 28, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.18f, 0.1f, 0.05f, 1f));
+            UiFactory.Stretch(levelSelectText.rectTransform, 8f);
             levelSelectButton.onClick.AddListener(navigator.LoadLevelSelect);
 
             localization.LanguageChanged += UpdateTexts;
@@ -182,8 +181,11 @@ namespace ChopChop.UI
 
         private void UpdateTexts()
         {
-            UiFactory.ApplySprite(titleImage, WaUiCatalog.LoadLabel(localization, "result_title"));
+            titleText.text = localization.Text(LocalizationKeys.Result.Title);
             totalLabelText.text = localization.Text(LocalizationKeys.Result.Total);
+            retryText.text = localization.Text(LocalizationKeys.Result.Retry);
+            levelSelectText.text = localization.Text(LocalizationKeys.Result.LevelSelect);
+
             if (hasVersusResult)
             {
                 totalLabelText.gameObject.SetActive(false);
@@ -204,9 +206,6 @@ namespace ChopChop.UI
                 ApplyStatRow(careRow, result.CareScore.ToString("0"));
                 ApplyStatRow(failureRow, result.FailureCount.ToString());
             }
-
-            UiFactory.ApplySprite(retryImage, WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.Result.Retry));
-            UiFactory.ApplySprite(levelSelectImage, WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.Result.LevelSelect));
         }
 
         private void ApplyBackgroundImage()
@@ -265,7 +264,7 @@ namespace ChopChop.UI
             rowRect.anchoredPosition = anchoredPosition;
             UiFactory.SetSize(rowRect, 660f, 60f);
 
-            var label = UiFactory.CreateSpriteImage(row.transform, "Label", null, false);
+            var label = UiFactory.CreateText(row.transform, "Label", 28, FontStyle.Bold, TextAnchor.MiddleLeft, new Color(0.66f, 0.44f, 0.16f, 1f));
             var labelRect = label.rectTransform;
             labelRect.anchorMin = new Vector2(0f, 0.5f);
             labelRect.anchorMax = new Vector2(0f, 0.5f);
@@ -286,7 +285,7 @@ namespace ChopChop.UI
 
         private void ApplyStatRow(StatRow row, string value)
         {
-            UiFactory.ApplySprite(row.Label, WaUiCatalog.LoadLocalizedKey(localization, row.LocalizationKey));
+            row.Label.text = localization.Text(row.LocalizationKey);
             row.Value.text = value;
         }
 
@@ -301,11 +300,11 @@ namespace ChopChop.UI
         private readonly struct StatRow
         {
             public readonly string LocalizationKey;
-            public readonly Image Label;
+            public readonly Text Label;
             public readonly Text Value;
             public readonly GameObject Root;
 
-            public StatRow(string localizationKey, Image label, Text value, GameObject root)
+            public StatRow(string localizationKey, Text label, Text value, GameObject root)
             {
                 LocalizationKey = localizationKey;
                 Label = label;

@@ -16,15 +16,8 @@ namespace ChopChop.App
 
         public GameLocalization()
         {
-            CurrentLanguage = PlayerPrefs.GetInt(PlayerPrefsKey, 0) == 1
-                ? AppLanguage.English
-                : AppLanguage.Japanese;
+            CurrentLanguage = (AppLanguage)PlayerPrefs.GetInt(PlayerPrefsKey, 0);
             ApplyLocale();
-        }
-
-        public void ToggleLanguage()
-        {
-            SetLanguage(CurrentLanguage == AppLanguage.Japanese ? AppLanguage.English : AppLanguage.Japanese);
         }
 
         public void SetLanguage(AppLanguage language)
@@ -35,7 +28,7 @@ namespace ChopChop.App
             }
 
             CurrentLanguage = language;
-            PlayerPrefs.SetInt(PlayerPrefsKey, language == AppLanguage.English ? 1 : 0);
+            PlayerPrefs.SetInt(PlayerPrefsKey, (int)language);
             ApplyLocale();
             LanguageChanged?.Invoke();
         }
@@ -47,17 +40,21 @@ namespace ChopChop.App
                 return string.Empty;
             }
 
-            try
+            // Unity StringTable はja/enのロケールアセットのみ存在するため、それ以外は直接カタログを参照する
+            if (CurrentLanguage == AppLanguage.Japanese || CurrentLanguage == AppLanguage.English)
             {
-                var text = LocalizationSettings.StringDatabase.GetLocalizedString(StringTableName, key);
-                if (!string.IsNullOrEmpty(text))
+                try
                 {
-                    return text;
+                    var text = LocalizationSettings.StringDatabase.GetLocalizedString(StringTableName, key);
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        return text;
+                    }
                 }
-            }
-            catch (Exception exception)
-            {
-                WarnMissingKey(key, exception.Message);
+                catch (Exception exception)
+                {
+                    WarnMissingKey(key, exception.Message);
+                }
             }
 
             return FallbackText(key);
@@ -65,9 +62,15 @@ namespace ChopChop.App
 
         private string FallbackText(string key)
         {
-            var table = CurrentLanguage == AppLanguage.English
-                ? LocalizationCatalog.English
-                : LocalizationCatalog.Japanese;
+            var table = CurrentLanguage switch
+            {
+                AppLanguage.English           => LocalizationCatalog.English,
+                AppLanguage.Korean            => LocalizationCatalog.Korean,
+                AppLanguage.ChineseSimplified => LocalizationCatalog.ChineseSimplified,
+                AppLanguage.French            => LocalizationCatalog.French,
+                AppLanguage.Spanish           => LocalizationCatalog.Spanish,
+                _                             => LocalizationCatalog.Japanese
+            };
             if (table.TryGetValue(key, out var text))
             {
                 return text;
@@ -87,7 +90,15 @@ namespace ChopChop.App
                     operation.WaitForCompletion();
                 }
 
-                var localeCode = CurrentLanguage == AppLanguage.Japanese ? "ja" : "en";
+                var localeCode = CurrentLanguage switch
+                {
+                    AppLanguage.Korean            => "ko",
+                    AppLanguage.ChineseSimplified => "zh-Hans",
+                    AppLanguage.French            => "fr",
+                    AppLanguage.Spanish           => "es",
+                    AppLanguage.English           => "en",
+                    _                             => "ja"
+                };
                 var locale = LocalizationSettings.AvailableLocales.GetLocale(localeCode);
                 if (locale != null)
                 {

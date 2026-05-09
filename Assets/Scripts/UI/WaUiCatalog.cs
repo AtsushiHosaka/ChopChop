@@ -1,4 +1,3 @@
-using ChopChop.App;
 using UnityEngine;
 
 namespace ChopChop.UI
@@ -6,7 +5,6 @@ namespace ChopChop.UI
     public static class WaUiCatalog
     {
         private const string Root = "UI/Wa/";
-        private const string LabelRoot = Root + "Labels/";
 
         public static Sprite StartBackground => Load(Root + "background_start");
         public static Sprite LevelSelectBackground => Load(Root + "background_level_select");
@@ -27,61 +25,9 @@ namespace ChopChop.UI
         public static Sprite ButtonSmallHover => Load(Root + "button_small_hover");
         public static Sprite ButtonSmallPressed => Load(Root + "button_small_pressed");
 
-        public static Sprite LoadLabel(GameLocalization localization, string key)
-        {
-            var languageFolder = localization.CurrentLanguage == AppLanguage.Japanese ? "ja/" : "en/";
-            return Load(LabelRoot + languageFolder + key);
-        }
-
-        public static Sprite LoadLocalizedKey(GameLocalization localization, string localizationKey)
-        {
-            if (string.IsNullOrWhiteSpace(localizationKey))
-            {
-                return null;
-            }
-
-            switch (localizationKey)
-            {
-                case LocalizationKeys.App.Title:
-                    return LoadLabel(localization, "app_title");
-                case LocalizationKeys.App.Start:
-                    return LoadLabel(localization, "start");
-                case LocalizationKeys.App.Language:
-                    return LoadLabel(localization, "language");
-                case LocalizationKeys.App.Quit:
-                    return LoadLabel(localization, "quit");
-                case LocalizationKeys.App.Back:
-                    return LoadLabel(localization, "back");
-                case LocalizationKeys.App.LevelSelect:
-                case LocalizationKeys.Result.LevelSelect:
-                    return LoadLabel(localization, "level_select");
-                case LocalizationKeys.Result.Title:
-                    return LoadLabel(localization, "result");
-                case LocalizationKeys.Result.Retry:
-                    return LoadLabel(localization, "retry");
-                case LocalizationKeys.Level.Locked:
-                    return LoadLabel(localization, "locked");
-                case LocalizationKeys.Hud.Time:
-                    return LoadLabel(localization, "hud_time");
-                case LocalizationKeys.Hud.Speed:
-                    return LoadLabel(localization, "hud_speed");
-                case LocalizationKeys.Hud.Care:
-                    return LoadLabel(localization, "hud_care");
-                case LocalizationKeys.Hud.Failures:
-                    return LoadLabel(localization, "hud_failures");
-                default:
-                    return LoadLabel(localization, SanitizeKey(localizationKey));
-            }
-        }
-
         private static Sprite Load(string resourcePath)
         {
             return Resources.Load<Sprite>(resourcePath);
-        }
-
-        private static string SanitizeKey(string key)
-        {
-            return key.Replace(".", "_").Replace(" ", "_");
         }
     }
 }

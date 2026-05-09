@@ -16,8 +16,8 @@ namespace ChopChop.UI
         private SukiyakiStageController stage;
         private Text timeValueText;
         private Text failureValueText;
-        private Image timeLabelImage;
-        private Image failureLabelImage;
+        private Text timeLabelText;
+        private Text failureLabelText;
         private SukiyakiCueOverlay cueOverlay;
         private UiPunchScale failurePunch;
         private int lastFailureCount = -1;
@@ -115,8 +115,8 @@ namespace ChopChop.UI
             statsRowRect.anchoredPosition = new Vector2(0f, 40f);
             UiFactory.SetSize(statsRowRect, 340f, 52f);
 
-            CreateInfoStat(statsRow.transform, "Time", new Vector2(-84f, 0f), LocalizationKeys.Hud.Time, out timeLabelImage, out timeValueText, 108f);
-            CreateInfoStat(statsRow.transform, "Failures", new Vector2(84f, 0f), LocalizationKeys.Hud.Failures, out failureLabelImage, out failureValueText, 82f);
+            CreateInfoStat(statsRow.transform, "Time", new Vector2(-84f, 0f), LocalizationKeys.Hud.Time, out timeLabelText, out timeValueText, 108f);
+            CreateInfoStat(statsRow.transform, "Failures", new Vector2(84f, 0f), LocalizationKeys.Hud.Failures, out failureLabelText, out failureValueText, 82f);
             failurePunch = failureValueText.gameObject.AddComponent<UiPunchScale>();
         }
 
@@ -162,15 +162,16 @@ namespace ChopChop.UI
             UiFactory.Stretch(content.GetComponent<RectTransform>(), 0f);
             UiFactory.AddVerticalLayout(content, 18f, TextAnchor.MiddleCenter, new RectOffset(48, 48, 40, 40));
 
-            var message = UiFactory.CreateSpriteImage(content.transform, "Message", WaUiCatalog.LoadLabel(localization, "setup_missing"));
-            UiFactory.SetSize(message.rectTransform, 620f, 86f);
+            var message = UiFactory.CreateText(content.transform, "Message", 32, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.34f, 0.18f, 0.09f, 1f));
+            message.text = localization.Text(LocalizationKeys.Level.SetupMissing);
+            UiFactory.SetPreferredHeight(message.rectTransform, 86f);
 
             var backButton = UiFactory.CreateSpriteButton(content.transform, "Level Select Button",
                 WaUiCatalog.ButtonSecondary, WaUiCatalog.ButtonSecondaryHover, WaUiCatalog.ButtonSecondaryPressed);
             UiFactory.SetSize(backButton.GetComponent<RectTransform>(), 360f, 64f);
-            var backLabel = UiFactory.CreateSpriteImage(backButton.transform, "Back Label",
-                WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.Result.LevelSelect));
-            UiFactory.Anchor(backLabel.rectTransform, Vector2.zero, Vector2.one, new Vector2(32f, 14f), new Vector2(-32f, -14f));
+            var backLabel = UiFactory.CreateText(backButton.transform, "Back Label", 28, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.18f, 0.1f, 0.05f, 1f));
+            backLabel.text = localization.Text(LocalizationKeys.Result.LevelSelect);
+            UiFactory.Stretch(backLabel.rectTransform, 8f);
             backButton.onClick.AddListener(navigator.LoadLevelSelect);
         }
 
@@ -186,11 +187,18 @@ namespace ChopChop.UI
 
         private void UpdateTexts()
         {
-            UiFactory.ApplySprite(timeLabelImage, WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.Hud.Time));
-            UiFactory.ApplySprite(failureLabelImage, WaUiCatalog.LoadLocalizedKey(localization, LocalizationKeys.Hud.Failures));
+            if (timeLabelText != null)
+            {
+                timeLabelText.text = localization.Text(LocalizationKeys.Hud.Time);
+            }
+
+            if (failureLabelText != null)
+            {
+                failureLabelText.text = localization.Text(LocalizationKeys.Hud.Failures);
+            }
         }
 
-        private void CreateInfoStat(Transform parent, string name, Vector2 anchoredPosition, string localizationKey, out Image labelImage, out Text valueText, float labelWidth)
+        private void CreateInfoStat(Transform parent, string name, Vector2 anchoredPosition, string localizationKey, out Text labelText, out Text valueText, float labelWidth)
         {
             var stat = new GameObject(name, typeof(RectTransform));
             stat.transform.SetParent(parent, false);
@@ -201,8 +209,8 @@ namespace ChopChop.UI
             statRect.anchoredPosition = anchoredPosition;
             UiFactory.SetSize(statRect, 148f, 52f);
 
-            labelImage = UiFactory.CreateSpriteImage(stat.transform, "Label", null, false);
-            var labelRect = labelImage.rectTransform;
+            labelText = UiFactory.CreateText(stat.transform, "Label", 16, FontStyle.Bold, TextAnchor.UpperCenter, new Color(0.66f, 0.44f, 0.16f, 1f));
+            var labelRect = labelText.rectTransform;
             labelRect.anchorMin = new Vector2(0.5f, 1f);
             labelRect.anchorMax = new Vector2(0.5f, 1f);
             labelRect.pivot = new Vector2(0.5f, 1f);

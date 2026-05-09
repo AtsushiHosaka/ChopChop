@@ -20,6 +20,10 @@ namespace ChopChop.App
             public const string Language = "settings.language";
             public const string Japanese = "settings.japanese";
             public const string English = "settings.english";
+            public const string Korean = "settings.korean";
+            public const string ChineseSimplified = "settings.chineseSimplified";
+            public const string French = "settings.french";
+            public const string Spanish = "settings.spanish";
             public const string Bgm = "settings.bgm";
             public const string BgmOn = "settings.bgmOn";
             public const string BgmOff = "settings.bgmOff";
@@ -60,6 +64,12 @@ namespace ChopChop.App
             public const string Winner = "result.winner";
             public const string Draw = "result.draw";
             public const string Total = "result.total";
+        }
+
+        public static class Feedback
+        {
+            public const string Nice = "feedback.nice";
+            public const string Failed = "feedback.failed";
         }
     }
 }
