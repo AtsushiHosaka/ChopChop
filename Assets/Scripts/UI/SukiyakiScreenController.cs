@@ -103,7 +103,7 @@ namespace ChopChop.UI
             UiFactory.SetSize(panelRect, 408f, 132f);
             UiFactory.AddFadeSlideIn(panel, 0.28f, 0.04f, new Vector2(-12f, 0f), 0.99f);
 
-            var panelImage = UiFactory.CreateSpriteImage(panel.transform, "Panel", WaUiCatalog.LevelCard, false);
+            var panelImage = UiFactory.CreateSpriteImage(panel.transform, "Panel", WaUiCatalog.SukiyakiHudPanel, false);
             UiFactory.Stretch(panelImage.rectTransform, 0f);
 
             var statsRow = new GameObject("Stats Row", typeof(RectTransform));
@@ -112,7 +112,7 @@ namespace ChopChop.UI
             statsRowRect.anchorMin = new Vector2(0.5f, 0f);
             statsRowRect.anchorMax = new Vector2(0.5f, 0f);
             statsRowRect.pivot = new Vector2(0.5f, 0f);
-            statsRowRect.anchoredPosition = new Vector2(0f, 12f);
+            statsRowRect.anchoredPosition = new Vector2(0f, 40f);
             UiFactory.SetSize(statsRowRect, 340f, 52f);
 
             CreateInfoStat(statsRow.transform, "Time", new Vector2(-84f, 0f), LocalizationKeys.Hud.Time, out timeLabelImage, out timeValueText, 108f);
@@ -206,7 +206,7 @@ namespace ChopChop.UI
             labelRect.anchorMin = new Vector2(0.5f, 1f);
             labelRect.anchorMax = new Vector2(0.5f, 1f);
             labelRect.pivot = new Vector2(0.5f, 1f);
-            labelRect.anchoredPosition = new Vector2(0f, 0f);
+            labelRect.anchoredPosition = new Vector2(0f, 8f);
             UiFactory.SetSize(labelRect, labelWidth, 22f);
 
             valueText = UiFactory.CreateText(stat.transform, "Value", 30, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.34f, 0.18f, 0.09f, 1f));
@@ -214,7 +214,7 @@ namespace ChopChop.UI
             valueRect.anchorMin = new Vector2(0.5f, 0f);
             valueRect.anchorMax = new Vector2(0.5f, 0f);
             valueRect.pivot = new Vector2(0.5f, 0f);
-            valueRect.anchoredPosition = new Vector2(0f, 0f);
+            valueRect.anchoredPosition = new Vector2(0f, 8f);
             UiFactory.SetSize(valueRect, 136f, 28f);
         }
 

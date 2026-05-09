@@ -14,6 +14,8 @@ namespace ChopChop.UI
         private bool hasVersusResult;
         private string retrySceneName;
         private Image titleImage;
+        private Text totalLabelText;
+        private Text totalValueText;
         private Text statsText;
         private StatRow timeRow;
         private StatRow speedRow;
@@ -40,6 +42,7 @@ namespace ChopChop.UI
             retrySceneName = levelSceneName;
 
             ApplyBackgroundImage();
+            CreateReadableScrim();
 
             var panel = new GameObject("Result Panel", typeof(RectTransform));
             panel.transform.SetParent(transform, false);
@@ -47,7 +50,8 @@ namespace ChopChop.UI
             panelRect.anchorMin = new Vector2(0.5f, 0.5f);
             panelRect.anchorMax = new Vector2(0.5f, 0.5f);
             panelRect.pivot = new Vector2(0.5f, 0.5f);
-            UiFactory.SetSize(panelRect, 760f, 548f);
+            panelRect.anchoredPosition = new Vector2(0f, 18f);
+            UiFactory.SetSize(panelRect, 1260f, 920f);
             UiFactory.AddFadeSlideIn(panel.gameObject, 0.38f, 0.04f, new Vector2(0f, -24f), 0.96f);
 
             var panelImage = UiFactory.CreateSpriteImage(panel.transform, "Panel Art", WaUiCatalog.ResultPanel, false);
@@ -62,53 +66,106 @@ namespace ChopChop.UI
             titleRect.anchorMin = new Vector2(0.5f, 1f);
             titleRect.anchorMax = new Vector2(0.5f, 1f);
             titleRect.pivot = new Vector2(0.5f, 1f);
-            titleRect.anchoredPosition = new Vector2(0f, -22f);
-            UiFactory.SetSize(titleRect, 360f, 88f);
+            titleRect.anchoredPosition = new Vector2(0f, -46f);
+            UiFactory.SetSize(titleRect, 340f, 82f);
 
-            timeRow = CreateStatRow(content.transform, "Time", new Vector2(0f, 262f), LocalizationKeys.Hud.Time);
-            speedRow = CreateStatRow(content.transform, "Speed", new Vector2(0f, 218f), LocalizationKeys.Hud.Speed);
-            careRow = CreateStatRow(content.transform, "Care", new Vector2(0f, 174f), LocalizationKeys.Hud.Care);
-            failureRow = CreateStatRow(content.transform, "Failures", new Vector2(0f, 130f), LocalizationKeys.Hud.Failures);
+            var summary = new GameObject("Summary", typeof(RectTransform));
+            summary.transform.SetParent(content.transform, false);
+            var summaryRect = summary.GetComponent<RectTransform>();
+            summaryRect.anchorMin = new Vector2(0.5f, 1f);
+            summaryRect.anchorMax = new Vector2(0.5f, 1f);
+            summaryRect.pivot = new Vector2(0.5f, 1f);
+            summaryRect.anchoredPosition = new Vector2(0f, -146f);
+            UiFactory.SetSize(summaryRect, 560f, 170f);
 
-            statsText = UiFactory.CreateText(content.transform, "Stats", 30, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.34f, 0.18f, 0.09f, 1f));
+            totalLabelText = UiFactory.CreateText(summary.transform, "Total Label", 32, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.66f, 0.44f, 0.16f, 1f));
+            var totalLabelRect = totalLabelText.rectTransform;
+            totalLabelRect.anchorMin = new Vector2(0.5f, 1f);
+            totalLabelRect.anchorMax = new Vector2(0.5f, 1f);
+            totalLabelRect.pivot = new Vector2(0.5f, 1f);
+            totalLabelRect.anchoredPosition = new Vector2(0f, 0f);
+            UiFactory.SetSize(totalLabelRect, 340f, 46f);
+
+            totalValueText = UiFactory.CreateText(summary.transform, "Total Value", 88, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.34f, 0.18f, 0.09f, 1f));
+            var totalValueRect = totalValueText.rectTransform;
+            totalValueRect.anchorMin = new Vector2(0.5f, 0f);
+            totalValueRect.anchorMax = new Vector2(0.5f, 0f);
+            totalValueRect.pivot = new Vector2(0.5f, 0f);
+            totalValueRect.anchoredPosition = new Vector2(0f, 0f);
+            UiFactory.SetSize(totalValueRect, 420f, 110f);
+            totalValueText.gameObject.AddComponent<Shadow>().effectColor = new Color(1f, 0.97f, 0.9f, 0.42f);
+
+            var statsArea = new GameObject("Stats Area", typeof(RectTransform));
+            statsArea.transform.SetParent(content.transform, false);
+            var statsAreaRect = statsArea.GetComponent<RectTransform>();
+            statsAreaRect.anchorMin = new Vector2(0.5f, 0.5f);
+            statsAreaRect.anchorMax = new Vector2(0.5f, 0.5f);
+            statsAreaRect.pivot = new Vector2(0.5f, 0.5f);
+            statsAreaRect.anchoredPosition = new Vector2(0f, -12f);
+            UiFactory.SetSize(statsAreaRect, 760f, 360f);
+
+            var bottomRule = UiFactory.CreatePanel(statsArea.transform, "Bottom Rule", new Color(0.9f, 0.74f, 0.37f, 0.48f));
+            UiFactory.Anchor(bottomRule, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(22f, 0f), new Vector2(-22f, 2f));
+            bottomRule.GetComponent<Image>().raycastTarget = false;
+
+            timeRow = CreateStatRow(statsArea.transform, "Time", new Vector2(0f, 244f), LocalizationKeys.Hud.Time);
+            speedRow = CreateStatRow(statsArea.transform, "Speed", new Vector2(0f, 176f), LocalizationKeys.Hud.Speed);
+            careRow = CreateStatRow(statsArea.transform, "Care", new Vector2(0f, 108f), LocalizationKeys.Hud.Care);
+            failureRow = CreateStatRow(statsArea.transform, "Failures", new Vector2(0f, 40f), LocalizationKeys.Hud.Failures);
+
+            statsText = UiFactory.CreateText(content.transform, "Stats", 44, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.34f, 0.18f, 0.09f, 1f));
             var statsRect = statsText.rectTransform;
             statsRect.anchorMin = new Vector2(0.5f, 0.5f);
             statsRect.anchorMax = new Vector2(0.5f, 0.5f);
             statsRect.pivot = new Vector2(0.5f, 0.5f);
-            statsRect.anchoredPosition = new Vector2(0f, 116f);
-            UiFactory.SetSize(statsRect, 560f, 180f);
+            statsRect.anchoredPosition = new Vector2(0f, -24f);
+            UiFactory.SetSize(statsRect, 900f, 340f);
             statsText.gameObject.AddComponent<Shadow>().effectColor = new Color(1f, 0.96f, 0.90f, 0.46f);
 
+            var buttonRow = new GameObject("Button Row", typeof(RectTransform));
+            buttonRow.transform.SetParent(content.transform, false);
+            var buttonRowRect = buttonRow.GetComponent<RectTransform>();
+            buttonRowRect.anchorMin = new Vector2(0.5f, 0f);
+            buttonRowRect.anchorMax = new Vector2(0.5f, 0f);
+            buttonRowRect.pivot = new Vector2(0.5f, 0f);
+            buttonRowRect.anchoredPosition = new Vector2(0f, 122f);
+            UiFactory.SetSize(buttonRowRect, 700f, 112f);
+            UiFactory.AddHorizontalLayout(buttonRow, 34f, TextAnchor.MiddleCenter, new RectOffset(0, 0, 0, 0));
+
             var retryButton = UiFactory.CreateSpriteButton(
-                content.transform,
+                buttonRow.transform,
                 "Retry Button",
                 WaUiCatalog.ButtonPrimary,
                 WaUiCatalog.ButtonPrimaryHover,
                 WaUiCatalog.ButtonPrimaryPressed);
+            retryButton.transition = Selectable.Transition.None;
+            var retryAnimator = retryButton.GetComponent<UiButtonAnimator>();
+            if (retryAnimator != null)
+            {
+                Destroy(retryAnimator);
+            }
             var retryRect = retryButton.GetComponent<RectTransform>();
-            retryRect.anchorMin = new Vector2(0.5f, 0f);
-            retryRect.anchorMax = new Vector2(0.5f, 0f);
-            retryRect.pivot = new Vector2(0.5f, 0f);
-            retryRect.anchoredPosition = new Vector2(0f, 66f);
-            UiFactory.SetSize(retryRect, 360f, 56f);
+            UiFactory.SetSize(retryRect, 320f, 96f);
             retryImage = UiFactory.CreateSpriteImage(retryButton.transform, "Retry Label", null, false);
-            UiFactory.Anchor(retryImage.rectTransform, Vector2.zero, Vector2.one, new Vector2(28f, 12f), new Vector2(-28f, -10f));
+            UiFactory.Anchor(retryImage.rectTransform, Vector2.zero, Vector2.one, new Vector2(18f, 10f), new Vector2(-18f, -8f));
             retryButton.onClick.AddListener(() => navigator.LoadLevel(retrySceneName));
 
             var levelSelectButton = UiFactory.CreateSpriteButton(
-                content.transform,
+                buttonRow.transform,
                 "Level Select Button",
-                WaUiCatalog.ButtonSecondary,
-                WaUiCatalog.ButtonSecondaryHover,
-                WaUiCatalog.ButtonSecondaryPressed);
+                WaUiCatalog.ButtonPrimary,
+                WaUiCatalog.ButtonPrimaryHover,
+                WaUiCatalog.ButtonPrimaryPressed);
+            levelSelectButton.transition = Selectable.Transition.None;
+            var levelSelectAnimator = levelSelectButton.GetComponent<UiButtonAnimator>();
+            if (levelSelectAnimator != null)
+            {
+                Destroy(levelSelectAnimator);
+            }
             var levelSelectRect = levelSelectButton.GetComponent<RectTransform>();
-            levelSelectRect.anchorMin = new Vector2(0.5f, 0f);
-            levelSelectRect.anchorMax = new Vector2(0.5f, 0f);
-            levelSelectRect.pivot = new Vector2(0.5f, 0f);
-            levelSelectRect.anchoredPosition = new Vector2(0f, 18f);
-            UiFactory.SetSize(levelSelectRect, 360f, 52f);
+            UiFactory.SetSize(levelSelectRect, 320f, 96f);
             levelSelectImage = UiFactory.CreateSpriteImage(levelSelectButton.transform, "Level Select Label", null, false);
-            UiFactory.Anchor(levelSelectImage.rectTransform, Vector2.zero, Vector2.one, new Vector2(28f, 10f), new Vector2(-28f, -8f));
+            UiFactory.Anchor(levelSelectImage.rectTransform, Vector2.zero, Vector2.one, new Vector2(18f, 10f), new Vector2(-18f, -8f));
             levelSelectButton.onClick.AddListener(navigator.LoadLevelSelect);
 
             localization.LanguageChanged += UpdateTexts;
@@ -126,16 +183,22 @@ namespace ChopChop.UI
         private void UpdateTexts()
         {
             UiFactory.ApplySprite(titleImage, WaUiCatalog.LoadLabel(localization, "result_title"));
+            totalLabelText.text = localization.Text(LocalizationKeys.Result.Total);
             if (hasVersusResult)
             {
+                totalLabelText.gameObject.SetActive(false);
+                totalValueText.gameObject.SetActive(false);
                 SetStatRowsActive(false);
                 statsText.gameObject.SetActive(true);
                 statsText.text = VersusStatsText();
             }
             else
             {
+                totalLabelText.gameObject.SetActive(true);
+                totalValueText.gameObject.SetActive(true);
                 SetStatRowsActive(true);
                 statsText.gameObject.SetActive(false);
+                totalValueText.text = result.TotalScore.ToString("0");
                 ApplyStatRow(timeRow, result.CompletionTime.ToString("0.0") + "s");
                 ApplyStatRow(speedRow, result.SpeedScore.ToString("0"));
                 ApplyStatRow(careRow, result.CareScore.ToString("0"));
@@ -157,6 +220,16 @@ namespace ChopChop.UI
             background.sprite = WaUiCatalog.ResultBackground;
             background.color = Color.white;
             background.raycastTarget = false;
+        }
+
+        private void CreateReadableScrim()
+        {
+            var scrim = new GameObject("Readable Scrim", typeof(RectTransform), typeof(Image));
+            scrim.transform.SetParent(transform, false);
+            UiFactory.Stretch(scrim.GetComponent<RectTransform>(), 0f);
+            var image = scrim.GetComponent<Image>();
+            image.color = new Color(0.07f, 0.05f, 0.03f, 0.08f);
+            image.raycastTarget = false;
         }
 
         private string VersusStatsText()
@@ -190,7 +263,7 @@ namespace ChopChop.UI
             rowRect.anchorMax = new Vector2(0.5f, 0f);
             rowRect.pivot = new Vector2(0.5f, 0f);
             rowRect.anchoredPosition = anchoredPosition;
-            UiFactory.SetSize(rowRect, 280f, 32f);
+            UiFactory.SetSize(rowRect, 660f, 60f);
 
             var label = UiFactory.CreateSpriteImage(row.transform, "Label", null, false);
             var labelRect = label.rectTransform;
@@ -198,15 +271,15 @@ namespace ChopChop.UI
             labelRect.anchorMax = new Vector2(0f, 0.5f);
             labelRect.pivot = new Vector2(0f, 0.5f);
             labelRect.anchoredPosition = new Vector2(0f, 0f);
-            UiFactory.SetSize(labelRect, 78f, 22f);
+            UiFactory.SetSize(labelRect, 190f, 42f);
 
-            var value = UiFactory.CreateText(row.transform, "Value", 30, FontStyle.Bold, TextAnchor.MiddleLeft, new Color(0.34f, 0.18f, 0.09f, 1f));
+            var value = UiFactory.CreateText(row.transform, "Value", 52, FontStyle.Bold, TextAnchor.MiddleRight, new Color(0.34f, 0.18f, 0.09f, 1f));
             var valueRect = value.rectTransform;
             valueRect.anchorMin = new Vector2(1f, 0.5f);
             valueRect.anchorMax = new Vector2(1f, 0.5f);
             valueRect.pivot = new Vector2(1f, 0.5f);
             valueRect.anchoredPosition = new Vector2(0f, 0f);
-            UiFactory.SetSize(valueRect, 136f, 26f);
+            UiFactory.SetSize(valueRect, 300f, 56f);
 
             return new StatRow(localizationKey, label, value, row);
         }

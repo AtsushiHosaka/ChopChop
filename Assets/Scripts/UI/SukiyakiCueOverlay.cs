@@ -85,6 +85,12 @@ namespace ChopChop.UI
             bannerGroup.blocksRaycasts = false;
             bannerGroup.interactable = false;
 
+            // 半透明背景（指示テキストの可読性向上）
+            var backdropRect = UiFactory.CreatePanel(bg.transform, "Banner Backdrop",
+                new Color(0.06f, 0.02f, 0.01f, 0.52f));
+            UiFactory.Stretch(backdropRect, 0f);
+            backdropRect.GetComponent<Image>().raycastTarget = false;
+
             bannerLabel = UiFactory.CreateSpriteImage(bg.transform, "Banner Label", null, true);
             UiFactory.Stretch(bannerLabel.rectTransform, 0f);
         }

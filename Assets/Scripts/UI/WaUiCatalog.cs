@@ -16,6 +16,7 @@ namespace ChopChop.UI
         public static Sprite HeaderPlaque => Load(Root + "header_plaque");
         public static Sprite ResultPanel => Load(Root + "panel_result");
         public static Sprite LevelCard => Load(Root + "level_card");
+        public static Sprite SukiyakiHudPanel => Load(Root + "level_card_sukiyaki_hud");
         public static Sprite ButtonPrimary => Load(Root + "button_primary");
         public static Sprite ButtonPrimaryHover => Load(Root + "button_primary_hover");
         public static Sprite ButtonPrimaryPressed => Load(Root + "button_primary_pressed");
