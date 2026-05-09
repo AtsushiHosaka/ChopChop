@@ -5603,6 +5603,8 @@ MonoBehaviour:
   upperChopstick: {fileID: 16540100}
   openingAxis: {x: 0, y: 1, z: 0}
   smoothing: 14
+  gripPivotFromTip: 0.67
+  wholeRotationSensitivity: 1
 --- !u!114 &1147880874
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5623,7 +5625,7 @@ MonoBehaviour:
   serviceUuid: 12345678-1234-1234-1234-1234567890ab
   characteristicUuid: abcd1234-5678-90ab-cdef-1234567890ab
   captureNeutralOnStart: 1
-  accelerometerCorrection: 0.015
+  accelerometerCorrection: 0.18
 --- !u!4 &1147880875
 Transform:
   m_ObjectHideFlags: 0
@@ -5672,7 +5674,7 @@ MonoBehaviour:
   applyProfileOnEnable: 1
   useTunedTheta: 1
   thetaMode: 0
-  motionSource: 0
+  motionSource: 1
   imu1Axis: 2
   imu2Axis: 2
   invertTheta: 0
@@ -5682,13 +5684,17 @@ MonoBehaviour:
   outputOpen: 35
   rawAccelerationToG: 0.000061
   rawGyroToDegreesPerSecond: 0.0175
-  parentRotationWeight: 0
+  parentRotationWeight: 0.7
+  parentRotationInputEuler: {x: -90, y: -90, z: 0}
+  parentPlanarYawOnly: 1
+  parentPlanarYawDirection: -1
+  parentLongAxisTwistWeight: 0
   useIndependentImuPose: 1
   autoCaptureIndependentNeutral: 1
-  independentPoseMode: 0
+  independentPoseMode: 4
   independentPoseWeight: 1
   gyroDeadzoneDegreesPerSecond: 1.5
-  accelerationCorrectionWeight: 0.02
+  accelerationCorrectionWeight: 0.18
   accelerationCorrectionDeadzoneDegrees: 2
   accelerationCorrectionMagnitudeToleranceG: 0.45
   imu1OpeningAxis: 0
@@ -5697,10 +5703,11 @@ MonoBehaviour:
   imu2OpeningDirection: 1
   imu1OpeningScale: 1
   imu2OpeningScale: 1
-  openingAngleMinDegrees: -55
-  openingAngleMaxDegrees: 55
+  openingAngleMinDegrees: 0
+  openingAngleMaxDegrees: 35
   openingAngleStaticJumpRejectDegrees: 12
   openingAngleStaticVelocityThresholdDps: 20
+  relativeOpeningAccelerationWeight: 0.9
   maxBleSampleAgeSeconds: 0.6
   bleResumeSettleSeconds: 0.2
   chopstickOpeningSeparationPerDegree: 0.0015

@@ -170,7 +170,8 @@ namespace ChopChop.BLE
             sample.SetGy(gyro.y);
             sample.SetGz(gyro.z);
 
-            if (TryEstimateOpeningAngle(imu1.AccelerationG, imu2.AccelerationG, out var theta))
+            if (!HashiImuMappingRuntime.UseIndependentImuPose
+                && TryEstimateOpeningAngle(imu1.AccelerationG, imu2.AccelerationG, out var theta))
             {
                 sample.SetTheta(HashiImuMappingRuntime.MapTheta(sample, theta));
             }

@@ -1,5 +1,7 @@
 using ChopChop.BLE;
 using ChopChop.Input;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using UnityEngine;
 
@@ -12,7 +14,7 @@ namespace ChopChop.Debugging
         [SerializeField] private bool applyProfileOnEnable = true;
         [SerializeField] private bool useTunedTheta = true;
         [SerializeField] private HashiImuThetaMode thetaMode = HashiImuThetaMode.AccelerationAngle;
-        [SerializeField] private HashiImuMotionSource motionSource = HashiImuMotionSource.Imu1;
+        [SerializeField] private HashiImuMotionSource motionSource = HashiImuMotionSource.Imu2;
         [SerializeField] private HashiImuAxis imu1Axis = HashiImuAxis.Z;
         [SerializeField] private HashiImuAxis imu2Axis = HashiImuAxis.Z;
         [SerializeField] private bool invertTheta;
@@ -22,13 +24,17 @@ namespace ChopChop.Debugging
         [SerializeField] private float outputOpen = 35f;
         [SerializeField] private float rawAccelerationToG = HashiImuMappingRuntime.Esp32Lsm6RawAccelerationToG;
         [SerializeField] private float rawGyroToDegreesPerSecond = HashiBleDefaults.RawGyroToDegreesPerSecond;
-        [SerializeField, Range(0f, 1f)] private float parentRotationWeight;
+        [SerializeField, Range(0f, 1f)] private float parentRotationWeight = 0.7f;
+        [SerializeField] private Vector3 parentRotationInputEuler = new Vector3(-90f, -90f, 0f);
+        [SerializeField] private bool parentPlanarYawOnly = true;
+        [SerializeField] private float parentPlanarYawDirection = -1f;
+        [SerializeField, Range(0f, 1f)] private float parentLongAxisTwistWeight;
         [SerializeField] private bool useIndependentImuPose = true;
         [SerializeField] private bool autoCaptureIndependentNeutral = true;
-        [SerializeField] private HashiIndependentPoseMode independentPoseMode = HashiIndependentPoseMode.AccelerationOpening;
+        [SerializeField] private HashiIndependentPoseMode independentPoseMode = HashiIndependentPoseMode.RelativeOpeningIntegrated;
         [SerializeField, Range(0f, 1f)] private float independentPoseWeight = 1f;
         [SerializeField] private float gyroDeadzoneDegreesPerSecond = 1.5f;
-        [SerializeField] private float accelerationCorrectionWeight = 0.02f;
+        [SerializeField] private float accelerationCorrectionWeight = 0.18f;
         [SerializeField] private float accelerationCorrectionDeadzoneDegrees = 2f;
         [SerializeField] private float accelerationCorrectionMagnitudeToleranceG = 0.45f;
         [SerializeField] private HashiImuAxis imu1OpeningAxis = HashiImuAxis.X;
@@ -37,10 +43,13 @@ namespace ChopChop.Debugging
         [SerializeField] private float imu2OpeningDirection = 1f;
         [SerializeField] private float imu1OpeningScale = 1f;
         [SerializeField] private float imu2OpeningScale = 1f;
-        [SerializeField] private float openingAngleMinDegrees = -55f;
-        [SerializeField] private float openingAngleMaxDegrees = 55f;
+        [SerializeField] private float openingAngleMinDegrees = 0f;
+        [SerializeField] private float openingAngleMaxDegrees = 35f;
         [SerializeField] private float openingAngleStaticJumpRejectDegrees = 12f;
         [SerializeField] private float openingAngleStaticVelocityThresholdDps = 20f;
+        [SerializeField] private float relativeOpeningAccelerationWeight = 0.9f;
+        [SerializeField] private float relativeOpeningGyroFullWeightBelowDps = 60f;
+        [SerializeField] private float relativeOpeningGyroZeroWeightAboveDps = 180f;
         [SerializeField] private float maxBleSampleAgeSeconds = 0.6f;
         [SerializeField] private float bleResumeSettleSeconds = 0.2f;
         [SerializeField] private float chopstickOpeningSeparationPerDegree = 0.0015f;
@@ -82,16 +91,30 @@ namespace ChopChop.Debugging
         [SerializeField] private Vector3 upperOutputEuler = Vector3.zero;
         [SerializeField] private Vector3 lowerOutputEuler = Vector3.zero;
         [SerializeField] private bool showAdvancedControls;
+        [SerializeField] private float bleCaptureMaxSeconds = 8f;
+
+        private const int MaxBleCaptureSamples = 600;
+        private const float RelativeOpeningAccelerationCorrectionWeight = 0.18f;
+        private const float RelativeOpeningAccelerationBlendWeight = 0.9f;
+        private const float RelativeOpeningMinDegrees = 0f;
+        private const float RelativeOpeningMaxDegrees = 35f;
 
         private DiagnosticSnapshot imu1GravitySnapshot;
         private DiagnosticSnapshot imu2GravitySnapshot;
         private DiagnosticSnapshot imu1MotionSnapshot;
         private DiagnosticSnapshot imu2MotionSnapshot;
+        private readonly List<BleCaptureRow> bleCaptureRows = new List<BleCaptureRow>(MaxBleCaptureSamples);
         private Rect windowRect = new Rect(12f, 12f, 520f, 620f);
         private Vector2 scrollPosition;
         private HashiInputProvider provider;
         private string diagnosticStatus = "No independent IMU diagnostic records yet.";
         private float nextRuntimeApplyAt;
+        private float nextProviderLookupAt;
+        private float bleCaptureStartedAt;
+        private float bleCaptureStoppedAt;
+        private int lastBleCaptureSequence;
+        private int bleCaptureDroppedSamples;
+        private bool isBleCaptureRecording;
 
         private void OnEnable()
         {
@@ -103,6 +126,8 @@ namespace ChopChop.Debugging
 
         private void Update()
         {
+            CaptureBleSampleIfRecording();
+
             if (!visible || Time.unscaledTime < nextRuntimeApplyAt)
             {
                 return;
@@ -162,6 +187,7 @@ namespace ChopChop.Debugging
                 GUILayout.Label("Latest dual IMU sample: none");
             }
 
+            DrawBleCaptureControls(hasDualSample);
             DrawIndependentDiagnostics(hasDualSample, sample);
 
             GUILayout.Space(8f);
@@ -190,10 +216,13 @@ namespace ChopChop.Debugging
             GUILayout.EndHorizontal();
             imu1OpeningScale = DrawSlider("IMU1 opening scale", imu1OpeningScale, 0f, 3f);
             imu2OpeningScale = DrawSlider("IMU2 opening scale", imu2OpeningScale, 0f, 3f);
-            openingAngleMinDegrees = DrawSlider("Opening min deg", openingAngleMinDegrees, -90f, 0f);
-            openingAngleMaxDegrees = DrawSlider("Opening max deg", openingAngleMaxDegrees, 0f, 90f);
+            openingAngleMinDegrees = DrawSlider("Opening min deg", openingAngleMinDegrees, 0f, 15f);
+            openingAngleMaxDegrees = DrawSlider("Opening max deg", openingAngleMaxDegrees, 20f, 45f);
             openingAngleStaticJumpRejectDegrees = DrawSlider("Static jump reject deg", openingAngleStaticJumpRejectDegrees, 0f, 45f);
             openingAngleStaticVelocityThresholdDps = DrawSlider("Static jump max dps", openingAngleStaticVelocityThresholdDps, 0f, 80f);
+            relativeOpeningAccelerationWeight = DrawSlider("Relative opening acc weight", relativeOpeningAccelerationWeight, 0f, 1f);
+            relativeOpeningGyroFullWeightBelowDps = DrawSlider("Relative gyro full below", relativeOpeningGyroFullWeightBelowDps, 0f, 300f);
+            relativeOpeningGyroZeroWeightAboveDps = DrawSlider("Relative gyro zero above", relativeOpeningGyroZeroWeightAboveDps, 1f, 600f);
             maxBleSampleAgeSeconds = DrawSlider("Max BLE sample age sec", maxBleSampleAgeSeconds, 0f, 2f);
             bleResumeSettleSeconds = DrawSlider("BLE resume settle sec", bleResumeSettleSeconds, 0f, 1f);
             chopstickOpeningSeparationPerDegree = DrawSlider("Opening separation per deg", chopstickOpeningSeparationPerDegree, 0f, 0.006f);
@@ -239,10 +268,14 @@ namespace ChopChop.Debugging
                 hashiDisplayOffsetWorld = new Vector3(1f, 0f, 0f);
             }
 
-            accelerationCorrectionWeight = DrawSlider("Acc correction weight", accelerationCorrectionWeight, 0f, 0.2f);
+            accelerationCorrectionWeight = DrawSlider("Acc correction weight", accelerationCorrectionWeight, 0f, 0.5f);
             accelerationCorrectionDeadzoneDegrees = DrawSlider("Acc correction deadzone deg", accelerationCorrectionDeadzoneDegrees, 0f, 20f);
             accelerationCorrectionMagnitudeToleranceG = DrawSlider("Acc 1G tolerance", accelerationCorrectionMagnitudeToleranceG, 0f, 1.5f);
             parentRotationWeight = DrawSlider("Whole Hashi rotation", parentRotationWeight, 0f, 1f);
+            parentRotationInputEuler = DrawEulerControls("Whole rotation input basis", parentRotationInputEuler);
+            parentPlanarYawOnly = GUILayout.Toggle(parentPlanarYawOnly, "Whole rotation planar yaw only");
+            parentPlanarYawDirection = DrawSignToggle("Whole yaw dir", parentPlanarYawDirection);
+            parentLongAxisTwistWeight = DrawSlider("Whole rotation long-axis twist", parentLongAxisTwistWeight, 0f, 1f);
             invertImu1Pose = GUILayout.Toggle(invertImu1Pose, "Invert IMU1 upper pose");
             invertImu2Pose = GUILayout.Toggle(invertImu2Pose, "Invert IMU2 lower pose");
             DrawAxisMap("IMU1 upper", ref imu1MapX, ref imu1MapY, ref imu1MapZ, ref imu1MapSigns);
@@ -331,6 +364,49 @@ namespace ChopChop.Debugging
             HashiImuMappingRuntime.TryReadOpeningVelocity(sample, HashiImuId.Imu1, out var imu1OpeningVelocity);
             HashiImuMappingRuntime.TryReadOpeningVelocity(sample, HashiImuId.Imu2, out var imu2OpeningVelocity);
             GUILayout.Label($"Opening velocity dps IMU1 {imu1OpeningVelocity:0.0} / IMU2 {imu2OpeningVelocity:0.0}");
+        }
+
+        private void DrawBleCaptureControls(bool hasDualSample)
+        {
+            GUILayout.Space(8f);
+            GUILayout.Label("BLE motion capture");
+            GUILayout.Label(
+                isBleCaptureRecording
+                    ? $"Recording {bleCaptureRows.Count}/{MaxBleCaptureSamples} samples..."
+                    : $"Captured {bleCaptureRows.Count}/{MaxBleCaptureSamples} samples");
+            bleCaptureMaxSeconds = DrawSlider("Capture seconds", bleCaptureMaxSeconds, 2f, 20f);
+
+            GUILayout.BeginHorizontal();
+            GUI.enabled = hasDualSample && !isBleCaptureRecording;
+            if (GUILayout.Button("Start BLE capture"))
+            {
+                StartBleCapture();
+            }
+
+            GUI.enabled = isBleCaptureRecording;
+            if (GUILayout.Button("Stop & Copy"))
+            {
+                StopBleCapture(copyReport: true);
+            }
+
+            GUI.enabled = bleCaptureRows.Count > 0 && !isBleCaptureRecording;
+            if (GUILayout.Button("Copy last"))
+            {
+                CopyBleCaptureReport();
+            }
+
+            if (GUILayout.Button("Clear"))
+            {
+                ClearBleCapture();
+            }
+
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
+
+            if (!hasDualSample)
+            {
+                GUILayout.Label("Waiting for dual IMU BLE sample before capture.");
+            }
         }
 
         private void DrawIndependentDiagnostics(bool hasDualSample, HashiBleSample sample)
@@ -530,6 +606,109 @@ namespace ChopChop.Debugging
                 || imu2MotionSnapshot.HasSample;
         }
 
+        private void StartBleCapture()
+        {
+            ResolveProviderForCapture();
+            bleCaptureRows.Clear();
+            bleCaptureDroppedSamples = 0;
+            lastBleCaptureSequence = 0;
+            bleCaptureStartedAt = Time.realtimeSinceStartup;
+            bleCaptureStoppedAt = 0f;
+            isBleCaptureRecording = true;
+            diagnosticStatus = $"BLE capture started. Move the chopsticks for up to {bleCaptureMaxSeconds:0.#} seconds.";
+        }
+
+        private void StopBleCapture(bool copyReport)
+        {
+            isBleCaptureRecording = false;
+            bleCaptureStoppedAt = Time.realtimeSinceStartup;
+            diagnosticStatus = $"BLE capture stopped with {bleCaptureRows.Count} samples.";
+            if (copyReport)
+            {
+                CopyBleCaptureReport();
+            }
+        }
+
+        private void ClearBleCapture()
+        {
+            isBleCaptureRecording = false;
+            bleCaptureRows.Clear();
+            bleCaptureDroppedSamples = 0;
+            lastBleCaptureSequence = 0;
+            bleCaptureStartedAt = 0f;
+            bleCaptureStoppedAt = 0f;
+            diagnosticStatus = "BLE capture cleared.";
+        }
+
+        private void CaptureBleSampleIfRecording()
+        {
+            if (!isBleCaptureRecording)
+            {
+                return;
+            }
+
+            ResolveProviderForCapture();
+            if (provider == null)
+            {
+                return;
+            }
+
+            if (bleCaptureMaxSeconds > 0f && Time.realtimeSinceStartup - bleCaptureStartedAt >= bleCaptureMaxSeconds)
+            {
+                StopBleCapture(copyReport: true);
+                return;
+            }
+
+            if (!provider.TryGetLatestBleSample(out var sample) || !sample.HasDualImu)
+            {
+                return;
+            }
+
+            if (sample.Sequence == lastBleCaptureSequence)
+            {
+                return;
+            }
+
+            if (bleCaptureRows.Count >= MaxBleCaptureSamples)
+            {
+                bleCaptureDroppedSamples++;
+                lastBleCaptureSequence = sample.Sequence;
+                return;
+            }
+
+            var hasPrevious = bleCaptureRows.Count > 0;
+            var previousSequence = hasPrevious ? bleCaptureRows[bleCaptureRows.Count - 1].Sequence : 0;
+            var previousRealtime = hasPrevious ? bleCaptureRows[bleCaptureRows.Count - 1].Realtime : 0f;
+            bleCaptureRows.Add(BleCaptureRow.FromSample(
+                bleCaptureRows.Count,
+                sample,
+                provider.CurrentFrame,
+                bleCaptureStartedAt,
+                hasPrevious,
+                previousSequence,
+                previousRealtime));
+            lastBleCaptureSequence = sample.Sequence;
+        }
+
+        private void ResolveProviderForCapture()
+        {
+            if (provider != null || Time.unscaledTime < nextProviderLookupAt)
+            {
+                return;
+            }
+
+            nextProviderLookupAt = Time.unscaledTime + 0.5f;
+            provider = FindAnyObjectByType<HashiInputProvider>(FindObjectsInactive.Include);
+        }
+
+        private void CopyBleCaptureReport()
+        {
+            var report = BuildBleCaptureReport();
+            GUIUtility.systemCopyBuffer = report;
+            diagnosticStatus = $"BLE capture copied: {bleCaptureRows.Count} samples.";
+            Debug.Log(BuildBleCaptureConsoleSummary());
+        }
+
         private void ApplySafeMovementProfile()
         {
             useHardwarePosition = true;
@@ -552,9 +731,8 @@ namespace ChopChop.Debugging
         {
             var builder = new StringBuilder(4096);
             builder.AppendLine("[HashiIndependentImu BEGIN]");
-            builder.AppendLine("AccelerationOpening mode ignores free 3D pose and maps gravity tilt from the neutral pose into the chopstick opening axis.");
-            builder.AppendLine("Current expected mounting: both IMUs see gravity near +Z while closed; recent logs show upper opening mainly rotates around IMU +X.");
-            builder.AppendLine("Gyro is logged as velocity only; the displayed opening angle comes from acceleration, so it remains available after motion stops.");
+            builder.AppendLine("RelativeOpeningIntegrated mode uses IMU1-IMU2 gyro difference for opening so whole-chopstick rotation is less likely to be mistaken as opening.");
+            builder.AppendLine("AccelerationOpening is still available for comparison, but it can misread whole-body rotation as chopstick opening.");
             builder.AppendLine();
             AppendRuntimeState(builder);
 
@@ -610,6 +788,153 @@ namespace ChopChop.Debugging
             Debug.Log(report);
         }
 
+        private string BuildBleCaptureReport()
+        {
+            var builder = new StringBuilder(bleCaptureRows.Count * 320 + 4096);
+            builder.AppendLine("[HashiBleCapture BEGIN]");
+            builder.AppendLine("Paste this whole block to Codex for BLE timing and IMU motion analysis.");
+            builder.AppendLine("Rows are captured only on new BLE sample sequences, so dt/seqGap reveal notification jitter or dropped payloads.");
+            builder.AppendLine();
+            AppendBleCaptureSummary(builder);
+            builder.AppendLine();
+            AppendRuntimeState(builder);
+            builder.AppendLine();
+            AppendBleCaptureCsv(builder);
+            builder.AppendLine("[HashiBleCapture END]");
+            return builder.ToString();
+        }
+
+        private string BuildBleCaptureConsoleSummary()
+        {
+            var builder = new StringBuilder(512);
+            builder.AppendLine("[HashiBleCapture] copied to clipboard.");
+            AppendBleCaptureSummary(builder);
+            return builder.ToString();
+        }
+
+        private void AppendBleCaptureSummary(StringBuilder builder)
+        {
+            var count = bleCaptureRows.Count;
+            var duration = CaptureDurationSeconds();
+            var averageHz = count > 1 && duration > 0f ? (count - 1) / duration : 0f;
+            var minDt = float.MaxValue;
+            var maxDt = 0f;
+            var averageDt = 0f;
+            var dtCount = 0;
+            var maxSeqGap = 0;
+            var gapCount = 0;
+            var maxAbsImu1Gyro = 0f;
+            var maxAbsImu2Gyro = 0f;
+            var maxAbsImu1Opening = 0f;
+            var maxAbsImu2Opening = 0f;
+            var maxAbsFrameTheta = 0f;
+
+            for (var i = 0; i < count; i++)
+            {
+                var row = bleCaptureRows[i];
+                if (i > 0)
+                {
+                    minDt = Mathf.Min(minDt, row.DeltaTime);
+                    maxDt = Mathf.Max(maxDt, row.DeltaTime);
+                    averageDt += row.DeltaTime;
+                    dtCount++;
+                }
+
+                maxSeqGap = Mathf.Max(maxSeqGap, row.SequenceGap);
+                if (row.SequenceGap > 1)
+                {
+                    gapCount++;
+                }
+
+                maxAbsImu1Gyro = Mathf.Max(maxAbsImu1Gyro, MaxAbs(row.Imu1MappedGyro));
+                maxAbsImu2Gyro = Mathf.Max(maxAbsImu2Gyro, MaxAbs(row.Imu2MappedGyro));
+                maxAbsImu1Opening = Mathf.Max(maxAbsImu1Opening, Mathf.Abs(row.Imu1OpeningAngle));
+                maxAbsImu2Opening = Mathf.Max(maxAbsImu2Opening, Mathf.Abs(row.Imu2OpeningAngle));
+                maxAbsFrameTheta = Mathf.Max(maxAbsFrameTheta, Mathf.Abs(row.FrameTheta));
+            }
+
+            if (dtCount > 0)
+            {
+                averageDt /= dtCount;
+            }
+            else
+            {
+                minDt = 0f;
+            }
+
+            builder.AppendLine("summary:");
+            builder.AppendLine($"  samples={count} droppedAfterBufferFull={bleCaptureDroppedSamples} durationSec={FormatFloat(duration)} averageHz={FormatFloat(averageHz)}");
+            builder.AppendLine($"  dtSec min={FormatFloat(minDt)} avg={FormatFloat(averageDt)} max={FormatFloat(maxDt)}");
+            builder.AppendLine($"  seqGap max={maxSeqGap} gapRows={gapCount}");
+            builder.AppendLine($"  maxAbsGyroDps imu1={FormatFloat(maxAbsImu1Gyro)} imu2={FormatFloat(maxAbsImu2Gyro)}");
+            builder.AppendLine($"  maxAbsOpeningDeg imu1={FormatFloat(maxAbsImu1Opening)} imu2={FormatFloat(maxAbsImu2Opening)} frameTheta={FormatFloat(maxAbsFrameTheta)}");
+            builder.AppendLine($"  recording={isBleCaptureRecording} startRealtime={FormatFloat(bleCaptureStartedAt)} stopRealtime={FormatFloat(bleCaptureStoppedAt)}");
+        }
+
+        private float CaptureDurationSeconds()
+        {
+            if (bleCaptureRows.Count > 1)
+            {
+                return bleCaptureRows[bleCaptureRows.Count - 1].RelativeTime - bleCaptureRows[0].RelativeTime;
+            }
+
+            if (isBleCaptureRecording && bleCaptureStartedAt > 0f)
+            {
+                return Time.realtimeSinceStartup - bleCaptureStartedAt;
+            }
+
+            return bleCaptureStartedAt > 0f && bleCaptureStoppedAt > 0f
+                ? bleCaptureStoppedAt - bleCaptureStartedAt
+                : 0f;
+        }
+
+        private void AppendBleCaptureCsv(StringBuilder builder)
+        {
+            builder.AppendLine("csv:");
+            builder.AppendLine("index,seq,t,dt,seqGap,frameTheta,frameGyroX,frameGyroY,frameGyroZ,framePosX,framePosY,framePosZ,frameRotX,frameRotY,frameRotZ,imu1RawAx,imu1RawAy,imu1RawAz,imu1RawGx,imu1RawGy,imu1RawGz,imu1AccX,imu1AccY,imu1AccZ,imu1GyroX,imu1GyroY,imu1GyroZ,imu1OpenAngle,imu1OpenVel,relativeAccOpen,relativeGyroWeight,relativeGyroMotion,relativeOpenDominance,relativeAccBlend,imu2RawAx,imu2RawAy,imu2RawAz,imu2RawGx,imu2RawGy,imu2RawGz,imu2AccX,imu2AccY,imu2AccZ,imu2GyroX,imu2GyroY,imu2GyroZ,imu2OpenAngle,imu2OpenVel,posX,posY,posZ,posVelX,posVelY,posVelZ,linearGX,linearGY,linearGZ");
+            for (var i = 0; i < bleCaptureRows.Count; i++)
+            {
+                AppendBleCaptureRow(builder, bleCaptureRows[i]);
+            }
+        }
+
+        private void AppendBleCaptureRow(StringBuilder builder, BleCaptureRow row)
+        {
+            builder
+                .Append(row.Index).Append(',')
+                .Append(row.Sequence).Append(',')
+                .Append(FormatFloat(row.RelativeTime)).Append(',')
+                .Append(FormatFloat(row.DeltaTime)).Append(',')
+                .Append(row.SequenceGap).Append(',')
+                .Append(FormatFloat(row.FrameTheta)).Append(',');
+            AppendCsvVector(builder, row.FrameGyro);
+            AppendCsvVector(builder, row.FramePosition);
+            AppendCsvVector(builder, row.FrameRotationEuler);
+            AppendCsvVector(builder, row.Imu1RawAcceleration);
+            AppendCsvVector(builder, row.Imu1RawGyro);
+            AppendCsvVector(builder, row.Imu1MappedAcceleration);
+            AppendCsvVector(builder, row.Imu1MappedGyro);
+            builder
+                .Append(FormatFloat(row.Imu1OpeningAngle)).Append(',')
+                .Append(FormatFloat(row.Imu1OpeningVelocity)).Append(',')
+                .Append(FormatFloat(row.RelativeOpeningAcceleration)).Append(',')
+                .Append(FormatFloat(row.RelativeOpeningGyroWeight)).Append(',')
+                .Append(FormatFloat(row.RelativeOpeningGyroMotion)).Append(',')
+                .Append(FormatFloat(row.RelativeOpeningVelocityDominance)).Append(',')
+                .Append(row.RelativeOpeningAccelerationCorrectionAllowed ? "1" : "0").Append(',');
+            AppendCsvVector(builder, row.Imu2RawAcceleration);
+            AppendCsvVector(builder, row.Imu2RawGyro);
+            AppendCsvVector(builder, row.Imu2MappedAcceleration);
+            AppendCsvVector(builder, row.Imu2MappedGyro);
+            builder
+                .Append(FormatFloat(row.Imu2OpeningAngle)).Append(',')
+                .Append(FormatFloat(row.Imu2OpeningVelocity)).Append(',');
+            AppendCsvVector(builder, row.PositionOffset);
+            AppendCsvVector(builder, row.PositionVelocity);
+            AppendCsvVector(builder, row.PositionLinearAccelerationG, appendTrailingComma: false);
+            builder.AppendLine();
+        }
+
         private void AppendRuntimeState(StringBuilder builder)
         {
             var imu1State = HashiImuMappingRuntime.Imu1PoseDebugState;
@@ -620,19 +945,25 @@ namespace ChopChop.Debugging
             builder.AppendLine($"  IMU2 neutral={imu2State.HasNeutral} neutralAcc={FormatVectorPrecise(imu2State.NeutralAcceleration)} integrated={imu2State.HasIntegratedPose} zeroSeq={imu2State.ZeroSequence}");
             builder.AppendLine($"  IMU1 openingAngle={imu1State.OpeningAngleDegrees:0.###}deg openingVelocity={imu1State.OpeningVelocityDegreesPerSecond:0.###}dps");
             builder.AppendLine($"  IMU2 openingAngle={imu2State.OpeningAngleDegrees:0.###}deg openingVelocity={imu2State.OpeningVelocityDegreesPerSecond:0.###}dps");
+            var relativeOpeningAccelerationText = imu1State.HasRelativeOpeningAcceleration
+                ? imu1State.RelativeOpeningAccelerationDegrees.ToString("0.###", CultureInfo.InvariantCulture)
+                : "n/a";
+            builder.AppendLine($"  RelativeOpening neutral={imu1State.HasRelativeOpeningNeutral} neutralAngle={imu1State.RelativeOpeningNeutralAngleDegrees:0.###}deg lowerToUpperEuler={FormatVectorPrecise(imu1State.RelativeOpeningLowerToUpperRotation.eulerAngles)} accOpen={relativeOpeningAccelerationText}deg accWeight={HashiImuMappingRuntime.RelativeOpeningAccelerationWeight:0.###}");
+            builder.AppendLine($"  RelativeOpeningGyroGate fullBelow={relativeOpeningGyroFullWeightBelowDps:0.###}dps zeroAbove={relativeOpeningGyroZeroWeightAboveDps:0.###}dps currentWeight={imu1State.RelativeOpeningGyroWeight:0.###} motion={imu1State.RelativeOpeningGyroMotionDegreesPerSecond:0.###}dps openDominance={imu1State.RelativeOpeningVelocityDominance:0.###} accBlendWhenValid={imu1State.RelativeOpeningAccelerationCorrectionAllowed}");
             builder.AppendLine($"  HardwarePosition neutral={positionState.HasNeutral} offset={FormatVectorPrecise(positionState.Offset)} velocity={FormatVectorPrecise(positionState.Velocity)} linearG={FormatVectorPrecise(positionState.LinearAccelerationG)}");
             builder.AppendLine($"  AutoCaptureIndependentNeutral={autoCaptureIndependentNeutral}");
             builder.AppendLine($"  IndependentPoseMode={independentPoseMode}");
             builder.AppendLine($"  IndependentPoseWeight={independentPoseWeight:0.###}");
+            builder.AppendLine($"  WholeHashiRotation parentWeight={HashiImuMappingRuntime.ParentRotationWeight:0.###} motionSource={HashiImuMappingRuntime.MotionSource} inputEuler={FormatVectorPrecise(HashiImuMappingRuntime.ParentRotationInputEuler)} planarYaw={HashiImuMappingRuntime.ParentPlanarYawOnly} yawDir={HashiImuMappingRuntime.ParentPlanarYawDirection:0.#} longAxisTwistWeight={HashiImuMappingRuntime.ParentLongAxisTwistWeight:0.###}");
             builder.AppendLine($"  GyroDeadzoneDegreesPerSecond={gyroDeadzoneDegreesPerSecond:0.###}");
-            builder.AppendLine($"  OpeningSensorAxis imu1={imu1OpeningAxis} dir={imu1OpeningDirection:0.#} scale={imu1OpeningScale:0.###} imu2={imu2OpeningAxis} dir={imu2OpeningDirection:0.#} scale={imu2OpeningScale:0.###} clamp=({openingAngleMinDegrees:0.###},{openingAngleMaxDegrees:0.###})");
+            builder.AppendLine($"  OpeningSensorAxis imu1={imu1OpeningAxis} dir={imu1OpeningDirection:0.#} scale={imu1OpeningScale:0.###} imu2={imu2OpeningAxis} dir={imu2OpeningDirection:0.#} scale={imu2OpeningScale:0.###} clamp=({HashiImuMappingRuntime.OpeningAngleMinDegrees:0.###},{HashiImuMappingRuntime.OpeningAngleMaxDegrees:0.###})");
             builder.AppendLine($"  OpeningNoiseReject jumpDeg={openingAngleStaticJumpRejectDegrees:0.###} staticVelocityDps={openingAngleStaticVelocityThresholdDps:0.###} maxSampleAge={maxBleSampleAgeSeconds:0.###} resumeSettle={bleResumeSettleSeconds:0.###}");
             builder.AppendLine($"  ChopstickSeparation perDeg={chopstickOpeningSeparationPerDegree:0.#####} max={maxChopstickOpeningSeparation:0.###} axis={FormatVectorPrecise(chopstickSeparationAxis)}");
             builder.AppendLine($"  PositionTracking use={useHardwarePosition} autoNeutral={autoCapturePositionNeutral} mode={positionTrackingMode} source={positionMotionSource} inputEuler={FormatVectorPrecise(positionInputEuler)} signs={FormatVectorPrecise(positionAxisSigns)} scale={FormatVectorPrecise(positionAccelerationScale)} maxOffset={FormatVectorPrecise(positionMaxOffset)} deadzoneG={positionDeadzoneG:0.###} damping={positionVelocityDamping:0.###} return={positionReturnToNeutral:0.###} gapReset={positionSampleGapResetSeconds:0.###}");
             builder.AppendLine($"  ChopstickVisualLengthScale={chopstickVisualLengthScale:0.###}");
             builder.AppendLine($"  HashiDisplayAlignmentEuler={FormatVectorPrecise(hashiDisplayAlignmentEuler)}");
             builder.AppendLine($"  HashiDisplayOffsetWorld={FormatVectorPrecise(hashiDisplayOffsetWorld)}");
-            builder.AppendLine($"  AccelerationCorrectionWeight={accelerationCorrectionWeight:0.###}");
+            builder.AppendLine($"  AccelerationCorrectionWeight={HashiImuMappingRuntime.AccelerationCorrectionWeight:0.###}");
             builder.AppendLine($"  IMU1 map=({imu1MapX},{imu1MapY},{imu1MapZ}) signs={FormatVectorPrecise(imu1MapSigns)} inputEuler={FormatVectorPrecise(imu1InputEuler)} gyroSigns={FormatVectorPrecise(imu1GyroSigns)} gyroScale={FormatVectorPrecise(imu1GyroAxisScale)} accSigns={FormatVectorPrecise(imu1AccelerationSigns)} outputEuler={FormatVectorPrecise(upperOutputEuler)} invert={invertImu1Pose}");
             builder.AppendLine($"  IMU2 map=({imu2MapX},{imu2MapY},{imu2MapZ}) signs={FormatVectorPrecise(imu2MapSigns)} inputEuler={FormatVectorPrecise(imu2InputEuler)} gyroSigns={FormatVectorPrecise(imu2GyroSigns)} gyroScale={FormatVectorPrecise(imu2GyroAxisScale)} accSigns={FormatVectorPrecise(imu2AccelerationSigns)} outputEuler={FormatVectorPrecise(lowerOutputEuler)} invert={invertImu2Pose}");
         }
@@ -693,13 +1024,32 @@ namespace ChopChop.Debugging
             HashiImuMappingRuntime.OutputOpen = outputOpen;
             HashiImuMappingRuntime.RawAccelerationToG = rawAccelerationToG;
             HashiImuMappingRuntime.RawGyroToDegreesPerSecond = rawGyroToDegreesPerSecond;
-            HashiImuMappingRuntime.ParentRotationWeight = parentRotationWeight;
+            var usesRelativeOpening = useIndependentImuPose
+                && independentPoseMode == HashiIndependentPoseMode.RelativeOpeningIntegrated;
+            var effectiveAccelerationCorrectionWeight = usesRelativeOpening
+                ? Mathf.Max(accelerationCorrectionWeight, RelativeOpeningAccelerationCorrectionWeight)
+                : accelerationCorrectionWeight;
+            var effectiveOpeningMinDegrees = usesRelativeOpening
+                ? RelativeOpeningMinDegrees
+                : openingAngleMinDegrees;
+            var effectiveOpeningMaxDegrees = usesRelativeOpening
+                ? RelativeOpeningMaxDegrees
+                : openingAngleMaxDegrees;
+            var effectiveRelativeOpeningAccelerationWeight = usesRelativeOpening
+                ? Mathf.Max(relativeOpeningAccelerationWeight, RelativeOpeningAccelerationBlendWeight)
+                : relativeOpeningAccelerationWeight;
+
+            HashiImuMappingRuntime.ParentRotationWeight = Mathf.Clamp01(parentRotationWeight);
+            HashiImuMappingRuntime.ParentRotationInputEuler = parentRotationInputEuler;
+            HashiImuMappingRuntime.ParentPlanarYawOnly = parentPlanarYawOnly;
+            HashiImuMappingRuntime.ParentPlanarYawDirection = parentPlanarYawDirection < 0f ? -1f : 1f;
+            HashiImuMappingRuntime.ParentLongAxisTwistWeight = Mathf.Clamp01(parentLongAxisTwistWeight);
             HashiImuMappingRuntime.UseIndependentImuPose = useIndependentImuPose;
             HashiImuMappingRuntime.AutoCaptureIndependentNeutral = autoCaptureIndependentNeutral;
             HashiImuMappingRuntime.IndependentPoseMode = independentPoseMode;
             HashiImuMappingRuntime.IndependentPoseWeight = independentPoseWeight;
             HashiImuMappingRuntime.GyroDeadzoneDegreesPerSecond = gyroDeadzoneDegreesPerSecond;
-            HashiImuMappingRuntime.AccelerationCorrectionWeight = accelerationCorrectionWeight;
+            HashiImuMappingRuntime.AccelerationCorrectionWeight = effectiveAccelerationCorrectionWeight;
             HashiImuMappingRuntime.AccelerationCorrectionDeadzoneDegrees = accelerationCorrectionDeadzoneDegrees;
             HashiImuMappingRuntime.AccelerationCorrectionMagnitudeToleranceG = accelerationCorrectionMagnitudeToleranceG;
             HashiImuMappingRuntime.Imu1OpeningAxis = imu1OpeningAxis;
@@ -708,10 +1058,13 @@ namespace ChopChop.Debugging
             HashiImuMappingRuntime.Imu2OpeningDirection = imu2OpeningDirection;
             HashiImuMappingRuntime.Imu1OpeningScale = imu1OpeningScale;
             HashiImuMappingRuntime.Imu2OpeningScale = imu2OpeningScale;
-            HashiImuMappingRuntime.OpeningAngleMinDegrees = openingAngleMinDegrees;
-            HashiImuMappingRuntime.OpeningAngleMaxDegrees = openingAngleMaxDegrees;
+            HashiImuMappingRuntime.OpeningAngleMinDegrees = effectiveOpeningMinDegrees;
+            HashiImuMappingRuntime.OpeningAngleMaxDegrees = effectiveOpeningMaxDegrees;
             HashiImuMappingRuntime.OpeningAngleStaticJumpRejectDegrees = openingAngleStaticJumpRejectDegrees;
             HashiImuMappingRuntime.OpeningAngleStaticVelocityThresholdDps = openingAngleStaticVelocityThresholdDps;
+            HashiImuMappingRuntime.RelativeOpeningAccelerationWeight = effectiveRelativeOpeningAccelerationWeight;
+            HashiImuMappingRuntime.RelativeOpeningGyroFullWeightBelowDps = relativeOpeningGyroFullWeightBelowDps;
+            HashiImuMappingRuntime.RelativeOpeningGyroZeroWeightAboveDps = relativeOpeningGyroZeroWeightAboveDps;
             HashiImuMappingRuntime.MaxBleSampleAgeSeconds = maxBleSampleAgeSeconds;
             HashiImuMappingRuntime.BleResumeSettleSeconds = bleResumeSettleSeconds;
             HashiImuMappingRuntime.ChopstickOpeningSeparationPerDegree = chopstickOpeningSeparationPerDegree;
@@ -899,6 +1252,28 @@ namespace ChopChop.Debugging
             return $"({value.x:0.###}, {value.y:0.###}, {value.z:0.###})";
         }
 
+        private static string FormatFloat(float value)
+        {
+            return value.ToString("0.#####", CultureInfo.InvariantCulture);
+        }
+
+        private static float MaxAbs(Vector3 value)
+        {
+            return Mathf.Max(Mathf.Abs(value.x), Mathf.Abs(value.y), Mathf.Abs(value.z));
+        }
+
+        private static void AppendCsvVector(StringBuilder builder, Vector3 value, bool appendTrailingComma = true)
+        {
+            builder
+                .Append(FormatFloat(value.x)).Append(',')
+                .Append(FormatFloat(value.y)).Append(',')
+                .Append(FormatFloat(value.z));
+            if (appendTrailingComma)
+            {
+                builder.Append(',');
+            }
+        }
+
         private static string DominantAxis(Vector3 value)
         {
             var absoluteX = Mathf.Abs(value.x);
@@ -921,6 +1296,92 @@ namespace ChopChop.Debugging
             }
 
             return value.z >= 0f ? "+Z" : "-Z";
+        }
+
+        private struct BleCaptureRow
+        {
+            public int Index;
+            public int Sequence;
+            public int SequenceGap;
+            public float Realtime;
+            public float RelativeTime;
+            public float DeltaTime;
+            public float FrameTheta;
+            public Vector3 FrameGyro;
+            public Vector3 FramePosition;
+            public Vector3 FrameRotationEuler;
+            public Vector3 Imu1RawAcceleration;
+            public Vector3 Imu1RawGyro;
+            public Vector3 Imu1MappedAcceleration;
+            public Vector3 Imu1MappedGyro;
+            public float Imu1OpeningAngle;
+            public float Imu1OpeningVelocity;
+            public float RelativeOpeningAcceleration;
+            public float RelativeOpeningGyroWeight;
+            public float RelativeOpeningGyroMotion;
+            public float RelativeOpeningVelocityDominance;
+            public bool RelativeOpeningAccelerationCorrectionAllowed;
+            public Vector3 Imu2RawAcceleration;
+            public Vector3 Imu2RawGyro;
+            public Vector3 Imu2MappedAcceleration;
+            public Vector3 Imu2MappedGyro;
+            public float Imu2OpeningAngle;
+            public float Imu2OpeningVelocity;
+            public Vector3 PositionOffset;
+            public Vector3 PositionVelocity;
+            public Vector3 PositionLinearAccelerationG;
+
+            public static BleCaptureRow FromSample(
+                int index,
+                HashiBleSample sample,
+                HashiInputFrame frame,
+                float startRealtime,
+                bool hasPrevious,
+                int previousSequence,
+                float previousRealtime)
+            {
+                var imu1State = HashiImuMappingRuntime.Imu1PoseDebugState;
+                var imu2State = HashiImuMappingRuntime.Imu2PoseDebugState;
+                var positionState = HashiImuMappingRuntime.PositionDebugState;
+                HashiImuMappingRuntime.TryReadOpeningVelocity(sample, HashiImuId.Imu1, out var imu1OpeningVelocity);
+                HashiImuMappingRuntime.TryReadOpeningVelocity(sample, HashiImuId.Imu2, out var imu2OpeningVelocity);
+
+                return new BleCaptureRow
+                {
+                    Index = index,
+                    Sequence = sample.Sequence,
+                    SequenceGap = hasPrevious ? Mathf.Max(0, sample.Sequence - previousSequence) : 0,
+                    Realtime = sample.RealtimeReceived,
+                    RelativeTime = sample.RealtimeReceived - startRealtime,
+                    DeltaTime = hasPrevious ? Mathf.Max(0f, sample.RealtimeReceived - previousRealtime) : 0f,
+                    FrameTheta = frame.ThetaDegrees,
+                    FrameGyro = frame.GyroDegreesPerSecond,
+                    FramePosition = frame.LocalPosition,
+                    FrameRotationEuler = frame.LocalRotation.eulerAngles,
+                    Imu1RawAcceleration = sample.Imu1AccelerationRaw,
+                    Imu1RawGyro = sample.Imu1GyroRaw,
+                    Imu1MappedAcceleration = HashiImuMappingRuntime.MapImu1Acceleration(sample.Imu1AccelerationRaw),
+                    Imu1MappedGyro = HashiImuMappingRuntime.MapImu1Gyro(sample.Imu1GyroRaw),
+                    Imu1OpeningAngle = imu1State.OpeningAngleDegrees,
+                    Imu1OpeningVelocity = imu1OpeningVelocity,
+                    RelativeOpeningAcceleration = imu1State.HasRelativeOpeningAcceleration
+                        ? imu1State.RelativeOpeningAccelerationDegrees
+                        : 0f,
+                    RelativeOpeningGyroWeight = imu1State.RelativeOpeningGyroWeight,
+                    RelativeOpeningGyroMotion = imu1State.RelativeOpeningGyroMotionDegreesPerSecond,
+                    RelativeOpeningVelocityDominance = imu1State.RelativeOpeningVelocityDominance,
+                    RelativeOpeningAccelerationCorrectionAllowed = imu1State.RelativeOpeningAccelerationCorrectionAllowed,
+                    Imu2RawAcceleration = sample.Imu2AccelerationRaw,
+                    Imu2RawGyro = sample.Imu2GyroRaw,
+                    Imu2MappedAcceleration = HashiImuMappingRuntime.MapImu2Acceleration(sample.Imu2AccelerationRaw),
+                    Imu2MappedGyro = HashiImuMappingRuntime.MapImu2Gyro(sample.Imu2GyroRaw),
+                    Imu2OpeningAngle = imu2State.OpeningAngleDegrees,
+                    Imu2OpeningVelocity = imu2OpeningVelocity,
+                    PositionOffset = positionState.Offset,
+                    PositionVelocity = positionState.Velocity,
+                    PositionLinearAccelerationG = positionState.LinearAccelerationG
+                };
+            }
         }
 
         private struct DiagnosticSnapshot
