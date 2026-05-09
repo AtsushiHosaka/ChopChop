@@ -19,6 +19,9 @@ namespace ChopChop.Levels.Sukiyaki
     [AddComponentMenu("ChopChop/Levels/Sukiyaki Stage Controller")]
     public sealed class SukiyakiStageController : MonoBehaviour, ILevelController
     {
+        // 食べるジェスチャーの2フェーズ
+        private enum EatGesturePhase { WaitingForLift, WaitingForPullback }
+
         [SerializeField] private float calibrationSeconds = 3f;
         [SerializeField] private MeatTearController meatTearController;
         [SerializeField] private HashiInputProvider inputProvider;
@@ -30,12 +33,21 @@ namespace ChopChop.Levels.Sukiyaki
         [SerializeField] private bool automaticProgress = true;
         [SerializeField] private HashiStageMovementMode hashiMovementMode = HashiStageMovementMode.Auto;
 
+        // DeliverToMouth: 上げて引く食べるジェスチャーの閾値（Inspectorで調整可）
+        // worldAccelY の単位はg（静止時 ≈ +1.0g）
+        [SerializeField] private float liftAccelThreshold = 0.0f;
+        [SerializeField] private float pullbackAccelThreshold = -1.5f;
+        [SerializeField] private float gestureLiftResetSeconds = 3.0f;
+
         private float levelStartTime;
         private float calibrationStartTime;
         private float roughness;
         private float stepProgress;
         private float stepGoalSeconds = 1f;
         private LevelRunResult result;
+
+        private EatGesturePhase eatGesturePhase;
+        private float liftDetectedAt;
 
         public bool IsRunning { get; private set; }
         public SukiyakiStep CurrentStep { get; private set; } = SukiyakiStep.Calibration;
@@ -198,6 +210,10 @@ namespace ChopChop.Levels.Sukiyaki
             CurrentStep = step;
             stepProgress = 0f;
             stepGoalSeconds = GoalSecondsFor(step);
+            if (step == SukiyakiStep.DeliverToMouth)
+            {
+                eatGesturePhase = EatGesturePhase.WaitingForLift;
+            }
             UpdateMeatStateFor(step);
             MoveRailFor(step);
             UpdateLiquidVisuals();
@@ -275,6 +291,13 @@ namespace ChopChop.Levels.Sukiyaki
             }
 
             roughness = Mathf.Max(roughness, Roughness(frame));
+
+            if (CurrentStep == SukiyakiStep.DeliverToMouth)
+            {
+                EvaluateEatGesture(frame);
+                return;
+            }
+
             var quality = QualityFor(CurrentStep, frame);
             var targetSatisfied = IsTargetSatisfiedFor(CurrentStep);
             if (CurrentStep == SukiyakiStep.MixEgg && eggFluidMixMonitor != null && eggFluidMixMonitor.HasActiveEggFluid)
@@ -345,6 +368,37 @@ namespace ChopChop.Levels.Sukiyaki
         private static float SafeOpen(float theta)
         {
             return 1f - Mathf.Abs(Mathf.InverseLerp(8f, 44f, theta) - 0.5f) * 2f;
+        }
+
+        private void EvaluateEatGesture(HashiInputFrame frame)
+        {
+            // デバイス座標系の加速度を世界座標系に変換してY成分を取得
+            var worldAccelY = (frame.LocalRotation * frame.Acceleration).y;
+
+            switch (eatGesturePhase)
+            {
+                case EatGesturePhase.WaitingForLift:
+                    if (worldAccelY > liftAccelThreshold)
+                    {
+                        eatGesturePhase = EatGesturePhase.WaitingForPullback;
+                        liftDetectedAt = Time.time;
+                        stepProgress = stepGoalSeconds * 0.5f;
+                    }
+                    break;
+
+                case EatGesturePhase.WaitingForPullback:
+                    if (Time.time - liftDetectedAt > gestureLiftResetSeconds)
+                    {
+                        eatGesturePhase = EatGesturePhase.WaitingForLift;
+                        stepProgress = 0f;
+                        break;
+                    }
+                    if (worldAccelY < pullbackAccelThreshold)
+                    {
+                        CompleteCurrentStep();
+                    }
+                    break;
+            }
         }
 
         private static float Roughness(HashiInputFrame frame)
