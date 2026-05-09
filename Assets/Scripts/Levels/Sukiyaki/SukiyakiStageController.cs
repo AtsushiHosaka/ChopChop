@@ -8,6 +8,14 @@ using UnityEngine;
 
 namespace ChopChop.Levels.Sukiyaki
 {
+    public enum HashiStageMovementMode
+    {
+        Auto,
+        DemoWaypointRail,
+        HardwarePositionOnly,
+        Hybrid
+    }
+
     [AddComponentMenu("ChopChop/Levels/Sukiyaki Stage Controller")]
     public sealed class SukiyakiStageController : MonoBehaviour, ILevelController
     {
@@ -20,6 +28,7 @@ namespace ChopChop.Levels.Sukiyaki
         [SerializeField] private ObiFluidMixMonitor eggFluidMixMonitor;
         [SerializeField] private SukiyakiStepTargetZone[] targetZones = Array.Empty<SukiyakiStepTargetZone>();
         [SerializeField] private bool automaticProgress = true;
+        [SerializeField] private HashiStageMovementMode hashiMovementMode = HashiStageMovementMode.Auto;
 
         private float levelStartTime;
         private float calibrationStartTime;
@@ -373,7 +382,7 @@ namespace ChopChop.Levels.Sukiyaki
 
         private void MoveRailFor(SukiyakiStep step)
         {
-            if (railMover == null)
+            if (railMover == null || !ShouldMoveDemoRail())
             {
                 return;
             }
@@ -401,6 +410,22 @@ namespace ChopChop.Levels.Sukiyaki
                 case SukiyakiStep.DeliverToMouth:
                     railMover.MoveTo(5);
                     break;
+            }
+        }
+
+        private bool ShouldMoveDemoRail()
+        {
+            switch (hashiMovementMode)
+            {
+                case HashiStageMovementMode.DemoWaypointRail:
+                case HashiStageMovementMode.Hybrid:
+                    return true;
+                case HashiStageMovementMode.HardwarePositionOnly:
+                    return false;
+                case HashiStageMovementMode.Auto:
+                    return inputProvider == null || inputProvider.InputMode == HashiInputMode.Demo;
+                default:
+                    return false;
             }
         }
     }

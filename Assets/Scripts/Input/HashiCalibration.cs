@@ -5,6 +5,7 @@ namespace ChopChop.Input
     public sealed class HashiCalibration
     {
         private Quaternion neutralRotation = Quaternion.identity;
+        private Vector3 neutralPosition;
         private bool hasNeutral;
 
         public bool HasNeutral => hasNeutral;
@@ -12,12 +13,14 @@ namespace ChopChop.Input
         public void Clear()
         {
             neutralRotation = Quaternion.identity;
+            neutralPosition = Vector3.zero;
             hasNeutral = false;
         }
 
         public void Capture(HashiInputFrame frame)
         {
             neutralRotation = Quaternion.Inverse(frame.LocalRotation);
+            neutralPosition = frame.LocalPosition;
             hasNeutral = true;
         }
 
@@ -34,6 +37,7 @@ namespace ChopChop.Input
                 frame.Acceleration,
                 frame.GyroDegreesPerSecond,
                 neutralRotation * frame.LocalRotation,
+                frame.LocalPosition - neutralPosition,
                 frame.HasSample,
                 frame.TimeReceived);
         }

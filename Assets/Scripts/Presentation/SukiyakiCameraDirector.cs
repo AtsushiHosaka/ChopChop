@@ -10,6 +10,7 @@ namespace ChopChop.Presentation
         [SerializeField] private Camera targetCamera;
         [SerializeField] private SukiyakiStageController stageController;
         [SerializeField] private SukiyakiStageLayout stageLayout;
+        [SerializeField] private bool lockAtInitialPose;
         [SerializeField] private float defaultMoveSeconds = 0.8f;
         [SerializeField] private Vector3 overviewFocus = new Vector3(0f, 0.08f, 0f);
         [SerializeField] private StepCameraPose[] stepPoses = Array.Empty<StepCameraPose>();
@@ -46,6 +47,11 @@ namespace ChopChop.Presentation
         private void OnEnable()
         {
             ResolveReferences();
+            if (lockAtInitialPose)
+            {
+                return;
+            }
+
             if (stageController != null)
             {
                 stageController.StepChanged += HandleStepChanged;
@@ -65,6 +71,11 @@ namespace ChopChop.Presentation
 
         private void LateUpdate()
         {
+            if (lockAtInitialPose)
+            {
+                return;
+            }
+
             if (stageController != null && (!hasLastStep || stageController.CurrentStep != lastStep))
             {
                 lastStep = stageController.CurrentStep;

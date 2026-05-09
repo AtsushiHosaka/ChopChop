@@ -35,8 +35,11 @@ namespace ChopChop.BLE
         [SerializeField] private Vector3 imu2AccelerationRaw;
         [SerializeField] private Vector3 imu2GyroRaw;
 
+        private static int nextSequence;
+
         public string RawJson { get; private set; }
         public float RealtimeReceived { get; private set; }
+        public int Sequence { get; private set; }
 
         public bool HasTheta => hasTheta;
         public bool HasPinch => hasPinch;
@@ -95,7 +98,8 @@ namespace ChopChop.BLE
             return new HashiBleSample
             {
                 RawJson = rawJson,
-                RealtimeReceived = Time.realtimeSinceStartup
+                RealtimeReceived = Time.realtimeSinceStartup,
+                Sequence = unchecked(++nextSequence)
             };
         }
 
