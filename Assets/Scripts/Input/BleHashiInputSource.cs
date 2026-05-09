@@ -131,6 +131,11 @@ namespace ChopChop.Input
                 var pinch = sample.HasPinch
                     ? Mathf.InverseLerp(0f, 200f, sample.PinchValue)
                     : Mathf.InverseLerp(40f, 5f, theta);
+                var localPosition = CurrentFrame.LocalPosition;
+                if (HashiImuMappingRuntime.UpdateHardwarePosition(sample, deltaTime, out var hardwarePosition, out _))
+                {
+                    localPosition = hardwarePosition;
+                }
 
                 CurrentFrame = new HashiInputFrame(
                     theta,
@@ -138,6 +143,7 @@ namespace ChopChop.Input
                     sample.HasAccelerationVector ? sample.AccelerationVector : Vector3.zero,
                     gyro,
                     HashiImuMappingRuntime.ApplyParentRotationWeight(rotation),
+                    localPosition,
                     true,
                     sample.RealtimeReceived);
                 staleSampleLogEmitted = false;

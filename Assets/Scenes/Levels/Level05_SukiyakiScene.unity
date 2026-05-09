@@ -1810,6 +1810,7 @@ MonoBehaviour:
   targetCamera: {fileID: 330585545}
   stageController: {fileID: 1454876607}
   stageLayout: {fileID: 1713009246}
+  lockAtInitialPose: 1
   defaultMoveSeconds: 0.8
   overviewFocus: {x: 0.05, y: 0.08, z: 0.02}
   stepPoses:
@@ -5667,7 +5668,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7860257a01ba4548975fe970f0a59ab2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ChopChop.Runtime::ChopChop.Debugging.HashiImuTuningOverlay
-  visible: 1
+  visible: 0
   applyProfileOnEnable: 1
   useTunedTheta: 1
   thetaMode: 0
@@ -5684,7 +5685,42 @@ MonoBehaviour:
   parentRotationWeight: 0
   useIndependentImuPose: 1
   autoCaptureIndependentNeutral: 1
+  independentPoseMode: 0
   independentPoseWeight: 1
+  gyroDeadzoneDegreesPerSecond: 1.5
+  accelerationCorrectionWeight: 0.02
+  accelerationCorrectionDeadzoneDegrees: 2
+  accelerationCorrectionMagnitudeToleranceG: 0.45
+  imu1OpeningAxis: 0
+  imu2OpeningAxis: 0
+  imu1OpeningDirection: 1
+  imu2OpeningDirection: 1
+  imu1OpeningScale: 1
+  imu2OpeningScale: 1
+  openingAngleMinDegrees: -55
+  openingAngleMaxDegrees: 55
+  openingAngleStaticJumpRejectDegrees: 12
+  openingAngleStaticVelocityThresholdDps: 20
+  maxBleSampleAgeSeconds: 0.6
+  bleResumeSettleSeconds: 0.2
+  chopstickOpeningSeparationPerDegree: 0.0015
+  maxChopstickOpeningSeparation: 0.08
+  chopstickSeparationAxis: {x: 1, y: 0, z: 0}
+  useHardwarePosition: 1
+  autoCapturePositionNeutral: 1
+  positionTrackingMode: 1
+  positionMotionSource: 2
+  positionInputEuler: {x: 0, y: 0, z: 0}
+  positionAxisSigns: {x: 1, y: 1, z: 1}
+  positionAccelerationScale: {x: 0.55, y: 0.4, z: 0.4}
+  positionMaxOffset: {x: 0.28, y: 0.22, z: 0.22}
+  positionDeadzoneG: 0.08
+  positionVelocityDamping: 5
+  positionReturnToNeutral: 1.5
+  positionSampleGapResetSeconds: 0.7
+  chopstickVisualLengthScale: 0.88
+  hashiDisplayAlignmentEuler: {x: 0, y: -90, z: 135}
+  hashiDisplayOffsetWorld: {x: 1, y: 0, z: 0}
   invertImu1Pose: 0
   invertImu2Pose: 0
   imu1MapX: 0
@@ -5695,6 +5731,17 @@ MonoBehaviour:
   imu2MapZ: 2
   imu1MapSigns: {x: 1, y: 1, z: 1}
   imu2MapSigns: {x: 1, y: 1, z: 1}
+  imu1InputEuler: {x: 0, y: 0, z: 0}
+  imu2InputEuler: {x: 0, y: 0, z: 0}
+  imu1GyroSigns: {x: 1, y: 1, z: 1}
+  imu2GyroSigns: {x: 1, y: 1, z: 1}
+  imu1GyroAxisScale: {x: 1, y: 1, z: 1}
+  imu2GyroAxisScale: {x: 1, y: 1, z: 1}
+  imu1AccelerationSigns: {x: 1, y: 1, z: 1}
+  imu2AccelerationSigns: {x: 1, y: 1, z: 1}
+  upperOutputEuler: {x: 0, y: 0, z: 0}
+  lowerOutputEuler: {x: 0, y: 0, z: 0}
+  showAdvancedControls: 0
 --- !u!1 &1150448509
 GameObject:
   m_ObjectHideFlags: 0
@@ -7542,6 +7589,7 @@ MonoBehaviour:
   eggFluidMixMonitor: {fileID: 1405094642}
   targetZones: []
   automaticProgress: 1
+  hashiMovementMode: 0
 --- !u!4 &1454876608
 Transform:
   m_ObjectHideFlags: 0
@@ -12520,6 +12568,7 @@ MonoBehaviour:
   targetCamera: {fileID: 1951154900}
   stageController: {fileID: 1454876607}
   stageLayout: {fileID: 1713009246}
+  lockAtInitialPose: 1
   defaultMoveSeconds: 0.8
   overviewFocus: {x: 0.05, y: 0.08, z: 0.02}
   stepPoses:

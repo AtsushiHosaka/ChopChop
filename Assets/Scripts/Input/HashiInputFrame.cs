@@ -9,6 +9,7 @@ namespace ChopChop.Input
         public Vector3 Acceleration { get; }
         public Vector3 GyroDegreesPerSecond { get; }
         public Quaternion LocalRotation { get; }
+        public Vector3 LocalPosition { get; }
         public bool HasSample { get; }
         public float TimeReceived { get; }
 
@@ -20,12 +21,34 @@ namespace ChopChop.Input
             Quaternion localRotation,
             bool hasSample,
             float timeReceived)
+            : this(
+                thetaDegrees,
+                pinchNormalized,
+                acceleration,
+                gyroDegreesPerSecond,
+                localRotation,
+                Vector3.zero,
+                hasSample,
+                timeReceived)
+        {
+        }
+
+        public HashiInputFrame(
+            float thetaDegrees,
+            float pinchNormalized,
+            Vector3 acceleration,
+            Vector3 gyroDegreesPerSecond,
+            Quaternion localRotation,
+            Vector3 localPosition,
+            bool hasSample,
+            float timeReceived)
         {
             ThetaDegrees = thetaDegrees;
             PinchNormalized = Mathf.Clamp01(pinchNormalized);
             Acceleration = acceleration;
             GyroDegreesPerSecond = gyroDegreesPerSecond;
             LocalRotation = localRotation;
+            LocalPosition = localPosition;
             HasSample = hasSample;
             TimeReceived = timeReceived;
         }
