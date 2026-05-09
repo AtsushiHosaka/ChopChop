@@ -7,16 +7,14 @@ namespace ChopChop.UI
 {
     public sealed class SukiyakiCountdownOverlay : MonoBehaviour
     {
-        private const string ResourceRoot = "UI/Countdown/countdown_";
-
         [SerializeField] private float secondsPerImage = 0.82f;
-        [SerializeField] private Vector2 imageSize = new Vector2(360f, 360f);
 
-        private readonly string[] keys = { "3", "2", "1" };
+        private readonly string[] labels = { "3", "2", "1" };
 
         private Action completed;
-        private CanvasGroup canvasGroup;
-        private Image image;
+        private CanvasGroup overlayCanvasGroup;
+        private CanvasGroup numberCanvasGroup;
+        private Text countText;
         private float startedAt;
         private int shownIndex = -1;
         private bool running;
@@ -40,7 +38,7 @@ namespace ChopChop.UI
 
             var elapsed = Time.unscaledTime - startedAt;
             var index = Mathf.FloorToInt(elapsed / secondsPerImage);
-            if (index >= keys.Length)
+            if (index >= labels.Length)
             {
                 Finish();
                 return;
@@ -52,64 +50,64 @@ namespace ChopChop.UI
 
         private void CreateVisual()
         {
-            var blocker = new GameObject("Countdown Overlay", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
-            blocker.transform.SetParent(transform, false);
-            UiFactory.Stretch(blocker.GetComponent<RectTransform>(), 0f);
+            var overlay = new GameObject("Countdown Overlay", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
+            overlay.transform.SetParent(transform, false);
+            UiFactory.Stretch(overlay.GetComponent<RectTransform>(), 0f);
 
-            canvasGroup = blocker.GetComponent<CanvasGroup>();
-            canvasGroup.blocksRaycasts = true;
-            canvasGroup.interactable = true;
+            overlayCanvasGroup = overlay.GetComponent<CanvasGroup>();
+            overlayCanvasGroup.blocksRaycasts = true;
+            overlayCanvasGroup.interactable = true;
 
-            var blockerImage = blocker.GetComponent<Image>();
-            blockerImage.color = new Color(0f, 0f, 0f, 0.32f);
+            var overlayImage = overlay.GetComponent<Image>();
+            overlayImage.color = new Color(0.05f, 0.025f, 0.02f, 0.26f);
 
-            var imageObject = new GameObject("Countdown Image", typeof(RectTransform), typeof(Image));
-            imageObject.transform.SetParent(blocker.transform, false);
-            var rect = imageObject.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = imageSize;
+            var numberObject = new GameObject("Countdown Number", typeof(RectTransform), typeof(CanvasGroup));
+            numberObject.transform.SetParent(overlay.transform, false);
+            var numberRect = numberObject.GetComponent<RectTransform>();
+            numberRect.anchorMin = new Vector2(0.5f, 0.5f);
+            numberRect.anchorMax = new Vector2(0.5f, 0.5f);
+            numberRect.pivot = new Vector2(0.5f, 0.5f);
+            numberRect.anchoredPosition = new Vector2(0f, 4f);
+            numberRect.sizeDelta = new Vector2(420f, 240f);
 
-            image = imageObject.GetComponent<Image>();
-            image.raycastTarget = false;
-            image.preserveAspect = true;
+            numberCanvasGroup = numberObject.GetComponent<CanvasGroup>();
+
+            countText = UiFactory.CreateText(numberObject.transform, "Text", 196, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.97f, 0.94f, 0.9f, 1f));
+            UiFactory.Stretch(countText.rectTransform, 0f);
+
+            var shadow = countText.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0.08f, 0.02f, 0.02f, 0.75f);
+            shadow.effectDistance = new Vector2(0f, -8f);
+
+            var outline = countText.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0.42f, 0.09f, 0.07f, 0.65f);
+            outline.effectDistance = new Vector2(1.4f, -1.4f);
         }
 
         private void ShowIndex(int index)
         {
-            if (shownIndex == index || image == null || index < 0 || index >= keys.Length)
+            if (shownIndex == index || countText == null || index < 0 || index >= labels.Length)
             {
                 return;
             }
 
             shownIndex = index;
-            var sprite = Resources.Load<Sprite>(ResourceRoot + keys[index]);
-            if (sprite == null)
-            {
-                Debug.LogWarning($"[Countdown] Missing sprite Resources/{ResourceRoot}{keys[index]}.png", this);
-                image.enabled = false;
-                return;
-            }
-
-            image.enabled = true;
-            image.sprite = sprite;
-            image.rectTransform.localScale = Vector3.one * 1.18f;
+            countText.text = labels[index];
+            countText.rectTransform.localScale = Vector3.one * 1.14f;
             AudioService.Instance?.PlayCue(AudioCueId.CountdownTick);
         }
 
         private void Animate(float localElapsed)
         {
-            if (image == null || canvasGroup == null)
+            if (countText == null || numberCanvasGroup == null)
             {
                 return;
             }
 
             var t = Mathf.Clamp01(localElapsed / secondsPerImage);
-            var pop = 1f + Mathf.Sin((1f - t) * Mathf.PI * 0.5f) * 0.18f;
-            image.rectTransform.localScale = Vector3.one * pop;
-            canvasGroup.alpha = t > 0.72f ? Mathf.InverseLerp(1f, 0.72f, t) : 1f;
+            var eased = 1f - Mathf.Pow(1f - t, 3f);
+            countText.rectTransform.localScale = Vector3.one * Mathf.Lerp(1.14f, 1f, eased);
+            numberCanvasGroup.alpha = t > 0.7f ? Mathf.InverseLerp(1f, 0.7f, t) : 1f;
         }
 
         private void Finish()
@@ -118,9 +116,9 @@ namespace ChopChop.UI
             AudioService.Instance?.PlayCue(AudioCueId.CountdownGo);
             completed?.Invoke();
             completed = null;
-            if (canvasGroup != null)
+            if (overlayCanvasGroup != null)
             {
-                Destroy(canvasGroup.gameObject);
+                Destroy(overlayCanvasGroup.gameObject);
             }
         }
     }
