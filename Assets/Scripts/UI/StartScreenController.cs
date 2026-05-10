@@ -64,7 +64,7 @@ namespace ChopChop.UI
             var startButton = UiFactory.CreateButton(main.transform, "Start Button", string.Empty, new Color(0.72f, 0.18f, 0.11f, 0.98f), Color.white);
             UiFactory.SetSize(startButton.GetComponent<RectTransform>(), 380f, 76f);
             startText = startButton.GetComponentInChildren<Text>();
-            startButton.onClick.AddListener(navigator.LoadLevelSelect);
+            startButton.onClick.AddListener(() => navigator.LoadLevel(AppScenes.SukiyakiLevel));
 
             var settingsButton = UiFactory.CreateButton(main.transform, "Settings Button", string.Empty, new Color(0.34f, 0.23f, 0.12f, 0.96f), new Color(0.98f, 0.92f, 0.82f, 1f));
             UiFactory.SetSize(settingsButton.GetComponent<RectTransform>(), 300f, 58f);
