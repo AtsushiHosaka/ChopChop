@@ -13,7 +13,6 @@ namespace ChopChop.UI
         private VersusLevelRunResult versusResult;
         private bool hasVersusResult;
         private string retrySceneName;
-        private Text titleText;
         private Text totalLabelText;
         private Text totalValueText;
         private Text statsText;
@@ -61,22 +60,13 @@ namespace ChopChop.UI
             content.transform.SetParent(panel.transform, false);
             UiFactory.Stretch(content.GetComponent<RectTransform>(), 0f);
 
-            titleText = UiFactory.CreateText(content.transform, "Title Label", 64, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.34f, 0.18f, 0.09f, 1f));
-            var titleRect = titleText.rectTransform;
-            titleRect.anchorMin = new Vector2(0.5f, 1f);
-            titleRect.anchorMax = new Vector2(0.5f, 1f);
-            titleRect.pivot = new Vector2(0.5f, 1f);
-            titleRect.anchoredPosition = new Vector2(0f, -46f);
-            UiFactory.SetSize(titleRect, 340f, 82f);
-            titleText.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.22f);
-
             var summary = new GameObject("Summary", typeof(RectTransform));
             summary.transform.SetParent(content.transform, false);
             var summaryRect = summary.GetComponent<RectTransform>();
             summaryRect.anchorMin = new Vector2(0.5f, 1f);
             summaryRect.anchorMax = new Vector2(0.5f, 1f);
             summaryRect.pivot = new Vector2(0.5f, 1f);
-            summaryRect.anchoredPosition = new Vector2(0f, -146f);
+            summaryRect.anchoredPosition = new Vector2(0f, -82f);
             UiFactory.SetSize(summaryRect, 560f, 170f);
 
             totalLabelText = UiFactory.CreateText(summary.transform, "Total Label", 32, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.66f, 0.44f, 0.16f, 1f));
@@ -181,7 +171,6 @@ namespace ChopChop.UI
 
         private void UpdateTexts()
         {
-            titleText.text = localization.Text(LocalizationKeys.Result.Title);
             totalLabelText.text = localization.Text(LocalizationKeys.Result.Total);
             retryText.text = localization.Text(LocalizationKeys.Result.Retry);
             levelSelectText.text = localization.Text(LocalizationKeys.App.Back);

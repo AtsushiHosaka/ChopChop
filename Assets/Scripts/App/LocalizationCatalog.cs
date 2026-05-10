@@ -57,7 +57,8 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Winner] = "勝者",
             [LocalizationKeys.Result.Draw] = "引き分け",
             [LocalizationKeys.Result.Total] = "合計",
-            [LocalizationKeys.Feedback.Nice] = "いい感じ！",
+            [LocalizationKeys.Feedback.Nice] = "いいね！",
+            [LocalizationKeys.Feedback.Next] = "次へ！",
             [LocalizationKeys.Feedback.Failed] = "ミス！"
         };
 
@@ -115,6 +116,7 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "Draw",
             [LocalizationKeys.Result.Total] = "Total",
             [LocalizationKeys.Feedback.Nice] = "Nice!",
+            [LocalizationKeys.Feedback.Next] = "Next!",
             [LocalizationKeys.Feedback.Failed] = "Failed!"
         };
 
@@ -172,6 +174,7 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "무승부",
             [LocalizationKeys.Result.Total] = "합계",
             [LocalizationKeys.Feedback.Nice] = "잘했어!",
+            [LocalizationKeys.Feedback.Next] = "다음!",
             [LocalizationKeys.Feedback.Failed] = "실패!"
         };
 
@@ -229,6 +232,7 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "平局",
             [LocalizationKeys.Result.Total] = "合计",
             [LocalizationKeys.Feedback.Nice] = "不错！",
+            [LocalizationKeys.Feedback.Next] = "下一步！",
             [LocalizationKeys.Feedback.Failed] = "失败！"
         };
 
@@ -286,6 +290,7 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "Égalité",
             [LocalizationKeys.Result.Total] = "Total",
             [LocalizationKeys.Feedback.Nice] = "Bien !",
+            [LocalizationKeys.Feedback.Next] = "Suivant !",
             [LocalizationKeys.Feedback.Failed] = "Raté !"
         };
 
@@ -343,6 +348,7 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "Empate",
             [LocalizationKeys.Result.Total] = "Total",
             [LocalizationKeys.Feedback.Nice] = "¡Bien!",
+            [LocalizationKeys.Feedback.Next] = "¡Siguiente!",
             [LocalizationKeys.Feedback.Failed] = "¡Fallido!"
         };
 

@@ -158,8 +158,124 @@ namespace ChopChop.Tests.EditMode
             Assert.That(stage.StepProgress01, Is.EqualTo(0f));
 
             tip.transform.position = Vector3.zero;
+            SetPrivateField(stage, "stepElapsedSeconds", 10f);
             EvaluateStepInput(stage, goodPickInput, 1f);
             Assert.That(stage.CurrentStep, Is.EqualTo(SukiyakiStep.PutInBroth));
+        }
+
+        [Test]
+        public void PickMeatInputWaitsForMinimumClearSeconds()
+        {
+            var stage = CreateStage();
+            var goodPickInput = new HashiInputFrame(
+                4f,
+                1f,
+                Vector3.zero,
+                Vector3.zero,
+                Quaternion.identity,
+                true,
+                0f);
+
+            stage.StartLevel();
+            AdvanceTo(stage, SukiyakiStep.PickMeat);
+
+            EvaluateStepInput(stage, goodPickInput, 1f);
+            Assert.That(stage.CurrentStep, Is.EqualTo(SukiyakiStep.PickMeat));
+            Assert.That(stage.StepProgress01, Is.GreaterThan(0.9f));
+
+            SetPrivateField(stage, "stepElapsedSeconds", 9.9f);
+            EvaluateStepInput(stage, goodPickInput, 0.1f);
+            Assert.That(stage.CurrentStep, Is.EqualTo(SukiyakiStep.PickMeat));
+
+            SetPrivateField(stage, "stepElapsedSeconds", 10f);
+            EvaluateStepInput(stage, goodPickInput, 0.1f);
+            Assert.That(stage.CurrentStep, Is.EqualTo(SukiyakiStep.PutInBroth));
+            Assert.That(stage.LastStepCompletedAutomatically, Is.False);
+        }
+
+        [Test]
+        public void PutInBrothInputWaitsForMinimumClearSeconds()
+        {
+            var stage = CreateStage();
+            var goodBrothInput = new HashiInputFrame(
+                4f,
+                1f,
+                Vector3.zero,
+                Vector3.zero,
+                Quaternion.identity,
+                true,
+                0f);
+
+            stage.StartLevel();
+            AdvanceTo(stage, SukiyakiStep.PutInBroth);
+
+            EvaluateStepInput(stage, goodBrothInput, 2f);
+            Assert.That(stage.CurrentStep, Is.EqualTo(SukiyakiStep.PutInBroth));
+            Assert.That(stage.StepProgress01, Is.GreaterThan(0.9f));
+
+            SetPrivateField(stage, "stepElapsedSeconds", 9.9f);
+            EvaluateStepInput(stage, goodBrothInput, 0.1f);
+            Assert.That(stage.CurrentStep, Is.EqualTo(SukiyakiStep.PutInBroth));
+
+            SetPrivateField(stage, "stepElapsedSeconds", 10f);
+            EvaluateStepInput(stage, goodBrothInput, 0.1f);
+            Assert.That(stage.CurrentStep, Is.EqualTo(SukiyakiStep.FlipMeat));
+            Assert.That(stage.LastStepCompletedAutomatically, Is.False);
+        }
+
+        [Test]
+        public void StepTimerAdvancesMixEggPickMeatAndPutInBrothWithoutInput()
+        {
+            var stage = CreateStage();
+
+            stage.StartLevel();
+            stage.CompleteCurrentStep();
+            Assert.That(stage.CurrentStep, Is.EqualTo(SukiyakiStep.MixEgg));
+
+            AdvanceStepTimer(stage, 10f);
+            Assert.That(stage.CurrentStep, Is.EqualTo(SukiyakiStep.PickMeat));
+            Assert.That(stage.LastStepCompletedAutomatically, Is.True);
+
+            AdvanceStepTimer(stage, 10f);
+            Assert.That(stage.CurrentStep, Is.EqualTo(SukiyakiStep.PutInBroth));
+            Assert.That(stage.LastStepCompletedAutomatically, Is.True);
+
+            AdvanceStepTimer(stage, 9f);
+            Assert.That(stage.CurrentStep, Is.EqualTo(SukiyakiStep.PutInBroth));
+
+            AdvanceStepTimer(stage, 1f);
+            Assert.That(stage.CurrentStep, Is.EqualTo(SukiyakiStep.FlipMeat));
+            Assert.That(stage.LastStepCompletedAutomatically, Is.True);
+        }
+
+        [Test]
+        public void TimedDeliverToMouthCompletesLevel()
+        {
+            var stage = CreateStage();
+            var completed = false;
+
+            stage.Completed += _ => completed = true;
+
+            stage.StartLevel();
+            AdvanceTo(stage, SukiyakiStep.DeliverToMouth);
+
+            AdvanceStepTimer(stage, 6f);
+
+            Assert.That(stage.CurrentStep, Is.EqualTo(SukiyakiStep.Result));
+            Assert.That(completed, Is.True);
+            Assert.That(stage.CurrentResult.IsComplete, Is.True);
+            Assert.That(stage.CurrentResult.TotalScore, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void CareScoreRewardsStepQualityAndPenalizesDamage()
+        {
+            var cleanHighQuality = SukiyakiScoreCalculator.Care(0, 0f, 1f);
+            var roughLowQuality = SukiyakiScoreCalculator.Care(0, 1f, 0.2f);
+            var failed = SukiyakiScoreCalculator.Care(1, 0f, 1f);
+
+            Assert.That(cleanHighQuality, Is.GreaterThan(roughLowQuality));
+            Assert.That(cleanHighQuality, Is.GreaterThan(failed));
         }
 
         private SukiyakiStageController CreateStage()
@@ -220,6 +336,15 @@ namespace ChopChop.Tests.EditMode
                 BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.That(method, Is.Not.Null);
             method.Invoke(stage, new object[] { frame, deltaTime });
+        }
+
+        private static void AdvanceStepTimer(SukiyakiStageController stage, float deltaTime)
+        {
+            var method = typeof(SukiyakiStageController).GetMethod(
+                "AdvanceStepTimer",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(method, Is.Not.Null);
+            method.Invoke(stage, new object[] { deltaTime });
         }
 
         private static void SetPrivateField<TTarget, TValue>(TTarget target, string fieldName, TValue value)

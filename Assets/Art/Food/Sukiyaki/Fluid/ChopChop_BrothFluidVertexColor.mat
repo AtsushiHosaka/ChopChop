@@ -25,10 +25,10 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _LightWrap: 0.52
-    - _RimPower: 3.2
+    - _LightWrap: 0.68
+    - _RimPower: 2.4
     m_Colors:
-    - _RimColor: {r: 1, g: 0.55, b: 0.2, a: 0.2}
-    - _Tint: {r: 0.52, g: 0.22, b: 0.08, a: 1}
+    - _RimColor: {r: 1, g: 0.68, b: 0.32, a: 0.28}
+    - _Tint: {r: 0.36, g: 0.13, b: 0.045, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

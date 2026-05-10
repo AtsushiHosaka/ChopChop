@@ -33,6 +33,17 @@ namespace ChopChop.Levels.Sukiyaki
         [SerializeField] private SukiyakiStepTargetZone[] targetZones = Array.Empty<SukiyakiStepTargetZone>();
         [SerializeField] private bool automaticProgress = true;
         [SerializeField] private HashiStageMovementMode hashiMovementMode = HashiStageMovementMode.Auto;
+        [Min(0.1f)] [SerializeField] private float mixEggTimeLimitSeconds = 10f;
+        [Min(0.1f)] [SerializeField] private float pickMeatTimeLimitSeconds = 10f;
+        [Min(0.1f)] [SerializeField] private float putInBrothTimeLimitSeconds = 10f;
+        [Min(0.1f)] [SerializeField] private float flipMeatTimeLimitSeconds = 8f;
+        [Min(0.1f)] [SerializeField] private float dipEggTimeLimitSeconds = 6f;
+        [Min(0.1f)] [SerializeField] private float deliverToMouthTimeLimitSeconds = 6f;
+        [Min(0f)] [SerializeField] private float pickMeatMinimumClearSeconds = 10f;
+        [Min(0f)] [SerializeField] private float putInBrothMinimumClearSeconds = 10f;
+        [Min(0f)] [SerializeField] private float flipMeatMinimumClearSeconds = 2.4f;
+        [Min(0f)] [SerializeField] private float dipEggMinimumClearSeconds = 1.2f;
+        [Range(0f, 1f)] [SerializeField] private float timedCompletionFallbackQuality = 0.42f;
 
         // DeliverToMouth: 上げて引く食べるジェスチャーの閾値（Inspectorで調整可）
         // worldAccelY の単位はg（静止時 ≈ +1.0g）
@@ -45,6 +56,12 @@ namespace ChopChop.Levels.Sukiyaki
         private float roughness;
         private float stepProgress;
         private float stepGoalSeconds = 1f;
+        private float stepElapsedSeconds;
+        private float stepTimeLimitSeconds;
+        private float currentStepQualityTotal;
+        private float currentStepQualitySeconds;
+        private float completedStepQualityTotal;
+        private int completedScoredStepCount;
         private LevelRunResult result;
 
         private EatGesturePhase eatGesturePhase;
@@ -54,10 +71,14 @@ namespace ChopChop.Levels.Sukiyaki
         public SukiyakiStep CurrentStep { get; private set; } = SukiyakiStep.Calibration;
         public float ElapsedSeconds => IsRunning ? Time.time - levelStartTime : result.CompletionTime;
         public int FailureCount { get; private set; }
-        public float StepProgress01 => stepGoalSeconds <= 0f ? 0f : Mathf.Clamp01(stepProgress / stepGoalSeconds);
+        public float StepProgress01 => Mathf.Max(InputStepProgress01, TimedStepProgress01);
         public LevelRunResult CurrentResult => result;
         public bool IsCurrentTargetSatisfied => IsTargetSatisfiedFor(CurrentStep);
         public HashiInputProvider InputProvider => inputProvider;
+        public bool LastStepCompletedAutomatically { get; private set; }
+
+        private float InputStepProgress01 => stepGoalSeconds <= 0f ? 0f : Mathf.Clamp01(stepProgress / stepGoalSeconds);
+        private float TimedStepProgress01 => stepTimeLimitSeconds <= 0f ? 0f : Mathf.Clamp01(stepElapsedSeconds / stepTimeLimitSeconds);
 
         public event Action<SukiyakiStep> StepChanged;
         public event Action<SukiyakiStep> StepSucceeded;
@@ -82,6 +103,8 @@ namespace ChopChop.Levels.Sukiyaki
             calibrationStartTime = Time.time;
             roughness = 0f;
             FailureCount = 0;
+            completedStepQualityTotal = 0f;
+            completedScoredStepCount = 0;
             IsRunning = true;
             result = new LevelRunResult(0f, 0, 0, 0, false);
             SetStep(SukiyakiStep.Calibration);
@@ -107,12 +130,24 @@ namespace ChopChop.Levels.Sukiyaki
 
         public void CompleteCurrentStep()
         {
+            CompleteCurrentStep(false);
+        }
+
+        public void CompleteCurrentStepAutomatically()
+        {
+            CompleteCurrentStep(true);
+        }
+
+        private void CompleteCurrentStep(bool automaticAdvance)
+        {
             if (!IsRunning)
             {
                 return;
             }
 
             var completedStep = CurrentStep;
+            LastStepCompletedAutomatically = automaticAdvance;
+            RecordCompletedStepQuality(completedStep);
             switch (CurrentStep)
             {
                 case SukiyakiStep.Calibration:
@@ -156,17 +191,26 @@ namespace ChopChop.Levels.Sukiyaki
 
             if (CurrentStep == SukiyakiStep.Calibration && Time.time - calibrationStartTime >= calibrationSeconds)
             {
-                CompleteCurrentStep();
+                CompleteCurrentStepAutomatically();
             }
 
             if (meatTearController != null)
             {
-                roughness = Mathf.Max(roughness, meatTearController.Damage / 100f);
+                roughness = Mathf.Max(roughness, meatTearController.Damage01);
             }
 
-            if (automaticProgress && inputProvider != null && CurrentStep != SukiyakiStep.Calibration)
+            if (automaticProgress && CurrentStep != SukiyakiStep.Calibration && CurrentStep != SukiyakiStep.Result)
             {
-                EvaluateStepInput(inputProvider.CurrentFrame, Time.deltaTime);
+                var stepBeforeInput = CurrentStep;
+                if (inputProvider != null)
+                {
+                    EvaluateStepInput(inputProvider.CurrentFrame, Time.deltaTime);
+                }
+
+                if (CurrentStep == stepBeforeInput)
+                {
+                    AdvanceStepTimer(Time.deltaTime);
+                }
             }
 
             UpdateLiquidVisuals();
@@ -201,7 +245,7 @@ namespace ChopChop.Levels.Sukiyaki
                 completionTime,
                 FailureCount,
                 SukiyakiScoreCalculator.Speed(completionTime),
-                SukiyakiScoreCalculator.Care(FailureCount, roughness),
+                SukiyakiScoreCalculator.Care(FailureCount, roughness, AverageStepQuality01()),
                 true);
             IsRunning = false;
             SetStep(SukiyakiStep.Result);
@@ -213,6 +257,10 @@ namespace ChopChop.Levels.Sukiyaki
             CurrentStep = step;
             stepProgress = 0f;
             stepGoalSeconds = GoalSecondsFor(step);
+            stepElapsedSeconds = 0f;
+            stepTimeLimitSeconds = TimeLimitSecondsFor(step);
+            currentStepQualityTotal = 0f;
+            currentStepQualitySeconds = 0f;
             if (step == SukiyakiStep.DeliverToMouth)
             {
                 eatGesturePhase = EatGesturePhase.WaitingForLift;
@@ -227,9 +275,7 @@ namespace ChopChop.Levels.Sukiyaki
         {
             if (eggLiquidSurface != null)
             {
-                var eggMix01 = eggFluidMixMonitor != null && eggFluidMixMonitor.HasActiveEggFluid
-                    ? eggFluidMixMonitor.EggMix01
-                    : StepProgress01;
+                var eggMix01 = EggVisualMix01();
 
                 if (CurrentStep == SukiyakiStep.MixEgg)
                 {
@@ -238,21 +284,21 @@ namespace ChopChop.Levels.Sukiyaki
                 }
                 else
                 {
-                    eggLiquidSurface.SetMix(CurrentStep > SukiyakiStep.MixEgg ? 1f : 0f);
+                    eggLiquidSurface.SetMix(CurrentStep > SukiyakiStep.MixEgg ? 1f : eggMix01);
                     eggLiquidSurface.SetActivity(CurrentStep == SukiyakiStep.DipEgg ? 0.5f : 0.08f);
                 }
             }
 
             if (brothLiquidSurface != null)
             {
-                var brothActivity = 0.05f;
+                var brothActivity = 0.16f;
                 if (CurrentStep == SukiyakiStep.PutInBroth)
                 {
-                    brothActivity = Mathf.Lerp(0.25f, 1f, StepProgress01);
+                    brothActivity = Mathf.Lerp(0.45f, 1f, StepProgress01);
                 }
                 else if (CurrentStep == SukiyakiStep.FlipMeat)
                 {
-                    brothActivity = 0.35f;
+                    brothActivity = 0.55f;
                 }
 
                 brothLiquidSurface.SetActivity(brothActivity);
@@ -297,16 +343,19 @@ namespace ChopChop.Levels.Sukiyaki
 
             if (CurrentStep == SukiyakiStep.DeliverToMouth)
             {
+                AccumulateStepQuality(QualityFor(CurrentStep, frame), deltaTime);
                 EvaluateEatGesture(frame);
                 return;
             }
 
             var quality = QualityFor(CurrentStep, frame);
             var targetSatisfied = IsTargetSatisfiedFor(CurrentStep);
+            var effectiveQuality = targetSatisfied ? quality : 0f;
             if (CurrentStep == SukiyakiStep.MixEgg && eggFluidMixMonitor != null && eggFluidMixMonitor.HasActiveEggFluid)
             {
+                effectiveQuality = Mathf.Max(effectiveQuality, eggFluidMixMonitor.EggMix01);
                 stepProgress = targetSatisfied
-                    ? Mathf.Clamp01(eggFluidMixMonitor.EggMix01) * stepGoalSeconds
+                    ? Mathf.Max(stepProgress, Mathf.Clamp01(eggFluidMixMonitor.EggMix01) * stepGoalSeconds)
                     : Mathf.Max(0f, stepProgress - deltaTime * 0.35f);
             }
             else
@@ -315,9 +364,37 @@ namespace ChopChop.Levels.Sukiyaki
                 stepProgress = Mathf.Clamp(stepProgress + progressDelta, 0f, stepGoalSeconds);
             }
 
+            AccumulateStepQuality(effectiveQuality, deltaTime);
+
             if (stepProgress >= stepGoalSeconds)
             {
-                CompleteCurrentStep();
+                if (CanCompleteCurrentStepFromInput())
+                {
+                    CompleteCurrentStep();
+                }
+                else
+                {
+                    stepProgress = stepGoalSeconds * 0.995f;
+                }
+            }
+        }
+
+        private void AdvanceStepTimer(float deltaTime)
+        {
+            if (deltaTime <= 0f || !IsScoredStep(CurrentStep) || stepTimeLimitSeconds <= 0f)
+            {
+                return;
+            }
+
+            stepElapsedSeconds += deltaTime;
+            if (CurrentStep == SukiyakiStep.MixEgg)
+            {
+                stepProgress = Mathf.Max(stepProgress, TimedStepProgress01 * stepGoalSeconds);
+            }
+
+            if (stepElapsedSeconds >= stepTimeLimitSeconds)
+            {
+                CompleteCurrentStepAutomatically();
             }
         }
 
@@ -340,6 +417,49 @@ namespace ChopChop.Levels.Sukiyaki
                 default:
                     return 1f;
             }
+        }
+
+        private float TimeLimitSecondsFor(SukiyakiStep step)
+        {
+            switch (step)
+            {
+                case SukiyakiStep.MixEgg:
+                    return mixEggTimeLimitSeconds;
+                case SukiyakiStep.PickMeat:
+                    return pickMeatTimeLimitSeconds;
+                case SukiyakiStep.PutInBroth:
+                    return putInBrothTimeLimitSeconds;
+                case SukiyakiStep.FlipMeat:
+                    return flipMeatTimeLimitSeconds;
+                case SukiyakiStep.DipEgg:
+                    return dipEggTimeLimitSeconds;
+                case SukiyakiStep.DeliverToMouth:
+                    return deliverToMouthTimeLimitSeconds;
+                default:
+                    return 0f;
+            }
+        }
+
+        private float MinimumClearSecondsFor(SukiyakiStep step)
+        {
+            switch (step)
+            {
+                case SukiyakiStep.PickMeat:
+                    return pickMeatMinimumClearSeconds;
+                case SukiyakiStep.PutInBroth:
+                    return putInBrothMinimumClearSeconds;
+                case SukiyakiStep.FlipMeat:
+                    return flipMeatMinimumClearSeconds;
+                case SukiyakiStep.DipEgg:
+                    return dipEggMinimumClearSeconds;
+                default:
+                    return 0f;
+            }
+        }
+
+        private bool CanCompleteCurrentStepFromInput()
+        {
+            return stepElapsedSeconds >= MinimumClearSecondsFor(CurrentStep);
         }
 
         private static float QualityFor(SukiyakiStep step, HashiInputFrame frame)
@@ -398,10 +518,67 @@ namespace ChopChop.Levels.Sukiyaki
                     }
                     if (worldAccelY < pullbackAccelThreshold)
                     {
+                        stepProgress = stepGoalSeconds;
                         CompleteCurrentStep();
                     }
                     break;
             }
+        }
+
+        private float EggVisualMix01()
+        {
+            var visualMix01 = CurrentStep > SukiyakiStep.MixEgg ? 1f : StepProgress01;
+            if (eggFluidMixMonitor != null)
+            {
+                eggFluidMixMonitor.SetPresentationMixFloor(CurrentStep >= SukiyakiStep.MixEgg ? visualMix01 : 0f);
+                if (eggFluidMixMonitor.HasActiveEggFluid)
+                {
+                    visualMix01 = Mathf.Max(visualMix01, eggFluidMixMonitor.EggMix01);
+                }
+            }
+
+            return Mathf.Clamp01(visualMix01);
+        }
+
+        private void AccumulateStepQuality(float quality01, float deltaTime)
+        {
+            if (deltaTime <= 0f || !IsScoredStep(CurrentStep))
+            {
+                return;
+            }
+
+            currentStepQualityTotal += Mathf.Clamp01(quality01) * deltaTime;
+            currentStepQualitySeconds += deltaTime;
+        }
+
+        private void RecordCompletedStepQuality(SukiyakiStep step)
+        {
+            if (!IsScoredStep(step))
+            {
+                return;
+            }
+
+            var quality01 = currentStepQualitySeconds > Mathf.Epsilon
+                ? currentStepQualityTotal / currentStepQualitySeconds
+                : timedCompletionFallbackQuality;
+            quality01 = Mathf.Max(quality01, InputStepProgress01 * 0.85f);
+            if (step == SukiyakiStep.MixEgg)
+            {
+                quality01 = Mathf.Max(quality01, EggVisualMix01() * 0.9f);
+            }
+
+            completedStepQualityTotal += Mathf.Clamp01(quality01);
+            completedScoredStepCount++;
+        }
+
+        private float AverageStepQuality01()
+        {
+            if (completedScoredStepCount <= 0)
+            {
+                return Mathf.Clamp01(timedCompletionFallbackQuality);
+            }
+
+            return Mathf.Clamp01(completedStepQualityTotal / completedScoredStepCount);
         }
 
         private static float Roughness(HashiInputFrame frame)
@@ -409,6 +586,11 @@ namespace ChopChop.Levels.Sukiyaki
             var angularRoughness = Mathf.InverseLerp(80f, 360f, frame.GyroDegreesPerSecond.magnitude);
             var accelerationRoughness = Mathf.InverseLerp(2f, 8f, frame.Acceleration.magnitude);
             return Mathf.Clamp01(Mathf.Max(angularRoughness, accelerationRoughness));
+        }
+
+        private static bool IsScoredStep(SukiyakiStep step)
+        {
+            return step >= SukiyakiStep.MixEgg && step <= SukiyakiStep.DeliverToMouth;
         }
 
         public bool IsTargetSatisfiedFor(SukiyakiStep step)

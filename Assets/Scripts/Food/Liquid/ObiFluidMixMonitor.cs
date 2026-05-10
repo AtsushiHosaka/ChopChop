@@ -12,14 +12,16 @@ namespace ChopChop.Food.Liquid
         [SerializeField] private ObiEmitter brothEmitter;
         [SerializeField] private Color eggWhiteColor = new Color(1f, 0.93f, 0.72f, 1f);
         [SerializeField] private Color eggYolkColor = new Color(1f, 0.58f, 0.05f, 1f);
-        [SerializeField] private Color mixedEggColor = new Color(1f, 0.78f, 0.18f, 1f);
-        [SerializeField] private Color brothColor = new Color(0.45f, 0.17f, 0.06f, 1f);
+        [SerializeField] private Color mixedEggColor = new Color(1f, 0.9f, 0.22f, 1f);
+        [SerializeField] private Color brothColor = new Color(0.36f, 0.13f, 0.045f, 1f);
         [SerializeField] private Transform[] stirrers = new Transform[0];
         [Min(0.01f)] [SerializeField] private float stirRadius = 0.16f;
         [Min(0f)] [SerializeField] private float stirredDiffusionRate = 3.5f;
         [Min(0f)] [SerializeField] private float passiveDiffusionRate = 0.015f;
         [Min(0f)] [SerializeField] private float minimumStirSpeed = 0.03f;
         [Min(0.001f)] [SerializeField] private float maximumStirSpeed = 0.75f;
+        [Range(0f, 1f)] [SerializeField] private float presentationMixFloor01;
+        [Range(0f, 1f)] [SerializeField] private float mixedColorBlend = 0.85f;
 
         private float eggMix01;
         private int activeEggParticleCount;
@@ -30,8 +32,14 @@ namespace ChopChop.Food.Liquid
         private float[] stirrerSpeeds = new float[0];
 
         public float EggMix01 => eggMix01;
+        public float VisualEggMix01 => Mathf.Clamp01(Mathf.Max(eggMix01, presentationMixFloor01));
         public int ActiveEggParticleCount => activeEggParticleCount;
         public bool HasActiveEggFluid => activeEggParticleCount > 0 && hasWhiteParticles && hasYolkParticles;
+
+        public void SetPresentationMixFloor(float mix01)
+        {
+            presentationMixFloor01 = Mathf.Clamp01(mix01);
+        }
 
         public void SetStirrers(params Transform[] activeStirrers)
         {
@@ -361,7 +369,7 @@ namespace ChopChop.Food.Liquid
 
                 var yolk01 = ReadYolk01(emitter, solverIndex);
                 var particleColor = Color.Lerp(eggWhiteColor, eggYolkColor, yolk01);
-                emitter.solver.colors[solverIndex] = Color.Lerp(particleColor, mixedEggColor, eggMix01 * 0.45f);
+                emitter.solver.colors[solverIndex] = Color.Lerp(particleColor, mixedEggColor, VisualEggMix01 * mixedColorBlend);
             }
 
             emitter.solver.colors.Upload(true);

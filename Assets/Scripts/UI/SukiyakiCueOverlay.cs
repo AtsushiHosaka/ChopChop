@@ -16,7 +16,7 @@ namespace ChopChop.UI
         [SerializeField] private float popScale = 0.06f;
         [SerializeField] private float popSeconds = 0.22f;
 
-        private static readonly Color SuccessColor = new Color(0.18f, 0.85f, 0.38f, 1f);
+        private static readonly Color SuccessColor = new Color(0.02f, 0.018f, 0.015f, 1f);
         private static readonly Color FailureColor = new Color(1f, 0.55f, 0.12f, 1f);
 
         private GameLocalization localization;
@@ -225,7 +225,9 @@ namespace ChopChop.UI
             feedbackText.resizeTextMinSize = 28;
             feedbackText.resizeTextMaxSize = 72;
             UiFactory.Stretch(feedbackText.rectTransform, 0f);
-            feedbackText.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
+            var shadow = feedbackText.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(1f, 0.94f, 0.78f, 0.62f);
+            shadow.effectDistance = new Vector2(3f, -3f);
         }
 
         private void UpdateFeedback()
@@ -327,14 +329,18 @@ namespace ChopChop.UI
         {
             if (step == SukiyakiStep.Calibration || step == SukiyakiStep.Result) return;
             if (failureShown) return;
-            ShowFeedback(localization.Text(LocalizationKeys.Feedback.Nice), SuccessColor);
+            var feedbackKey = stageController != null && stageController.LastStepCompletedAutomatically
+                ? LocalizationKeys.Feedback.Next
+                : LocalizationKeys.Feedback.Nice;
+            var fallback = feedbackKey == LocalizationKeys.Feedback.Next ? "次へ！" : "いいね！";
+            ShowFeedback(LocalizedText(feedbackKey, fallback), SuccessColor);
         }
 
         private void HandleStepFailed(SukiyakiStep step)
         {
             if (failureShown) return;
             failureShown = true;
-            ShowFeedback(localization.Text(LocalizationKeys.Feedback.Failed), FailureColor);
+            ShowFeedback(LocalizedText(LocalizationKeys.Feedback.Failed, "ミス！"), FailureColor);
         }
 
         private string GetStepText(SukiyakiStep step)
@@ -371,7 +377,13 @@ namespace ChopChop.UI
 
         private string LocalizedText(string key, string fallback)
         {
-            return localization != null ? localization.Text(key) : fallback;
+            var text = localization != null ? localization.Text(key) : fallback;
+            if (string.IsNullOrWhiteSpace(text) || text == key || text.IndexOf("no translation", System.StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return fallback;
+            }
+
+            return text;
         }
     }
 }

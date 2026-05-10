@@ -11,12 +11,12 @@ namespace ChopChop.Levels.Sukiyaki
         [SerializeField] private HashiInputProvider inputProvider;
         [SerializeField] private SukiyakiStageController stageController;
         [SerializeField] private float calibrationSeconds = 3.2f;
-        [SerializeField] private float mixEggSeconds = 3.4f;
-        [SerializeField] private float pickMeatSeconds = 1.4f;
-        [SerializeField] private float putInBrothSeconds = 2f;
-        [SerializeField] private float flipMeatSeconds = 2.4f;
-        [SerializeField] private float dipEggSeconds = 1.7f;
-        [SerializeField] private float deliverToMouthSeconds = 1.8f;
+        [SerializeField] private float mixEggSeconds = 10f;
+        [SerializeField] private float pickMeatSeconds = 10f;
+        [SerializeField] private float putInBrothSeconds = 10f;
+        [SerializeField] private float flipMeatSeconds = 8f;
+        [SerializeField] private float dipEggSeconds = 6f;
+        [SerializeField] private float deliverToMouthSeconds = 6f;
 
         private SukiyakiStep observedStep;
         private float stepStartedAt;
@@ -85,7 +85,7 @@ namespace ChopChop.Levels.Sukiyaki
 
             if (Time.time - stepStartedAt >= DurationFor(stageController.CurrentStep))
             {
-                stageController.CompleteCurrentStep();
+                stageController.CompleteCurrentStepAutomatically();
             }
         }
 

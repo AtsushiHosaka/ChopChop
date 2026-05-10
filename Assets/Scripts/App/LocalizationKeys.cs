@@ -68,6 +68,7 @@ namespace ChopChop.App
         public static class Feedback
         {
             public const string Nice = "feedback.nice";
+            public const string Next = "feedback.next";
             public const string Failed = "feedback.failed";
         }
     }

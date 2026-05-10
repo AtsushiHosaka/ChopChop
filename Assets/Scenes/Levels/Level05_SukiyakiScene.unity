@@ -1382,7 +1382,7 @@ Transform:
   m_GameObject: {fileID: 284334245}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.42, y: 0.014, z: -0.28}
+  m_LocalPosition: {x: 0.72, y: 0.014, z: -0.28}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1825,19 +1825,19 @@ MonoBehaviour:
     fieldOfView: 40
     moveSeconds: 0.85
   - step: 2
-    offset: {x: -0.08, y: 0.62, z: -0.92}
-    lookAtOffset: {x: 0, y: 0.1, z: 0}
-    fieldOfView: 35
+    offset: {x: 0.02, y: 0.66, z: -1}
+    lookAtOffset: {x: 0, y: 0.12, z: 0}
+    fieldOfView: 36
     moveSeconds: 0.85
   - step: 3
-    offset: {x: -0.08, y: 0.64, z: -0.94}
-    lookAtOffset: {x: 0, y: 0.12, z: 0}
-    fieldOfView: 35
+    offset: {x: 0, y: 0.7, z: -1.05}
+    lookAtOffset: {x: 0, y: 0.14, z: 0}
+    fieldOfView: 36
     moveSeconds: 0.85
   - step: 4
-    offset: {x: -0.22, y: 0.66, z: -0.92}
-    lookAtOffset: {x: 0, y: 0.12, z: 0}
-    fieldOfView: 34
+    offset: {x: 0, y: 0.72, z: -1.05}
+    lookAtOffset: {x: 0, y: 0.14, z: 0}
+    fieldOfView: 35
     moveSeconds: 0.85
   - step: 5
     offset: {x: 0.08, y: 0.78, z: -1.35}
@@ -3134,12 +3134,12 @@ MonoBehaviour:
   inputProvider: {fileID: 1147880874}
   stageController: {fileID: 1454876607}
   calibrationSeconds: 3.2
-  mixEggSeconds: 3.4
-  pickMeatSeconds: 1.4
-  putInBrothSeconds: 2
-  flipMeatSeconds: 2.4
-  dipEggSeconds: 1.7
-  deliverToMouthSeconds: 1.8
+  mixEggSeconds: 10
+  pickMeatSeconds: 10
+  putInBrothSeconds: 10
+  flipMeatSeconds: 8
+  dipEggSeconds: 6
+  deliverToMouthSeconds: 6
 --- !u!1 &719299746
 GameObject:
   m_ObjectHideFlags: 0
@@ -7375,8 +7375,8 @@ MonoBehaviour:
   brothEmitter: {fileID: 1732163516}
   eggWhiteColor: {r: 1, g: 0.93, b: 0.72, a: 1}
   eggYolkColor: {r: 1, g: 0.58, b: 0.05, a: 1}
-  mixedEggColor: {r: 1, g: 0.78, b: 0.18, a: 1}
-  brothColor: {r: 0.45, g: 0.17, b: 0.06, a: 1}
+  mixedEggColor: {r: 1, g: 0.9, b: 0.22, a: 1}
+  brothColor: {r: 0.36, g: 0.13, b: 0.045, a: 1}
   stirrers:
   - {fileID: 1478005109}
   - {fileID: 1851624397}
@@ -7385,6 +7385,8 @@ MonoBehaviour:
   passiveDiffusionRate: 0.015
   minimumStirSpeed: 0.03
   maximumStirSpeed: 0.75
+  presentationMixFloor01: 0
+  mixedColorBlend: 0.85
 --- !u!1 &1405152489
 GameObject:
   m_ObjectHideFlags: 0
@@ -7595,11 +7597,22 @@ MonoBehaviour:
   inputProvider: {fileID: 1147880874}
   railMover: {fileID: 1147880872}
   eggLiquidSurface: {fileID: 1959975400}
-  brothLiquidSurface: {fileID: 1518954016}
+  brothLiquidSurface: {fileID: 0}
   eggFluidMixMonitor: {fileID: 1405094642}
   targetZones: []
   automaticProgress: 1
   hashiMovementMode: 3
+  mixEggTimeLimitSeconds: 10
+  pickMeatTimeLimitSeconds: 10
+  putInBrothTimeLimitSeconds: 10
+  flipMeatTimeLimitSeconds: 8
+  dipEggTimeLimitSeconds: 6
+  deliverToMouthTimeLimitSeconds: 6
+  pickMeatMinimumClearSeconds: 10
+  putInBrothMinimumClearSeconds: 10
+  flipMeatMinimumClearSeconds: 2.4
+  dipEggMinimumClearSeconds: 1.2
+  timedCompletionFallbackQuality: 0.42
 --- !u!4 &1454876608
 Transform:
   m_ObjectHideFlags: 0
@@ -8536,7 +8549,7 @@ Transform:
   m_GameObject: {fileID: 1638884851}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.68, y: 0.012, z: -0.32}
+  m_LocalPosition: {x: -0.75, y: 0.012, z: -0.52}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -8668,7 +8681,7 @@ Transform:
   m_GameObject: {fileID: 1673978848}
   serializedVersion: 2
   m_LocalRotation: {x: 0.53729963, y: -0, z: -0, w: 0.8433914}
-  m_LocalPosition: {x: -0.68, y: 1.152, z: -0.75}
+  m_LocalPosition: {x: -0.75, y: 1.152, z: -0.95}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8856,7 +8869,7 @@ MonoBehaviour:
     label: Raw Meat
     stationRoot: {fileID: 1638884852}
     waypoint: {fileID: 1673978849}
-    position: {x: -0.68, y: 0.012, z: -0.32}
+    position: {x: -0.75, y: 0.012, z: -0.52}
     eulerAngles: {x: -0, y: 0, z: 0}
     waypointOffset: {x: 0, y: 1.14, z: -0.43}
     waypointEulerAngles: {x: 65, y: -0, z: -0}
@@ -8864,7 +8877,7 @@ MonoBehaviour:
     label: Broth
     stationRoot: {fileID: 284334246}
     waypoint: {fileID: 1901421049}
-    position: {x: 0.42, y: 0.014, z: -0.28}
+    position: {x: 0.72, y: 0.014, z: -0.28}
     eulerAngles: {x: -0, y: 0, z: 0}
     waypointOffset: {x: 0, y: 1.17, z: -0.4}
     waypointEulerAngles: {x: 65, y: -0, z: -0}
@@ -9021,8 +9034,8 @@ Transform:
   m_GameObject: {fileID: 1732163512}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.084, z: 0}
-  m_LocalScale: {x: 0.145, y: 0.0055, z: 0.074}
+  m_LocalPosition: {x: 0, y: 0.076, z: 0}
+  m_LocalScale: {x: 0.13, y: 0.0075, z: 0.07}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2056808501}
@@ -9083,7 +9096,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Obi::Obi.ObiEmitterShapeCube
   emitter: {fileID: 1732163516}
-  color: {r: 0.52, g: 0.22, b: 0.08, a: 1}
+  color: {r: 0.36, g: 0.13, b: 0.045, a: 1}
   particleSize: 0.02583394
   distribution:
   - position: {x: -0.2025, y: -0.018, z: -0.146, w: 0}
@@ -12033,7 +12046,7 @@ Transform:
   m_GameObject: {fileID: 1901421048}
   serializedVersion: 2
   m_LocalRotation: {x: 0.53729963, y: -0, z: -0, w: 0.8433914}
-  m_LocalPosition: {x: 0.42, y: 1.184, z: -0.68}
+  m_LocalPosition: {x: 0.72, y: 1.184, z: -0.68}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -12593,19 +12606,19 @@ MonoBehaviour:
     fieldOfView: 40
     moveSeconds: 0.85
   - step: 2
-    offset: {x: -0.08, y: 0.62, z: -0.92}
-    lookAtOffset: {x: 0, y: 0.1, z: 0}
-    fieldOfView: 35
+    offset: {x: 0.02, y: 0.66, z: -1}
+    lookAtOffset: {x: 0, y: 0.12, z: 0}
+    fieldOfView: 36
     moveSeconds: 0.85
   - step: 3
-    offset: {x: -0.08, y: 0.64, z: -0.94}
-    lookAtOffset: {x: 0, y: 0.12, z: 0}
-    fieldOfView: 35
+    offset: {x: 0, y: 0.7, z: -1.05}
+    lookAtOffset: {x: 0, y: 0.14, z: 0}
+    fieldOfView: 36
     moveSeconds: 0.85
   - step: 4
-    offset: {x: -0.22, y: 0.66, z: -0.92}
-    lookAtOffset: {x: 0, y: 0.12, z: 0}
-    fieldOfView: 34
+    offset: {x: 0, y: 0.72, z: -1.05}
+    lookAtOffset: {x: 0, y: 0.14, z: 0}
+    fieldOfView: 35
     moveSeconds: 0.85
   - step: 5
     offset: {x: 0.08, y: 0.78, z: -1.35}

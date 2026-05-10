@@ -25,13 +25,13 @@ namespace ChopChop.Levels.Sukiyaki
 
         [SerializeField] private StagePoint rawMeat = new StagePoint(
             "Raw Meat",
-            new Vector3(-0.45f, 0.005f, -0.28f),
-            new Vector3(0f, 0.935f, -0.47f));
+            new Vector3(-0.75f, 0.005f, -0.52f),
+            new Vector3(0f, 1.14f, -0.43f));
 
         [SerializeField] private StagePoint broth = new StagePoint(
             "Broth",
-            new Vector3(0.15f, 0.005f, 0.08f),
-            new Vector3(0f, 0.955f, -0.38f));
+            new Vector3(0.72f, 0.005f, -0.28f),
+            new Vector3(0f, 1.17f, -0.4f));
 
         [SerializeField] private StagePoint flip = new StagePoint(
             "Flip",

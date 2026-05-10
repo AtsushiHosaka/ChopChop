@@ -28,6 +28,9 @@ namespace ChopChop.Food.Meat
         public MeatTearProfile TearProfile => tearProfile;
         public MeatTearDriverBehaviour TearDriver => tearDriver;
         public float Damage { get; private set; }
+        public float Damage01 => tearProfile != null && tearProfile.durability > 0f
+            ? Mathf.Clamp01(Damage / tearProfile.durability)
+            : Mathf.Clamp01(Damage / 100f);
         public MeatStressFrame LastStressFrame { get; private set; } = MeatStressFrame.None;
         public bool IsTorn => MeatState == MeatState.Torn;
 
