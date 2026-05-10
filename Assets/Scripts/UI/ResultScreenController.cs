@@ -165,7 +165,7 @@ namespace ChopChop.UI
             UiFactory.SetSize(levelSelectButton.GetComponent<RectTransform>(), 320f, 96f);
             levelSelectText = UiFactory.CreateText(levelSelectButton.transform, "Level Select Label", 28, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.18f, 0.1f, 0.05f, 1f));
             UiFactory.Stretch(levelSelectText.rectTransform, 8f);
-            levelSelectButton.onClick.AddListener(navigator.LoadLevelSelect);
+            levelSelectButton.onClick.AddListener(navigator.LoadStart);
 
             localization.LanguageChanged += UpdateTexts;
             UpdateTexts();
@@ -184,7 +184,7 @@ namespace ChopChop.UI
             titleText.text = localization.Text(LocalizationKeys.Result.Title);
             totalLabelText.text = localization.Text(LocalizationKeys.Result.Total);
             retryText.text = localization.Text(LocalizationKeys.Result.Retry);
-            levelSelectText.text = localization.Text(LocalizationKeys.Result.LevelSelect);
+            levelSelectText.text = localization.Text(LocalizationKeys.App.Back);
 
             if (hasVersusResult)
             {

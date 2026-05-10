@@ -81,14 +81,14 @@ namespace ChopChop.UI
             bannerGroup.blocksRaycasts = false;
             bannerGroup.interactable = false;
 
-            var backdropRect = UiFactory.CreatePanel(bg.transform, "Banner Backdrop",
-                new Color(0.06f, 0.02f, 0.01f, 0.52f));
-            UiFactory.Stretch(backdropRect, 0f);
-            backdropRect.GetComponent<Image>().raycastTarget = false;
-
-            bannerText = UiFactory.CreateText(bg.transform, "Banner Text", 44, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.97f, 0.90f, 0.78f, 1f));
+            bannerText = UiFactory.CreateText(bg.transform, "Banner Text", 50, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.99f, 0.93f, 0.82f, 1f));
             UiFactory.Stretch(bannerText.rectTransform, 8f);
-            bannerText.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.65f);
+            var outline = bannerText.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0.72f, 0.14f, 0.10f, 1f);
+            outline.effectDistance = new Vector2(3f, -3f);
+            var shadow = bannerText.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0.18f, 0.05f, 0.03f, 0.45f);
+            shadow.effectDistance = new Vector2(2f, -2f);
         }
 
         private void UpdateBannerPop()
