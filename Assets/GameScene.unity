@@ -147,7 +147,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: 
   m_UsePipelineSettings: 1
   m_AdditionalLightsShadowResolutionTier: 2
@@ -255,6 +255,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 695365505}
+  - component: {fileID: 695365506}
   m_Layer: 0
   m_Name: Hashi
   m_TagString: Untagged
@@ -279,6 +280,29 @@ Transform:
   - {fileID: 866015870}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &695365506
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 695365504}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 297d3751868f474a949b61f39c9824b8, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ChopChop.BLE.HashiBleController
+  lowerChopstick: {fileID: 1615578954}
+  upperChopstick: {fileID: 866015870}
+  deviceNameFilter: Dual_IMU_ESP32
+  serviceUuid: 12345678-1234-1234-1234-1234567890ab
+  characteristicUuid: abcd1234-5678-90ab-cdef-1234567890ab
+  gyroSensitivity: 1
+  accelerometerCorrection: 0.35
+  smoothing: 12
+  openingAxis: {x: 0, y: 0, z: 1}
+  staleWarningSeconds: 2
+  logParsedSamples: 0
 --- !u!1 &866015869
 GameObject:
   m_ObjectHideFlags: 0

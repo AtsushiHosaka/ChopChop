@@ -138,19 +138,11 @@ namespace ChopChop.BLE
 
         internal static HashiBleSample Create(HashiBlePayload payload)
         {
-            var hostNow = HashiBleClock.NowSeconds;
-            var unityNow = Time.realtimeSinceStartupAsDouble;
-            var receivedRealtime = unityNow;
-            if (payload.HostTimeSeconds > 0.0 && hostNow >= payload.HostTimeSeconds)
-            {
-                receivedRealtime = unityNow - (hostNow - payload.HostTimeSeconds);
-            }
-
             return new HashiBleSample
             {
                 RawJson = payload.Text ?? string.Empty,
-                hostTimeSeconds = payload.HostTimeSeconds > 0.0 ? payload.HostTimeSeconds : hostNow,
-                realtimeReceived = (float)Math.Max(0.0, receivedRealtime),
+                hostTimeSeconds = payload.HostTimeSeconds > 0.0 ? payload.HostTimeSeconds : HashiBleClock.NowSeconds,
+                realtimeReceived = Time.realtimeSinceStartup,
                 sequence = unchecked(++nextSequence),
                 hasSequence = false
             };

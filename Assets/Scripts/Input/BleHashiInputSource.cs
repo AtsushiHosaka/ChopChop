@@ -70,8 +70,6 @@ namespace ChopChop.Input
             parentNeutralMotionSource = HashiImuMappingRuntime.MotionSource;
             nextReconnectAttemptAt = 0f;
             reconnectAttemptCount = 0;
-            HashiImuMappingRuntime.ClearIndependentNeutral();
-            HashiImuMappingRuntime.ClearHardwarePosition();
 
             if (!TryClaimRuntimeLock())
             {
@@ -121,9 +119,9 @@ namespace ChopChop.Input
                 return;
             }
 
-            while (receiver.TryDequeuePayload(out var payload))
+            while (receiver.TryDequeueRawPayload(out var rawPayload))
             {
-                if (!HashiBleSampleParser.TryParse(payload, out var sample, out var error))
+                if (!HashiBleSampleParser.TryParse(rawPayload, out var sample, out var error))
                 {
                     LogMalformedPayload(error);
                     continue;
@@ -161,26 +159,12 @@ namespace ChopChop.Input
                     rotation = ApplyAccelerometerCorrection(rotation, acceleration, gyro);
                 }
 
-                if (HashiImuMappingRuntime.UseIndependentImuPose && (sample.HasImu1 || sample.HasImu2))
-                {
-                    HashiImuMappingRuntime.UpdateIndependentRotations(
-                        sample,
-                        rotationDeltaTime > 0f ? rotationDeltaTime : deltaTime,
-                        Vector3.forward,
-                        out _,
-                        out _);
-                }
-
                 var theta = ResolveTheta(sample, CurrentFrame.ThetaDegrees);
                 var pinch = sample.HasPinch
                     ? Mathf.InverseLerp(0f, 200f, sample.PinchValue)
                     : Mathf.InverseLerp(40f, 5f, theta);
                 var localPosition = CurrentFrame.LocalPosition;
-                if (HashiImuMappingRuntime.UpdateHardwarePosition(
-                    sample,
-                    rotationDeltaTime > 0f ? rotationDeltaTime : deltaTime,
-                    out var hardwarePosition,
-                    out _))
+                if (HashiImuMappingRuntime.UpdateHardwarePosition(sample, deltaTime, out var hardwarePosition, out _))
                 {
                     localPosition = hardwarePosition;
                 }

@@ -82,6 +82,7 @@ namespace ChopChop.BLE
     public static class HashiImuMappingRuntime
     {
         public const float Esp32Lsm6RawAccelerationToG = HashiBleDefaults.RawAccelerationToG;
+        private const float RelativeOpeningReleaseOpenSuppressionDps = 4f;
 
         public static bool UseTunedTheta { get; set; }
         public static HashiImuThetaMode ThetaMode { get; set; } = HashiImuThetaMode.AccelerationAngle;
@@ -120,9 +121,9 @@ namespace ChopChop.BLE
         public static float OpeningAngleMaxDegrees { get; set; } = 35f;
         public static float OpeningAngleStaticJumpRejectDegrees { get; set; } = 12f;
         public static float OpeningAngleStaticVelocityThresholdDps { get; set; } = 20f;
-        public static float RelativeOpeningAccelerationWeight { get; set; } = 0.35f;
-        public static float RelativeOpeningGyroFullWeightBelowDps { get; set; } = 140f;
-        public static float RelativeOpeningGyroZeroWeightAboveDps { get; set; } = 900f;
+        public static float RelativeOpeningAccelerationWeight { get; set; } = 0.9f;
+        public static float RelativeOpeningGyroFullWeightBelowDps { get; set; } = 60f;
+        public static float RelativeOpeningGyroZeroWeightAboveDps { get; set; } = 180f;
         public static float MaxBleSampleAgeSeconds { get; set; } = 0.6f;
         public static float BleResumeSettleSeconds { get; set; } = 0.2f;
         public static float ChopstickOpeningSeparationPerDegree { get; set; } = 0.0015f;
@@ -133,7 +134,7 @@ namespace ChopChop.BLE
         public static HashiPositionTrackingMode PositionTrackingMode { get; set; } = HashiPositionTrackingMode.AccelerationDirect;
         public static HashiImuMotionSource PositionMotionSource { get; set; } = HashiImuMotionSource.Average;
         public static Vector3 PositionInputEuler { get; set; } = Vector3.zero;
-        public static Vector3 PositionAxisSigns { get; set; } = Vector3.one;
+        public static Vector3 PositionAxisSigns { get; set; } = new Vector3(1f, 1f, -1f);
         public static Vector3 PositionAccelerationScale { get; set; } = new Vector3(0.55f, 0.4f, 0.4f);
         public static Vector3 PositionMaxOffset { get; set; } = new Vector3(0.28f, 0.22f, 0.22f);
         public static float PositionDeadzoneG { get; set; } = 0.08f;
@@ -213,9 +214,9 @@ namespace ChopChop.BLE
             OpeningAngleMaxDegrees = 35f;
             OpeningAngleStaticJumpRejectDegrees = 12f;
             OpeningAngleStaticVelocityThresholdDps = 20f;
-            RelativeOpeningAccelerationWeight = 0.35f;
-            RelativeOpeningGyroFullWeightBelowDps = 140f;
-            RelativeOpeningGyroZeroWeightAboveDps = 900f;
+            RelativeOpeningAccelerationWeight = 0.9f;
+            RelativeOpeningGyroFullWeightBelowDps = 60f;
+            RelativeOpeningGyroZeroWeightAboveDps = 180f;
             MaxBleSampleAgeSeconds = 0.6f;
             BleResumeSettleSeconds = 0.2f;
             ChopstickOpeningSeparationPerDegree = 0.0015f;
@@ -226,7 +227,7 @@ namespace ChopChop.BLE
             PositionTrackingMode = HashiPositionTrackingMode.AccelerationDirect;
             PositionMotionSource = HashiImuMotionSource.Average;
             PositionInputEuler = Vector3.zero;
-            PositionAxisSigns = Vector3.one;
+            PositionAxisSigns = new Vector3(1f, 1f, -1f);
             PositionAccelerationScale = new Vector3(0.55f, 0.4f, 0.4f);
             PositionMaxOffset = new Vector3(0.28f, 0.22f, 0.22f);
             PositionDeadzoneG = 0.08f;
@@ -656,43 +657,6 @@ namespace ChopChop.BLE
             return upperOk & lowerOk;
         }
 
-        public static bool TryGetCurrentIndependentRotations(
-            out Quaternion upperRotation,
-            out Quaternion lowerRotation)
-        {
-            return TryGetCurrentIndependentRotations(Vector3.forward, out upperRotation, out lowerRotation);
-        }
-
-        public static bool TryGetCurrentIndependentRotations(
-            Vector3 openingAxis,
-            out Quaternion upperRotation,
-            out Quaternion lowerRotation)
-        {
-            upperRotation = Quaternion.identity;
-            lowerRotation = Quaternion.identity;
-
-            if (!UseIndependentImuPose || (!imu1Pose.HasIntegratedPose && !imu2Pose.HasIntegratedPose))
-            {
-                return false;
-            }
-
-            switch (IndependentPoseMode)
-            {
-                case HashiIndependentPoseMode.GyroIntegrated:
-                case HashiIndependentPoseMode.AccelerationRelative:
-                    upperRotation = BuildImuOutput(imu1Pose.IntegratedRotation, HashiImuId.Imu1);
-                    lowerRotation = BuildImuOutput(imu2Pose.IntegratedRotation, HashiImuId.Imu2);
-                    return true;
-                case HashiIndependentPoseMode.AccelerationOpening:
-                case HashiIndependentPoseMode.OpeningAxisIntegrated:
-                case HashiIndependentPoseMode.RelativeOpeningIntegrated:
-                default:
-                    upperRotation = BuildOpeningAxisOutput(imu1Pose.OpeningAngleDegrees, HashiImuId.Imu1, openingAxis);
-                    lowerRotation = BuildOpeningAxisOutput(imu2Pose.OpeningAngleDegrees, HashiImuId.Imu2, openingAxis);
-                    return true;
-            }
-        }
-
         public static bool TryReadOpeningVelocity(
             HashiBleSample sample,
             HashiImuId imuId,
@@ -1054,12 +1018,20 @@ namespace ChopChop.BLE
                 out var velocityDominance);
             if (IsGyroSaturated(sample, HashiImuMotionSource.Difference))
             {
-                gyroWeight = Mathf.Abs(relativeVelocity) >= Mathf.Max(OpeningAngleStaticVelocityThresholdDps, 1f)
-                    ? Mathf.Max(gyroWeight, 0.35f)
-                    : 0f;
+                gyroWeight = 0f;
             }
 
             relativeVelocity *= gyroWeight;
+            var closeSuppressionThreshold = Mathf.Max(OpeningAngleStaticVelocityThresholdDps, 1f);
+            if (relativeVelocity < -closeSuppressionThreshold)
+            {
+                imu1Pose.SuppressAccelerationOpeningUntilOpenMotion = true;
+            }
+            else if (relativeVelocity > Mathf.Max(GyroDeadzoneDegreesPerSecond * 2f, RelativeOpeningReleaseOpenSuppressionDps))
+            {
+                imu1Pose.SuppressAccelerationOpeningUntilOpenMotion = false;
+            }
+
             imu1Pose.OpeningVelocityDegreesPerSecond = relativeVelocity;
             imu2Pose.OpeningVelocityDegreesPerSecond = 0f;
             if (deltaTime > 0f)
@@ -1070,7 +1042,7 @@ namespace ChopChop.BLE
             }
 
             var hasAccelerationOpening = TryReadRelativeAccelerationOpening(sample, out var accelerationOpening);
-            var accelerationCorrectionAllowed = false;
+            var accelerationCorrectionAllowed = hasAccelerationOpening;
             imu1Pose.RelativeOpeningGyroWeight = gyroWeight;
             imu1Pose.RelativeOpeningGyroMotionDegreesPerSecond = gyroMotion;
             imu1Pose.RelativeOpeningVelocityDominance = velocityDominance;
@@ -1084,33 +1056,15 @@ namespace ChopChop.BLE
 
             if (hasAccelerationOpening)
             {
-                var correctionMotionWeight = 1f - Mathf.InverseLerp(
-                    Mathf.Max(0f, RelativeOpeningGyroFullWeightBelowDps),
-                    Mathf.Max(RelativeOpeningGyroFullWeightBelowDps + 1f, RelativeOpeningGyroZeroWeightAboveDps),
-                    gyroMotion);
-                var jump = Mathf.Abs(accelerationOpening - imu1Pose.OpeningAngleDegrees);
-                var jumpLimit = Mathf.Max(OpeningAngleStaticJumpRejectDegrees, 1f);
-                var currentLooksClosed = Mathf.Abs(imu1Pose.OpeningAngleDegrees) <= jumpLimit;
-                var accelerationLooksClosed = Mathf.Abs(accelerationOpening) <= jumpLimit;
-                var correctionDirection = accelerationOpening - imu1Pose.OpeningAngleDegrees;
-                var gyroSupportsCorrection = Mathf.Abs(correctionDirection) > 0.001f
-                    && Mathf.Abs(relativeVelocity) >= Mathf.Max(OpeningAngleStaticVelocityThresholdDps, 1f)
-                    && Mathf.Sign(relativeVelocity) == Mathf.Sign(correctionDirection);
-                accelerationCorrectionAllowed = jump <= jumpLimit
-                    || (currentLooksClosed && accelerationLooksClosed)
-                    || (gyroSupportsCorrection && jump <= jumpLimit * 2f);
+                var accelerationPullsOpen = accelerationOpening > imu1Pose.OpeningAngleDegrees + 0.5f;
+                accelerationCorrectionAllowed = !(imu1Pose.SuppressAccelerationOpeningUntilOpenMotion && accelerationPullsOpen);
                 if (accelerationCorrectionAllowed)
                 {
-                    var correctionRate = Mathf.Clamp01(RelativeOpeningAccelerationWeight)
-                        * Mathf.Clamp01(correctionMotionWeight)
-                        * 6f;
-                    var correctionAlpha = correctionRate <= 0f || deltaTime <= 0f
-                        ? 0f
-                        : 1f - Mathf.Exp(-correctionRate * deltaTime);
+                    var correctionWeight = Mathf.Clamp01(RelativeOpeningAccelerationWeight);
                     imu1Pose.OpeningAngleDegrees = ClampOpeningAngle(Mathf.Lerp(
                         imu1Pose.OpeningAngleDegrees,
                         accelerationOpening,
-                        correctionAlpha));
+                        correctionWeight));
                 }
             }
 
@@ -1699,6 +1653,7 @@ namespace ChopChop.BLE
             public float RelativeOpeningGyroMotionDegreesPerSecond;
             public float RelativeOpeningVelocityDominance;
             public bool RelativeOpeningAccelerationCorrectionAllowed;
+            public bool SuppressAccelerationOpeningUntilOpenMotion;
             public float LastSampleRealtime;
             public int LastSampleSequence;
             public int ZeroSequence;
@@ -1741,6 +1696,7 @@ namespace ChopChop.BLE
                 RelativeOpeningGyroMotionDegreesPerSecond = 0f;
                 RelativeOpeningVelocityDominance = 0f;
                 RelativeOpeningAccelerationCorrectionAllowed = false;
+                SuppressAccelerationOpeningUntilOpenMotion = false;
                 LastSampleRealtime = -1f;
                 LastSampleSequence = -1;
                 ZeroSequence = -1;
@@ -1752,6 +1708,7 @@ namespace ChopChop.BLE
                 IntegratedRotation = Quaternion.identity;
                 OpeningAngleDegrees = 0f;
                 OpeningVelocityDegreesPerSecond = 0f;
+                SuppressAccelerationOpeningUntilOpenMotion = false;
                 LastSampleRealtime = sample.RealtimeReceived;
                 LastSampleSequence = sample.Sequence;
             }

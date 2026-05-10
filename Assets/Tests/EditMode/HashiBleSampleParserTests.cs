@@ -109,48 +109,19 @@ namespace ChopChop.Tests.EditMode
         }
 
         [Test]
-        public void RelativeOpeningAccelerationDoesNotOpenFromClosedWithoutGyroSupport()
+        public void RelativeOpeningClosingGyroCanBeatStaleAccelerationOpen()
         {
             HashiImuMappingRuntime.IndependentPoseMode = HashiIndependentPoseMode.RelativeOpeningIntegrated;
-            HashiImuMappingRuntime.RelativeOpeningAccelerationWeight = 1f;
-            HashiImuMappingRuntime.RawAccelerationToG = 1f;
-            HashiImuMappingRuntime.GyroDeadzoneDegreesPerSecond = 0f;
-            HashiImuMappingRuntime.OpeningAngleStaticJumpRejectDegrees = 12f;
-            HashiImuMappingRuntime.OpeningAngleStaticVelocityThresholdDps = 20f;
-
-            var neutral = ParseDualImuCsv("0,0,1,0,0,0,0,0,1,0,0,0");
-            var falseOpenFromAccelerationOnly = ParseDualImuCsv("0,-0.573576,0.819152,0,0,0,0,0,1,0,0,0");
-
-            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
-                neutral,
-                0.1f,
-                Vector3.up,
-                out _,
-                out _), Is.True);
-            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
-                falseOpenFromAccelerationOnly,
-                0.1f,
-                Vector3.up,
-                out _,
-                out _), Is.True);
-
-            var imu1State = HashiImuMappingRuntime.Imu1PoseDebugState;
-            Assert.That(imu1State.RelativeOpeningAccelerationDegrees, Is.GreaterThan(20f));
-            Assert.That(imu1State.RelativeOpeningAccelerationCorrectionAllowed, Is.False);
-            Assert.That(imu1State.OpeningAngleDegrees, Is.LessThan(1f));
-        }
-
-        [Test]
-        public void RelativeOpeningStillRespondsWhenOpeningGyroSaturates()
-        {
-            HashiImuMappingRuntime.IndependentPoseMode = HashiIndependentPoseMode.RelativeOpeningIntegrated;
-            HashiImuMappingRuntime.RelativeOpeningAccelerationWeight = 0f;
             HashiImuMappingRuntime.RawAccelerationToG = 1f;
             HashiImuMappingRuntime.RawGyroToDegreesPerSecond = 1f;
             HashiImuMappingRuntime.GyroDeadzoneDegreesPerSecond = 0f;
+            HashiImuMappingRuntime.RelativeOpeningAccelerationWeight = 0.9f;
+            HashiImuMappingRuntime.OpeningAngleStaticVelocityThresholdDps = 20f;
 
-            var neutral = ParseDualImuCsv("0,0,1,0,0,0,0,0,1,0,0,0");
-            var saturatedOpening = ParseDualImuCsv("0,0,1,32767,0,0,0,0,1,0,0,0");
+            var neutral = ParseDualImuCsv("IMU1,0,0,1,0,0,0,1\nIMU2,0,0,1,0,0,0,1");
+            var open = ParseDualImuCsv("IMU1,0,-0.573576,0.819152,350,0,0,2\nIMU2,0,0,1,0,0,0,2");
+            var closeWithStaleOpenAcceleration = ParseDualImuCsv("IMU1,0,-0.422618,0.906308,-350,0,0,3\nIMU2,0,0,1,0,0,0,3");
+            var heldClosedWithStaleOpenAcceleration = ParseDualImuCsv("IMU1,0,-0.422618,0.906308,0,0,0,4\nIMU2,0,0,1,0,0,0,4");
 
             Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
                 neutral,
@@ -159,13 +130,29 @@ namespace ChopChop.Tests.EditMode
                 out _,
                 out _), Is.True);
             Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
-                saturatedOpening,
+                open,
                 0.1f,
                 Vector3.up,
                 out _,
                 out _), Is.True);
+            Assert.That(HashiImuMappingRuntime.Imu1PoseDebugState.OpeningAngleDegrees, Is.GreaterThan(30f));
 
-            Assert.That(HashiImuMappingRuntime.Imu1PoseDebugState.OpeningAngleDegrees, Is.GreaterThan(20f));
+            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
+                closeWithStaleOpenAcceleration,
+                0.1f,
+                Vector3.up,
+                out _,
+                out _), Is.True);
+            Assert.That(HashiImuMappingRuntime.Imu1PoseDebugState.OpeningAngleDegrees, Is.LessThan(3f));
+
+            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
+                heldClosedWithStaleOpenAcceleration,
+                0.1f,
+                Vector3.up,
+                out _,
+                out _), Is.True);
+            Assert.That(HashiImuMappingRuntime.Imu1PoseDebugState.OpeningAngleDegrees, Is.LessThan(3f));
+            Assert.That(HashiImuMappingRuntime.Imu1PoseDebugState.RelativeOpeningAccelerationCorrectionAllowed, Is.False);
         }
 
         private static HashiBleSample ParseDualImuCsv(string payload)

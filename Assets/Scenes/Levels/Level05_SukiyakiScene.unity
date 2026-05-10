@@ -5601,7 +5601,7 @@ MonoBehaviour:
   inputProvider: {fileID: 1147880874}
   lowerChopstick: {fileID: 1092233522}
   upperChopstick: {fileID: 16540100}
-  openingAxis: {x: 0, y: -1, z: 0}
+  openingAxis: {x: 0, y: 1, z: 0}
   smoothing: 14
   gripPivotFromTip: 0.72
   wholeRotationSensitivity: 1
@@ -5709,9 +5709,7 @@ MonoBehaviour:
   openingAngleMaxDegrees: 35
   openingAngleStaticJumpRejectDegrees: 12
   openingAngleStaticVelocityThresholdDps: 20
-  relativeOpeningAccelerationWeight: 0.35
-  relativeOpeningGyroFullWeightBelowDps: 140
-  relativeOpeningGyroZeroWeightAboveDps: 900
+  relativeOpeningAccelerationWeight: 0.9
   maxBleSampleAgeSeconds: 0.6
   bleResumeSettleSeconds: 0.2
   chopstickOpeningSeparationPerDegree: 0.0015
@@ -5722,7 +5720,7 @@ MonoBehaviour:
   positionTrackingMode: 1
   positionMotionSource: 2
   positionInputEuler: {x: 0, y: 0, z: 0}
-  positionAxisSigns: {x: 1, y: 1, z: 1}
+  positionAxisSigns: {x: 1, y: 1, z: -1}
   positionAccelerationScale: {x: 0.55, y: 0.4, z: 0.4}
   positionMaxOffset: {x: 0.28, y: 0.22, z: 0.22}
   positionDeadzoneG: 0.08

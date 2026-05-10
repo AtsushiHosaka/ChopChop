@@ -180,6 +180,7 @@ namespace ChopChop.BLE
 
         private void HandleHotkeys()
         {
+#if ENABLE_LEGACY_INPUT_MANAGER
             if (recalibrateKey != KeyCode.None && UnityEngine.Input.GetKeyDown(recalibrateKey))
             {
                 Recalibrate();
@@ -189,6 +190,7 @@ namespace ChopChop.BLE
             {
                 ZeroPose();
             }
+#endif
         }
 
         private void CaptureBaseline()
