@@ -69,7 +69,6 @@ namespace ChopChop.App
         {
             public const string Nice = "feedback.nice";
             public const string Failed = "feedback.failed";
-            public const string Reset = "feedback.reset";
         }
     }
 }

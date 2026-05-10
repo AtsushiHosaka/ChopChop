@@ -58,8 +58,7 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "引き分け",
             [LocalizationKeys.Result.Total] = "合計",
             [LocalizationKeys.Feedback.Nice] = "いい感じ！",
-            [LocalizationKeys.Feedback.Failed] = "ミス！",
-            [LocalizationKeys.Feedback.Reset] = "リセットしました"
+            [LocalizationKeys.Feedback.Failed] = "ミス！"
         };
 
         private static readonly IReadOnlyDictionary<string, string> EnglishEntries = new Dictionary<string, string>
@@ -116,8 +115,7 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "Draw",
             [LocalizationKeys.Result.Total] = "Total",
             [LocalizationKeys.Feedback.Nice] = "Nice!",
-            [LocalizationKeys.Feedback.Failed] = "Failed!",
-            [LocalizationKeys.Feedback.Reset] = "Reset complete."
+            [LocalizationKeys.Feedback.Failed] = "Failed!"
         };
 
         private static readonly IReadOnlyDictionary<string, string> KoreanEntries = new Dictionary<string, string>
@@ -174,8 +172,7 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "무승부",
             [LocalizationKeys.Result.Total] = "합계",
             [LocalizationKeys.Feedback.Nice] = "잘했어!",
-            [LocalizationKeys.Feedback.Failed] = "실패!",
-            [LocalizationKeys.Feedback.Reset] = "초기화했습니다."
+            [LocalizationKeys.Feedback.Failed] = "실패!"
         };
 
         private static readonly IReadOnlyDictionary<string, string> ChineseSimplifiedEntries = new Dictionary<string, string>
@@ -232,8 +229,7 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "平局",
             [LocalizationKeys.Result.Total] = "合计",
             [LocalizationKeys.Feedback.Nice] = "不错！",
-            [LocalizationKeys.Feedback.Failed] = "失败！",
-            [LocalizationKeys.Feedback.Reset] = "已重置。"
+            [LocalizationKeys.Feedback.Failed] = "失败！"
         };
 
         private static readonly IReadOnlyDictionary<string, string> FrenchEntries = new Dictionary<string, string>
@@ -290,8 +286,7 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "Égalité",
             [LocalizationKeys.Result.Total] = "Total",
             [LocalizationKeys.Feedback.Nice] = "Bien !",
-            [LocalizationKeys.Feedback.Failed] = "Raté !",
-            [LocalizationKeys.Feedback.Reset] = "Réinitialisé."
+            [LocalizationKeys.Feedback.Failed] = "Raté !"
         };
 
         private static readonly IReadOnlyDictionary<string, string> SpanishEntries = new Dictionary<string, string>
@@ -348,8 +343,7 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "Empate",
             [LocalizationKeys.Result.Total] = "Total",
             [LocalizationKeys.Feedback.Nice] = "¡Bien!",
-            [LocalizationKeys.Feedback.Failed] = "¡Fallido!",
-            [LocalizationKeys.Feedback.Reset] = "Reinicio completo."
+            [LocalizationKeys.Feedback.Failed] = "¡Fallido!"
         };
 
         public static IReadOnlyDictionary<string, string> Japanese => JapaneseEntries;

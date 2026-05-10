@@ -46,7 +46,7 @@ namespace ChopChop.App
                 try
                 {
                     var text = LocalizationSettings.StringDatabase.GetLocalizedString(StringTableName, key);
-                    if (!string.IsNullOrEmpty(text) && text != key)
+                    if (IsTranslatedText(key, text))
                     {
                         return text;
                     }
@@ -119,6 +119,16 @@ namespace ChopChop.App
             }
 
             Debug.LogWarning($"[Localization] Missing String Table entry '{key}': {message}");
+        }
+
+        private static bool IsTranslatedText(string key, string text)
+        {
+            if (string.IsNullOrWhiteSpace(text) || text == key)
+            {
+                return false;
+            }
+
+            return text.IndexOf("no translation", StringComparison.OrdinalIgnoreCase) < 0;
         }
     }
 }

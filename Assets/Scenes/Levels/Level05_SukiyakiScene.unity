@@ -4505,7 +4505,7 @@ Transform:
   m_GameObject: {fileID: 872340713}
   serializedVersion: 2
   m_LocalRotation: {x: 0.6087614, y: -0, z: -0, w: 0.7933533}
-  m_LocalPosition: {x: -1.1, y: 0.958, z: -0.099999994}
+  m_LocalPosition: {x: -1.1, y: 0.958, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5604,7 +5604,7 @@ MonoBehaviour:
   openingAxis: {x: 0, y: 1, z: 0}
   smoothing: 14
   gripPivotFromTip: 0.72
-  wholeRotationSensitivity: 1
+  wholeRotationSensitivity: 0.85
 --- !u!114 &1147880874
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5684,13 +5684,13 @@ MonoBehaviour:
   outputOpen: 35
   rawAccelerationToG: 0.000061
   rawGyroToDegreesPerSecond: 0.0175
-  parentRotationWeight: 0.6
+  parentRotationWeight: 0.45
   parentRotationInputEuler: {x: -90, y: -90, z: 0}
   parentPlanarYawOnly: 1
   parentPlanarYawDirection: -1
   parentVerticalPitchWhenDominant: 1
   parentVerticalPitchDominance: 1.35
-  parentVerticalPitchScale: 1.35
+  parentVerticalPitchScale: 1.1
   parentLongAxisTwistWeight: 0
   useIndependentImuPose: 1
   autoCaptureIndependentNeutral: 1
@@ -5722,9 +5722,9 @@ MonoBehaviour:
   positionMotionSource: 2
   positionInputEuler: {x: 0, y: 0, z: 0}
   positionAxisSigns: {x: 1, y: 1, z: -1}
-  positionAccelerationScale: {x: 0.55, y: 0.4, z: 0.4}
-  positionMaxOffset: {x: 0.28, y: 0.22, z: 0.22}
-  positionDeadzoneG: 0.08
+  positionAccelerationScale: {x: 0.1, y: 0.08, z: 0.08}
+  positionMaxOffset: {x: 0.12, y: 0.1, z: 0.08}
+  positionDeadzoneG: 0.12
   positionVelocityDamping: 5
   positionReturnToNeutral: 1.5
   positionSampleGapResetSeconds: 0.7
@@ -8850,7 +8850,7 @@ MonoBehaviour:
     waypoint: {fileID: 872340714}
     position: {x: -1.38, y: 0.018, z: 0.32}
     eulerAngles: {x: -0, y: 0, z: 0}
-    waypointOffset: {x: 0.28, y: 0.94, z: -0.42}
+    waypointOffset: {x: 0.28, y: 0.94, z: -0.32}
     waypointEulerAngles: {x: 75, y: -0, z: -0}
   rawMeat:
     label: Raw Meat

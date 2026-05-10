@@ -158,10 +158,10 @@ namespace ChopChop.Tests.EditMode
         public void ParentVerticalPitchScaleUpgradesLegacySerializedValues()
         {
             HashiImuMappingRuntime.ParentVerticalPitchScale = 1f;
-            Assert.That(HashiImuMappingRuntime.ParentVerticalPitchScale, Is.EqualTo(1.35f).Within(0.0001f));
+            Assert.That(HashiImuMappingRuntime.ParentVerticalPitchScale, Is.EqualTo(1.1f).Within(0.0001f));
 
             HashiImuMappingRuntime.ParentVerticalPitchScale = 0.55f;
-            Assert.That(HashiImuMappingRuntime.ParentVerticalPitchScale, Is.EqualTo(1.35f).Within(0.0001f));
+            Assert.That(HashiImuMappingRuntime.ParentVerticalPitchScale, Is.EqualTo(1.1f).Within(0.0001f));
 
             HashiImuMappingRuntime.ParentVerticalPitchScale = 0f;
             Assert.That(HashiImuMappingRuntime.ParentVerticalPitchScale, Is.EqualTo(0f).Within(0.0001f));
@@ -183,7 +183,7 @@ namespace ChopChop.Tests.EditMode
             var weighted = HashiImuMappingRuntime.ApplyParentRotationRateWeight(filtered);
 
             Assert.That(filtered.z, Is.EqualTo(162f).Within(0.0001f));
-            Assert.That(weighted.z, Is.GreaterThan(95f));
+            Assert.That(weighted.z, Is.GreaterThan(70f));
         }
 
         [Test]
@@ -196,17 +196,11 @@ namespace ChopChop.Tests.EditMode
                 LocalizationCatalog.Japanese[LocalizationKeys.Hud.ResetHashi],
                 Is.EqualTo("リセット"));
             Assert.That(
-                LocalizationCatalog.Japanese[LocalizationKeys.Feedback.Reset],
-                Is.EqualTo("リセットしました"));
-            Assert.That(
                 LocalizationCatalog.English[LocalizationKeys.Hud.ConnectHashi],
                 Is.EqualTo("BLE is not connected."));
             Assert.That(
                 LocalizationCatalog.English[LocalizationKeys.Hud.ResetHashi],
                 Is.EqualTo("Reset"));
-            Assert.That(
-                LocalizationCatalog.English[LocalizationKeys.Feedback.Reset],
-                Is.EqualTo("Reset complete."));
             Assert.That(
                 LocalizationCatalog.Korean[LocalizationKeys.Hud.ConnectHashi],
                 Is.EqualTo("BLE가 연결되어 있지 않습니다."));
@@ -214,17 +208,11 @@ namespace ChopChop.Tests.EditMode
                 LocalizationCatalog.Korean[LocalizationKeys.Hud.ResetHashi],
                 Is.EqualTo("초기화"));
             Assert.That(
-                LocalizationCatalog.Korean[LocalizationKeys.Feedback.Reset],
-                Is.EqualTo("초기화했습니다."));
-            Assert.That(
                 LocalizationCatalog.ChineseSimplified[LocalizationKeys.Hud.ConnectHashi],
                 Is.EqualTo("BLE 未连接。"));
             Assert.That(
                 LocalizationCatalog.ChineseSimplified[LocalizationKeys.Hud.ResetHashi],
                 Is.EqualTo("重置"));
-            Assert.That(
-                LocalizationCatalog.ChineseSimplified[LocalizationKeys.Feedback.Reset],
-                Is.EqualTo("已重置。"));
             Assert.That(
                 LocalizationCatalog.French[LocalizationKeys.Hud.ConnectHashi],
                 Is.EqualTo("Le BLE n'est pas connecté."));
@@ -232,17 +220,11 @@ namespace ChopChop.Tests.EditMode
                 LocalizationCatalog.French[LocalizationKeys.Hud.ResetHashi],
                 Is.EqualTo("Réinitialiser"));
             Assert.That(
-                LocalizationCatalog.French[LocalizationKeys.Feedback.Reset],
-                Is.EqualTo("Réinitialisé."));
-            Assert.That(
                 LocalizationCatalog.Spanish[LocalizationKeys.Hud.ConnectHashi],
                 Is.EqualTo("BLE no está conectado."));
             Assert.That(
                 LocalizationCatalog.Spanish[LocalizationKeys.Hud.ResetHashi],
                 Is.EqualTo("Reiniciar"));
-            Assert.That(
-                LocalizationCatalog.Spanish[LocalizationKeys.Feedback.Reset],
-                Is.EqualTo("Reinicio completo."));
         }
 
         [Test]

@@ -19,7 +19,12 @@ namespace ChopChop.Input
 
         public void Capture(HashiInputFrame frame)
         {
-            neutralRotation = Quaternion.Inverse(frame.LocalRotation);
+            Capture(frame, Quaternion.identity);
+        }
+
+        public void Capture(HashiInputFrame frame, Quaternion postNeutralRotation)
+        {
+            neutralRotation = postNeutralRotation * Quaternion.Inverse(frame.LocalRotation);
             neutralPosition = frame.LocalPosition;
             hasNeutral = true;
         }

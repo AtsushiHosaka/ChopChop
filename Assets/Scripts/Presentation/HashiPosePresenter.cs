@@ -13,7 +13,7 @@ namespace ChopChop.Presentation
         [SerializeField] private Vector3 openingAxis = Vector3.forward;
         [SerializeField] private float smoothing = 12f;
         [SerializeField, Range(0f, 1f)] private float gripPivotFromTip = 0.72f;
-        [SerializeField, Range(0f, 1f)] private float wholeRotationSensitivity = 1f;
+        [SerializeField, Range(0f, 1f)] private float wholeRotationSensitivity = 0.85f;
 
         private Quaternion baseParentRotation;
         private Quaternion lowerBaseRotation;

@@ -24,13 +24,13 @@ namespace ChopChop.Debugging
         [SerializeField] private float outputOpen = 35f;
         [SerializeField] private float rawAccelerationToG = HashiImuMappingRuntime.Esp32Lsm6RawAccelerationToG;
         [SerializeField] private float rawGyroToDegreesPerSecond = HashiBleDefaults.RawGyroToDegreesPerSecond;
-        [SerializeField, Range(0f, 1f)] private float parentRotationWeight = 0.6f;
+        [SerializeField, Range(0f, 1f)] private float parentRotationWeight = 0.45f;
         [SerializeField] private Vector3 parentRotationInputEuler = new Vector3(-90f, -90f, 0f);
         [SerializeField] private bool parentPlanarYawOnly = true;
         [SerializeField] private float parentPlanarYawDirection = -1f;
         [SerializeField] private bool parentVerticalPitchWhenDominant = true;
         [SerializeField, Range(1f, 3f)] private float parentVerticalPitchDominance = 1.35f;
-        [SerializeField, Range(0f, 2f)] private float parentVerticalPitchScale = 1.35f;
+        [SerializeField, Range(0f, 2f)] private float parentVerticalPitchScale = 1.1f;
         [SerializeField, Range(0f, 1f)] private float parentLongAxisTwistWeight;
         [SerializeField] private bool useIndependentImuPose = true;
         [SerializeField] private bool autoCaptureIndependentNeutral = true;
@@ -64,9 +64,9 @@ namespace ChopChop.Debugging
         [SerializeField] private HashiImuMotionSource positionMotionSource = HashiImuMotionSource.Average;
         [SerializeField] private Vector3 positionInputEuler = Vector3.zero;
         [SerializeField] private Vector3 positionAxisSigns = new Vector3(1f, 1f, -1f);
-        [SerializeField] private Vector3 positionAccelerationScale = new Vector3(0.55f, 0.4f, 0.4f);
-        [SerializeField] private Vector3 positionMaxOffset = new Vector3(0.28f, 0.22f, 0.22f);
-        [SerializeField] private float positionDeadzoneG = 0.08f;
+        [SerializeField] private Vector3 positionAccelerationScale = new Vector3(0.1f, 0.08f, 0.08f);
+        [SerializeField] private Vector3 positionMaxOffset = new Vector3(0.12f, 0.1f, 0.08f);
+        [SerializeField] private float positionDeadzoneG = 0.12f;
         [SerializeField] private float positionVelocityDamping = 5f;
         [SerializeField] private float positionReturnToNeutral = 1.5f;
         [SerializeField] private float positionSampleGapResetSeconds = 0.7f;
@@ -101,7 +101,7 @@ namespace ChopChop.Debugging
         private const float RelativeOpeningAccelerationBlendWeight = 0.9f;
         private const float RelativeOpeningMinDegrees = 0f;
         private const float RelativeOpeningMaxDegrees = 35f;
-        private const float PreferredParentVerticalPitchScale = 1.35f;
+        private const float PreferredParentVerticalPitchScale = 1.1f;
         private const float LegacyParentVerticalPitchScaleMax = 1.0001f;
 
         private DiagnosticSnapshot imu1GravitySnapshot;
@@ -728,9 +728,9 @@ namespace ChopChop.Debugging
             positionMotionSource = HashiImuMotionSource.Average;
             positionInputEuler = Vector3.zero;
             positionAxisSigns = new Vector3(1f, 1f, -1f);
-            positionAccelerationScale = new Vector3(0.55f, 0.4f, 0.4f);
-            positionMaxOffset = new Vector3(0.28f, 0.22f, 0.22f);
-            positionDeadzoneG = 0.08f;
+            positionAccelerationScale = new Vector3(0.1f, 0.08f, 0.08f);
+            positionMaxOffset = new Vector3(0.12f, 0.1f, 0.08f);
+            positionDeadzoneG = 0.12f;
             positionVelocityDamping = 5f;
             positionReturnToNeutral = 1.5f;
             positionSampleGapResetSeconds = 0.7f;

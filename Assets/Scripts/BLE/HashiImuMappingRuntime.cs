@@ -87,7 +87,7 @@ namespace ChopChop.BLE
         private const float RelativeOpeningAccelerationMinDominanceDuringMotion = 0.25f;
         private const float RelativeOpeningAccelerationCredibilityMinDegrees = 6f;
         private const float RelativeOpeningAccelerationRelativeAngleRatio = 0.35f;
-        private const float PreferredParentVerticalPitchScale = 1.35f;
+        private const float PreferredParentVerticalPitchScale = 1.1f;
         private const float LegacyParentVerticalPitchScaleMax = 1.0001f;
 
         public static bool UseTunedTheta { get; set; }
@@ -102,7 +102,7 @@ namespace ChopChop.BLE
         public static float OutputOpen { get; set; } = 180f;
         public static float RawAccelerationToG { get; set; } = HashiBleDefaults.RawAccelerationToG;
         public static float RawGyroToDegreesPerSecond { get; set; } = HashiBleDefaults.RawGyroToDegreesPerSecond;
-        public static float ParentRotationWeight { get; set; } = 0.6f;
+        public static float ParentRotationWeight { get; set; } = 0.45f;
         public static Vector3 ParentRotationInputEuler { get; set; } = new Vector3(-90f, -90f, 0f);
         public static bool ParentPlanarYawOnly { get; set; } = true;
         public static float ParentPlanarYawDirection { get; set; } = -1f;
@@ -146,9 +146,9 @@ namespace ChopChop.BLE
         public static HashiImuMotionSource PositionMotionSource { get; set; } = HashiImuMotionSource.Average;
         public static Vector3 PositionInputEuler { get; set; } = Vector3.zero;
         public static Vector3 PositionAxisSigns { get; set; } = new Vector3(1f, 1f, -1f);
-        public static Vector3 PositionAccelerationScale { get; set; } = new Vector3(0.55f, 0.4f, 0.4f);
-        public static Vector3 PositionMaxOffset { get; set; } = new Vector3(0.28f, 0.22f, 0.22f);
-        public static float PositionDeadzoneG { get; set; } = 0.08f;
+        public static Vector3 PositionAccelerationScale { get; set; } = new Vector3(0.1f, 0.08f, 0.08f);
+        public static Vector3 PositionMaxOffset { get; set; } = new Vector3(0.12f, 0.1f, 0.08f);
+        public static float PositionDeadzoneG { get; set; } = 0.12f;
         public static float PositionVelocityDamping { get; set; } = 5f;
         public static float PositionReturnToNeutral { get; set; } = 1.5f;
         public static float PositionSampleGapResetSeconds { get; set; } = 0.7f;
@@ -201,13 +201,13 @@ namespace ChopChop.BLE
             OutputOpen = 180f;
             RawAccelerationToG = HashiBleDefaults.RawAccelerationToG;
             RawGyroToDegreesPerSecond = HashiBleDefaults.RawGyroToDegreesPerSecond;
-            ParentRotationWeight = 0.6f;
+            ParentRotationWeight = 0.45f;
             ParentRotationInputEuler = new Vector3(-90f, -90f, 0f);
             ParentPlanarYawOnly = true;
             ParentPlanarYawDirection = -1f;
             ParentVerticalPitchWhenDominant = true;
             ParentVerticalPitchDominance = 1.35f;
-            ParentVerticalPitchScale = 1.35f;
+            ParentVerticalPitchScale = 1.1f;
             ParentLongAxisTwistWeight = 0f;
             UseIndependentImuPose = true;
             AutoCaptureIndependentNeutral = true;
@@ -241,9 +241,9 @@ namespace ChopChop.BLE
             PositionMotionSource = HashiImuMotionSource.Average;
             PositionInputEuler = Vector3.zero;
             PositionAxisSigns = new Vector3(1f, 1f, -1f);
-            PositionAccelerationScale = new Vector3(0.55f, 0.4f, 0.4f);
-            PositionMaxOffset = new Vector3(0.28f, 0.22f, 0.22f);
-            PositionDeadzoneG = 0.08f;
+            PositionAccelerationScale = new Vector3(0.1f, 0.08f, 0.08f);
+            PositionMaxOffset = new Vector3(0.12f, 0.1f, 0.08f);
+            PositionDeadzoneG = 0.12f;
             PositionVelocityDamping = 5f;
             PositionReturnToNeutral = 1.5f;
             PositionSampleGapResetSeconds = 0.7f;

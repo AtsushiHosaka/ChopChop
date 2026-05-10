@@ -8,6 +8,7 @@ namespace ChopChop.Input
     public sealed class HashiInputProvider : MonoBehaviour
     {
         private const float BleConnectionPromptStaleSeconds = 1.5f;
+        private const float ResetPoseTipDirectionRollDegrees = 360f;
 
         [SerializeField] private PlayerId playerId = new PlayerId(0);
         [SerializeField] private string playerLabel = "P1";
@@ -136,9 +137,16 @@ namespace ChopChop.Input
                 HashiImuMappingRuntime.ZeroImu2IntegratedPose(sample);
             }
 
-            calibration.Capture(frame);
+            calibration.Capture(frame, ResetPosePostNeutralRotation());
             CurrentFrame = calibration.Apply(frame);
             return true;
+        }
+
+        private static Quaternion ResetPosePostNeutralRotation()
+        {
+            var displayAlignment = Quaternion.Euler(HashiImuMappingRuntime.HashiDisplayAlignmentEuler);
+            var tipDirectionRoll = Quaternion.AngleAxis(ResetPoseTipDirectionRollDegrees, Vector3.forward);
+            return displayAlignment * tipDirectionRoll * Quaternion.Inverse(displayAlignment);
         }
 
         private void OnEnable()

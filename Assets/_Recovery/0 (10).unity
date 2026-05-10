@@ -148,7 +148,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.055, y: 0, z: 0.5}
-  m_LocalScale: {x: 0.028, y: 0.028, z: 1.2}
+  m_LocalScale: {x: 0.035, y: 0.035, z: 1.2}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1851624397}
@@ -1810,7 +1810,7 @@ MonoBehaviour:
   targetCamera: {fileID: 330585545}
   stageController: {fileID: 1454876607}
   stageLayout: {fileID: 1713009246}
-  lockAtInitialPose: 0
+  lockAtInitialPose: 1
   defaultMoveSeconds: 0.8
   overviewFocus: {x: 0.05, y: 0.08, z: 0.02}
   stepPoses:
@@ -1820,9 +1820,9 @@ MonoBehaviour:
     fieldOfView: 46
     moveSeconds: 0.55
   - step: 1
-    offset: {x: 0, y: 0.78, z: -1.35}
-    lookAtOffset: {x: 0, y: 0.16, z: 0}
-    fieldOfView: 40
+    offset: {x: 0, y: 0.58, z: -0.9}
+    lookAtOffset: {x: 0, y: 0.11, z: 0}
+    fieldOfView: 34
     moveSeconds: 0.85
   - step: 2
     offset: {x: -0.08, y: 0.62, z: -0.92}
@@ -1840,9 +1840,9 @@ MonoBehaviour:
     fieldOfView: 34
     moveSeconds: 0.85
   - step: 5
-    offset: {x: 0.08, y: 0.78, z: -1.35}
-    lookAtOffset: {x: 0, y: 0.16, z: 0}
-    fieldOfView: 40
+    offset: {x: 0.08, y: 0.58, z: -0.9}
+    lookAtOffset: {x: 0, y: 0.11, z: 0}
+    fieldOfView: 34
     moveSeconds: 0.85
   - step: 6
     offset: {x: 0, y: 0.68, z: -1.1}
@@ -4504,8 +4504,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 872340713}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.6087614, y: -0, z: -0, w: 0.7933533}
-  m_LocalPosition: {x: -1.38, y: 0.958, z: -0.099999994}
+  m_LocalRotation: {x: 0.53729963, y: -0, z: -0, w: 0.8433914}
+  m_LocalPosition: {x: -1.38, y: 1.138, z: -0.099999994}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5352,7 +5352,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.055, y: 0, z: 0.5}
-  m_LocalScale: {x: 0.028, y: 0.028, z: 1.2}
+  m_LocalScale: {x: 0.035, y: 0.035, z: 1.2}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1478005109}
@@ -5534,7 +5534,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -1.38, y: 0.018, z: 0.32}
-  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1664488236}
@@ -5602,7 +5602,7 @@ MonoBehaviour:
   lowerChopstick: {fileID: 1092233522}
   upperChopstick: {fileID: 16540100}
   openingAxis: {x: 0, y: 1, z: 0}
-  smoothing: 14
+  smoothing: 22
   gripPivotFromTip: 0.72
   wholeRotationSensitivity: 1
 --- !u!114 &1147880874
@@ -5688,13 +5688,12 @@ MonoBehaviour:
   parentRotationInputEuler: {x: -90, y: -90, z: 0}
   parentPlanarYawOnly: 1
   parentPlanarYawDirection: -1
-  parentVerticalPitchWhenDominant: 1
-  parentVerticalPitchDominance: 1.35
-  parentVerticalPitchScale: 1
+  parentVerticalPitchWhenDominant: 0
+  parentVerticalPitchScale: 0
   parentLongAxisTwistWeight: 0
   useIndependentImuPose: 1
   autoCaptureIndependentNeutral: 1
-  independentPoseMode: 4
+  independentPoseMode: 1
   independentPoseWeight: 1
   gyroDeadzoneDegreesPerSecond: 1.5
   accelerationCorrectionWeight: 0.18
@@ -5706,24 +5705,24 @@ MonoBehaviour:
   imu2OpeningDirection: 1
   imu1OpeningScale: 1
   imu2OpeningScale: 1
-  openingAngleMinDegrees: 0
-  openingAngleMaxDegrees: 35
+  openingAngleMinDegrees: -55
+  openingAngleMaxDegrees: 55
   openingAngleStaticJumpRejectDegrees: 12
   openingAngleStaticVelocityThresholdDps: 20
-  relativeOpeningAccelerationWeight: 0.9
-  relativeOpeningGyroFullWeightBelowDps: 60
-  relativeOpeningGyroZeroWeightAboveDps: 180
+  relativeOpeningAccelerationWeight: 0.35
+  relativeOpeningGyroFullWeightBelowDps: 140
+  relativeOpeningGyroZeroWeightAboveDps: 900
   maxBleSampleAgeSeconds: 0.6
   bleResumeSettleSeconds: 0.2
   chopstickOpeningSeparationPerDegree: 0.0015
   maxChopstickOpeningSeparation: 0.08
   chopstickSeparationAxis: {x: 1, y: 0, z: 0}
-  useHardwarePosition: 1
+  useHardwarePosition: 0
   autoCapturePositionNeutral: 1
   positionTrackingMode: 1
   positionMotionSource: 2
   positionInputEuler: {x: 0, y: 0, z: 0}
-  positionAxisSigns: {x: 1, y: 1, z: -1}
+  positionAxisSigns: {x: 1, y: 1, z: 1}
   positionAccelerationScale: {x: 0.55, y: 0.4, z: 0.4}
   positionMaxOffset: {x: 0.28, y: 0.22, z: 0.22}
   positionDeadzoneG: 0.08
@@ -5732,7 +5731,7 @@ MonoBehaviour:
   positionSampleGapResetSeconds: 0.7
   chopstickVisualLengthScale: 0.88
   hashiDisplayAlignmentEuler: {x: 0, y: -90, z: 135}
-  hashiDisplayOffsetWorld: {x: 0, y: 0, z: 0}
+  hashiDisplayOffsetWorld: {x: 1, y: 0, z: 0}
   invertImu1Pose: 0
   invertImu2Pose: 0
   imu1MapX: 0
@@ -7602,10 +7601,7 @@ MonoBehaviour:
   eggFluidMixMonitor: {fileID: 1405094642}
   targetZones: []
   automaticProgress: 1
-  hashiMovementMode: 3
-  liftAccelThreshold: 0
-  pullbackAccelThreshold: -1.5
-  gestureLiftResetSeconds: 3
+  hashiMovementMode: 0
 --- !u!4 &1454876608
 Transform:
   m_ObjectHideFlags: 0
@@ -8856,8 +8852,8 @@ MonoBehaviour:
     waypoint: {fileID: 872340714}
     position: {x: -1.38, y: 0.018, z: 0.32}
     eulerAngles: {x: -0, y: 0, z: 0}
-    waypointOffset: {x: 0, y: 0.94, z: -0.42}
-    waypointEulerAngles: {x: 75, y: -0, z: -0}
+    waypointOffset: {x: 0, y: 1.12, z: -0.42}
+    waypointEulerAngles: {x: 65, y: -0, z: -0}
   rawMeat:
     label: Raw Meat
     stationRoot: {fileID: 1638884852}
@@ -12584,7 +12580,7 @@ MonoBehaviour:
   targetCamera: {fileID: 1951154900}
   stageController: {fileID: 1454876607}
   stageLayout: {fileID: 1713009246}
-  lockAtInitialPose: 0
+  lockAtInitialPose: 1
   defaultMoveSeconds: 0.8
   overviewFocus: {x: 0.05, y: 0.08, z: 0.02}
   stepPoses:
@@ -12594,9 +12590,9 @@ MonoBehaviour:
     fieldOfView: 46
     moveSeconds: 0.55
   - step: 1
-    offset: {x: 0, y: 0.78, z: -1.35}
-    lookAtOffset: {x: 0, y: 0.16, z: 0}
-    fieldOfView: 40
+    offset: {x: 0, y: 0.58, z: -0.9}
+    lookAtOffset: {x: 0, y: 0.11, z: 0}
+    fieldOfView: 34
     moveSeconds: 0.85
   - step: 2
     offset: {x: -0.08, y: 0.62, z: -0.92}
@@ -12614,9 +12610,9 @@ MonoBehaviour:
     fieldOfView: 34
     moveSeconds: 0.85
   - step: 5
-    offset: {x: 0.08, y: 0.78, z: -1.35}
-    lookAtOffset: {x: 0, y: 0.16, z: 0}
-    fieldOfView: 40
+    offset: {x: 0.08, y: 0.58, z: -0.9}
+    lookAtOffset: {x: 0, y: 0.11, z: 0}
+    fieldOfView: 34
     moveSeconds: 0.85
   - step: 6
     offset: {x: 0, y: 0.68, z: -1.1}
