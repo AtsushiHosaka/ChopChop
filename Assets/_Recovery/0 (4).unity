@@ -3514,6 +3514,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &839888361
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 839888363}
+  - component: {fileID: 839888362}
+  m_Layer: 0
+  m_Name: BurstCollisionWorld
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &839888362
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 839888361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1a161c4294214a4fbcb7e9e94800494, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Obi::Obi.BurstColliderWorld
+  cellSpans:
+    m_AlignBytes: 16
+--- !u!4 &839888363
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 839888361}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &857134719
 GameObject:
   m_ObjectHideFlags: 0
@@ -4480,52 +4526,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.07296017, y: 0.305, z: 0.044}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!1 &861325708
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 861325710}
-  - component: {fileID: 861325709}
-  m_Layer: 0
-  m_Name: BurstCollisionWorld
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &861325709
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 861325708}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1a161c4294214a4fbcb7e9e94800494, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Obi::Obi.BurstColliderWorld
-  cellSpans:
-    m_AlignBytes: 16
---- !u!4 &861325710
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 861325708}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &872340713
 GameObject:
   m_ObjectHideFlags: 0
@@ -5649,6 +5649,8 @@ MonoBehaviour:
   upperChopstick: {fileID: 16540100}
   openingAxis: {x: 0, y: 1, z: 0}
   smoothing: 14
+  gripPivotFromTip: 0.72
+  wholeRotationSensitivity: 1
 --- !u!114 &1147880874
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5669,7 +5671,7 @@ MonoBehaviour:
   serviceUuid: 12345678-1234-1234-1234-1234567890ab
   characteristicUuid: abcd1234-5678-90ab-cdef-1234567890ab
   captureNeutralOnStart: 1
-  accelerometerCorrection: 0.015
+  accelerometerCorrection: 0.18
 --- !u!4 &1147880875
 Transform:
   m_ObjectHideFlags: 0
@@ -5718,7 +5720,7 @@ MonoBehaviour:
   applyProfileOnEnable: 1
   useTunedTheta: 1
   thetaMode: 0
-  motionSource: 0
+  motionSource: 1
   imu1Axis: 2
   imu2Axis: 2
   invertTheta: 0
@@ -5728,13 +5730,19 @@ MonoBehaviour:
   outputOpen: 35
   rawAccelerationToG: 0.000061
   rawGyroToDegreesPerSecond: 0.0175
-  parentRotationWeight: 0
+  parentRotationWeight: 0.7
+  parentRotationInputEuler: {x: -90, y: -90, z: 0}
+  parentPlanarYawOnly: 1
+  parentPlanarYawDirection: -1
+  parentVerticalPitchWhenDominant: 1
+  parentVerticalPitchDominance: 1.2
+  parentLongAxisTwistWeight: 0
   useIndependentImuPose: 1
   autoCaptureIndependentNeutral: 1
-  independentPoseMode: 0
+  independentPoseMode: 4
   independentPoseWeight: 1
   gyroDeadzoneDegreesPerSecond: 1.5
-  accelerationCorrectionWeight: 0.02
+  accelerationCorrectionWeight: 0.18
   accelerationCorrectionDeadzoneDegrees: 2
   accelerationCorrectionMagnitudeToleranceG: 0.45
   imu1OpeningAxis: 0
@@ -5743,10 +5751,13 @@ MonoBehaviour:
   imu2OpeningDirection: 1
   imu1OpeningScale: 1
   imu2OpeningScale: 1
-  openingAngleMinDegrees: -55
-  openingAngleMaxDegrees: 55
+  openingAngleMinDegrees: 0
+  openingAngleMaxDegrees: 35
   openingAngleStaticJumpRejectDegrees: 12
   openingAngleStaticVelocityThresholdDps: 20
+  relativeOpeningAccelerationWeight: 0.9
+  relativeOpeningGyroFullWeightBelowDps: 60
+  relativeOpeningGyroZeroWeightAboveDps: 180
   maxBleSampleAgeSeconds: 0.6
   bleResumeSettleSeconds: 0.2
   chopstickOpeningSeparationPerDegree: 0.0015
@@ -5788,6 +5799,7 @@ MonoBehaviour:
   upperOutputEuler: {x: 0, y: 0, z: 0}
   lowerOutputEuler: {x: 0, y: 0, z: 0}
   showAdvancedControls: 0
+  bleCaptureMaxSeconds: 8
 --- !u!1 &1150448509
 GameObject:
   m_ObjectHideFlags: 0
@@ -14130,4 +14142,4 @@ SceneRoots:
   - {fileID: 1965876656}
   - {fileID: 1713009245}
   - {fileID: 1150448513}
-  - {fileID: 861325710}
+  - {fileID: 839888363}

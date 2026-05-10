@@ -74,7 +74,6 @@ namespace ChopChop.App
 
             DestroyCurrentScreen();
             builtSceneName = sceneName;
-            UpdateBgmForScene(sceneName);
 
             if (sceneName == AppScenes.Start)
             {
@@ -86,7 +85,7 @@ namespace ChopChop.App
             }
             else if (sceneName == AppScenes.Settings)
             {
-                currentScreen = SettingsScreenController.Create(localization, navigator, audioService);
+                currentScreen = SettingsScreenController.Create(localization, navigator);
             }
             else if (sceneName == AppScenes.SukiyakiLevel)
             {
@@ -100,18 +99,6 @@ namespace ChopChop.App
             {
                 currentScreen = PrototypeLevelScreenController.Create(localization, navigator, levelDefinition);
             }
-        }
-
-        private void UpdateBgmForScene(string sceneName)
-        {
-            if (audioService == null)
-            {
-                return;
-            }
-
-            audioService.PlayBgm(sceneName == AppScenes.SukiyakiLevel
-                ? AudioBgmId.Sukiyaki
-                : AudioBgmId.Menu);
         }
 
         private void DestroyCurrentScreen()

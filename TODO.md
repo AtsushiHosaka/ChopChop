@@ -88,10 +88,10 @@
 - [x] `Assets/Localization/StringTables/ChopChopText_ja.asset` が存在する。
 - [x] `Assets/Localization/StringTables/ChopChopText_en.asset` が存在する。
 - [x] すべてのUIテキストが `ChopChopText` String Table経由で表示される。
-- [x] Settings画面でLanguageを押すと日本語/英語が切り替わる。
-- [x] Settings画面でBGM ON/OFFを切り替えられる。
-- [x] Sukiyaki画面でLanguageを押すとHUDと工程表示が切り替わる。
-- [x] Result画面でLanguageを押すと結果ラベルとボタンが切り替わる。
+- [x] Start画面からSettingsへ入り、Language Settingsを押した時だけ言語一覧が表示される。
+- [x] Settings画面はBGM設定を出さず、現状必要なLanguage/Backだけを表示する。
+- [x] Sukiyaki画面にはJapanese/Englishなどの言語切替ボタンが表示されない。
+- [x] Result画面にはJapanese/Englishなどの言語切替ボタンが表示されない。
 - [x] 日本語/英語のString Tableで欠けているkeyがない。
 - [ ] 画面内テキストがボタンやHUDからはみ出さない。
 
@@ -503,8 +503,8 @@
 - [x] `SukiyakiStageController` の肉破れretry testがある。
 - [x] Start画面のStart/Settings/Quitボタン生成testがある。
 - [x] Level Select画面のBack/Settings/Level Card生成testがある。
-- [x] Settings画面のLanguage/BGM/Backボタン生成testがある。
-- [x] Result画面のRetry/Back/Languageボタン生成testがある。
+- [x] Settings画面のLanguage Settings/Backボタン生成testがある。
+- [x] Result画面のRetry/Level Selectボタン生成testがあり、Languageボタンが存在しないことを確認する。
 - [x] `ChopChopMvpValidator` がBuild Settingsを検証する。
 - [x] `ChopChopMvpValidator` がLevelCatalogを検証する。
 - [x] `ChopChopMvpValidator` がLocalization key欠落を検証する。
@@ -728,10 +728,11 @@
 
 ## 29. BGM And Sound Effects
 
-- [x] `AudioService` がAppRuntime配下で永続化され、Sceneを跨いでBGM/SEを管理する。
-- [x] Start/Level Select/Result/PrototypeではMenu BGM、Lv.5 SukiyakiではSukiyaki BGMが自動で切り替わる。
-- [x] BGM切り替え時に短いfade-inを行い、Scene遷移時に唐突に鳴らさない。
-- [x] Settings画面でBGM ON/OFFを切り替え、PlayerPrefsへ保存できる。
+- [x] `AudioService` がAppRuntime配下で永続化され、Sceneを跨いでSEを鳴らせる。
+- [x] 現状のBGMは完全に削除され、ランダム音源や仮BGMを背景で鳴らし続ける処理がない。
+- [ ] 将来BGMを入れる場合は、明示的に用意したBGM音源だけをScene/ゲーム状態に応じてループ再生する。
+- [ ] 将来BGMを入れる場合は、Scene遷移時のfade-in/fade-outと音量設定を実装する。
+- [ ] 将来BGMを入れる場合は、Settings画面にBGM音量/ON-OFFを戻し、PlayerPrefsへ保存できるようにする。
 - [x] 全 `UiFactory.CreateButton` ボタンにclick SEが付いている。
 - [x] 全 `UiFactory.CreateButton` ボタンにhover SEが付いている。
 - [x] カウントダウンの3/2/1表示ごとにtick SEが鳴る。
@@ -740,8 +741,9 @@
 - [x] Sukiyaki工程成功時に成功SEが鳴る。
 - [x] Sukiyaki工程失敗/肉破れ時に失敗SEが鳴る。
 - [x] Result遷移前に完了SEが鳴る。
-- [ ] Unity Editor Play ModeでBGM/SEの音量バランスを確認する。
-- [x] BGM/SEがプレイヤー向けUIに開発用トグルとして露出していないことを確認する。
+- [ ] 箸の開閉、箸先接触、肉の移動/破れなど、操作に対応したSE cueを追加できる設計にする。
+- [ ] Unity Editor Play ModeでSEの音量バランスを確認する。
+- [x] SEがプレイヤー向けUIに開発用トグルとして露出していないことを確認する。
 - [ ] 2P split-screen時、P1/P2の成功/失敗SEが過剰に重ならないように設計する。
 - [ ] 最終版では生成WAVを使い続けるか、商用利用可能な高品質assetへ差し替えるか判断する。
 
@@ -757,7 +759,7 @@
 - [ ] Lv.1-Lv.4/Tutorialは現状prototype中心なので、各レベルの本番 `ILevelController` とDemo専用Driverを別々に実装する。
 - [ ] 2P対戦は基盤のみなので、2P専用Scene/Mode、左右HUD、P1/P2独立Stage、複数BLE receiver対応を実装する。
 - [ ] Player-visible assetのライセンス確認、最終asset差し替え、AssetCredits更新をリリース前に完了する。
-- [ ] UI/BGM/SE/Lighting/SkyboxをPlay Modeで目視・聴感確認し、MVP展示に耐える品質へ調整する。
+- [ ] UI/SE/Lighting/SkyboxをPlay Modeで目視・聴感確認し、MVP展示に耐える品質へ調整する。
 
 ## 31. Current Verification Queue
 

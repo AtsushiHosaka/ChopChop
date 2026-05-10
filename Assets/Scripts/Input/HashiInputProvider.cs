@@ -14,7 +14,7 @@ namespace ChopChop.Input
         [SerializeField] private string serviceUuid = HashiBleDefaults.ServiceUuid;
         [SerializeField] private string characteristicUuid = HashiBleDefaults.CharacteristicUuid;
         [SerializeField] private bool captureNeutralOnStart;
-        [SerializeField, Range(0f, 1f)] private float accelerometerCorrection = 0.015f;
+        [SerializeField, Range(0f, 1f)] private float accelerometerCorrection = 0.18f;
 
         private IHashiInputSource source;
         private readonly HashiCalibration calibration = new HashiCalibration();

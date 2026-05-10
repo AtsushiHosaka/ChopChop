@@ -57,8 +57,10 @@ This document records third-party and generated assets currently used or evaluat
 ### Audio
 
 - Project path: `Assets/Resources/Audio`
-- Current usage: generated menu/sukiyaki BGM loops and UI/gameplay SE.
-- Modifications: generated inside Unity as WAV files; safe to replace with higher-quality licensed audio later.
+- Current usage: generated UI/gameplay SE.
+- Current BGM policy: no BGM clip or placeholder/random background playback is shipped right now.
+- Modifications: generated inside Unity as WAV files; safe to replace with higher-quality licensed SE later.
+- Future work: if BGM is added, use an intentional licensed loop and track the implementation in `TODO.md`.
 
 ### Prototype Materials And Procedural Food Meshes
 
@@ -70,5 +72,5 @@ This document records third-party and generated assets currently used or evaluat
 
 - Confirm every third-party asset license allows the intended MVP exhibition, recording, and distribution scope.
 - Remove unused imported sample assets from builds or exclude them from distribution.
-- Confirm whether generated audio remains acceptable or should be replaced by licensed production audio.
+- Confirm whether generated SE remains acceptable or should be replaced by licensed production audio.
 - Re-check visible final scene assets so no placeholder primitive is presented as final food/tableware art.

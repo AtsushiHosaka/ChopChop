@@ -1,6 +1,7 @@
 using ChopChop.BLE;
 using ChopChop.Input;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace ChopChop.Tests.EditMode
 {
@@ -105,6 +106,59 @@ namespace ChopChop.Tests.EditMode
             Assert.That(BleHashiInputSource.ShouldAutoReconnect("Native plugin missing"), Is.False);
             Assert.That(BleHashiInputSource.ShouldAutoReconnect("Unsupported platform"), Is.False);
             Assert.That(BleHashiInputSource.ShouldAutoReconnect("Unauthorized: Bluetooth permission denied"), Is.False);
+        }
+
+        [Test]
+        public void RelativeOpeningClosingGyroCanBeatStaleAccelerationOpen()
+        {
+            HashiImuMappingRuntime.IndependentPoseMode = HashiIndependentPoseMode.RelativeOpeningIntegrated;
+            HashiImuMappingRuntime.RawAccelerationToG = 1f;
+            HashiImuMappingRuntime.RawGyroToDegreesPerSecond = 1f;
+            HashiImuMappingRuntime.GyroDeadzoneDegreesPerSecond = 0f;
+            HashiImuMappingRuntime.RelativeOpeningAccelerationWeight = 0.9f;
+            HashiImuMappingRuntime.OpeningAngleStaticVelocityThresholdDps = 20f;
+
+            var neutral = ParseDualImuCsv("IMU1,0,0,1,0,0,0,1\nIMU2,0,0,1,0,0,0,1");
+            var open = ParseDualImuCsv("IMU1,0,-0.573576,0.819152,350,0,0,2\nIMU2,0,0,1,0,0,0,2");
+            var closeWithStaleOpenAcceleration = ParseDualImuCsv("IMU1,0,-0.422618,0.906308,-350,0,0,3\nIMU2,0,0,1,0,0,0,3");
+            var heldClosedWithStaleOpenAcceleration = ParseDualImuCsv("IMU1,0,-0.422618,0.906308,0,0,0,4\nIMU2,0,0,1,0,0,0,4");
+
+            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
+                neutral,
+                0.1f,
+                Vector3.up,
+                out _,
+                out _), Is.True);
+            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
+                open,
+                0.1f,
+                Vector3.up,
+                out _,
+                out _), Is.True);
+            Assert.That(HashiImuMappingRuntime.Imu1PoseDebugState.OpeningAngleDegrees, Is.GreaterThan(30f));
+
+            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
+                closeWithStaleOpenAcceleration,
+                0.1f,
+                Vector3.up,
+                out _,
+                out _), Is.True);
+            Assert.That(HashiImuMappingRuntime.Imu1PoseDebugState.OpeningAngleDegrees, Is.LessThan(3f));
+
+            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
+                heldClosedWithStaleOpenAcceleration,
+                0.1f,
+                Vector3.up,
+                out _,
+                out _), Is.True);
+            Assert.That(HashiImuMappingRuntime.Imu1PoseDebugState.OpeningAngleDegrees, Is.LessThan(3f));
+            Assert.That(HashiImuMappingRuntime.Imu1PoseDebugState.RelativeOpeningAccelerationCorrectionAllowed, Is.False);
+        }
+
+        private static HashiBleSample ParseDualImuCsv(string payload)
+        {
+            Assert.That(HashiBleSampleParser.TryParse(payload, out var sample, out var error), Is.True, error);
+            return sample;
         }
     }
 }

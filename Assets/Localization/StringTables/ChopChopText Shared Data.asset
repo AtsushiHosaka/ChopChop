@@ -195,18 +195,6 @@ MonoBehaviour:
     m_Key: settings.english
     m_Metadata:
       m_Items: []
-  - m_Id: 1713262113579012
-    m_Key: settings.bgm
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1713262113579013
-    m_Key: settings.bgmOn
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1713262113579014
-    m_Key: settings.bgmOff
-    m_Metadata:
-      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

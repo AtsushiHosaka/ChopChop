@@ -37,6 +37,12 @@ The Hashi root should contain:
 - `WaypointRailMover` connected to the production rail waypoints.
 - Chopstick tip colliders with `ChopstickTip` for food contact analysis.
 
+## Audio Policy
+
+- Keep `AudioService.PlayCue` as the single runtime entry point for SE.
+- Do not ship placeholder/random BGM playback. Current builds should not start any looping background music.
+- Future BGM work should add a real licensed loop intentionally, with scene/state selection, fade handling, and settings persistence tracked in `TODO.md`.
+
 ## Meat Setup
 
 The meat prefab should contain:
