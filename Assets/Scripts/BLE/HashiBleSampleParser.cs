@@ -112,11 +112,15 @@ namespace ChopChop.BLE
                 PopulateSelectedMotion(ref sample);
                 PopulateAccelerationOpeningIfNeeded(ref sample);
             }
+            else if (sample.HasImu1 || sample.HasImu2)
+            {
+                PopulateSelectedMotion(ref sample);
+            }
             else if (hasAnyImu)
             {
                 error = string.Format(
                     CultureInfo.InvariantCulture,
-                    "payload must contain acc+gyro for both IMUs. imu1 acc={0} gyro={1}, imu2 acc={2} gyro={3}",
+                    "payload must contain usable acc+gyro for at least one IMU. imu1 acc={0} gyro={1}, imu2 acc={2} gyro={3}",
                     sample.HasImu1Acceleration,
                     sample.HasImu1Gyro,
                     sample.HasImu2Acceleration,
@@ -124,7 +128,7 @@ namespace ChopChop.BLE
                 return false;
             }
 
-            if (recognizedFields == 0 && !sample.HasDualImu)
+            if (recognizedFields == 0 && !sample.HasImu1 && !sample.HasImu2)
             {
                 error = "Payload did not contain any recognized Hashi fields.";
                 return false;

@@ -656,6 +656,43 @@ namespace ChopChop.BLE
             return upperOk & lowerOk;
         }
 
+        public static bool TryGetCurrentIndependentRotations(
+            out Quaternion upperRotation,
+            out Quaternion lowerRotation)
+        {
+            return TryGetCurrentIndependentRotations(Vector3.forward, out upperRotation, out lowerRotation);
+        }
+
+        public static bool TryGetCurrentIndependentRotations(
+            Vector3 openingAxis,
+            out Quaternion upperRotation,
+            out Quaternion lowerRotation)
+        {
+            upperRotation = Quaternion.identity;
+            lowerRotation = Quaternion.identity;
+
+            if (!UseIndependentImuPose || (!imu1Pose.HasIntegratedPose && !imu2Pose.HasIntegratedPose))
+            {
+                return false;
+            }
+
+            switch (IndependentPoseMode)
+            {
+                case HashiIndependentPoseMode.GyroIntegrated:
+                case HashiIndependentPoseMode.AccelerationRelative:
+                    upperRotation = BuildImuOutput(imu1Pose.IntegratedRotation, HashiImuId.Imu1);
+                    lowerRotation = BuildImuOutput(imu2Pose.IntegratedRotation, HashiImuId.Imu2);
+                    return true;
+                case HashiIndependentPoseMode.AccelerationOpening:
+                case HashiIndependentPoseMode.OpeningAxisIntegrated:
+                case HashiIndependentPoseMode.RelativeOpeningIntegrated:
+                default:
+                    upperRotation = BuildOpeningAxisOutput(imu1Pose.OpeningAngleDegrees, HashiImuId.Imu1, openingAxis);
+                    lowerRotation = BuildOpeningAxisOutput(imu2Pose.OpeningAngleDegrees, HashiImuId.Imu2, openingAxis);
+                    return true;
+            }
+        }
+
         public static bool TryReadOpeningVelocity(
             HashiBleSample sample,
             HashiImuId imuId,

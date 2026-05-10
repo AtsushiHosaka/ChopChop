@@ -36,8 +36,6 @@ namespace ChopChop.Presentation
         private Vector3 lastDisplayOffsetWorld;
         private Vector3 lastPositionWithDisplayOffset;
         private bool hasAppliedDisplayOffset;
-        private float lastAcceptedBleRealtime = -1f;
-        private float ignoreBleUntilRealtime;
         private float displayedTheta;
         private Vector3 displayedPositionOffset;
 
@@ -100,8 +98,6 @@ namespace ChopChop.Presentation
             hasAppliedDisplayOffset = false;
             lastDisplayOffsetWorld = Vector3.zero;
             lastPositionWithDisplayOffset = Vector3.zero;
-            lastAcceptedBleRealtime = -1f;
-            ignoreBleUntilRealtime = 0f;
             displayedPositionOffset = Vector3.zero;
             ApplyParentRotationKeepingAnchor(AlignedBaseParentRotation(), Vector3.zero);
         }
@@ -122,33 +118,31 @@ namespace ChopChop.Presentation
             var blend = smoothing <= 0f ? 1f : 1f - Mathf.Exp(-smoothing * Time.deltaTime);
             var positionBlend = smoothing <= 0f ? 1f : 1f - Mathf.Exp(-(smoothing * 0.35f) * Time.deltaTime);
 
-            if (HashiImuMappingRuntime.UseIndependentImuPose)
+            if (HashiImuMappingRuntime.UseIndependentImuPose
+                && HashiImuMappingRuntime.TryGetCurrentIndependentRotations(
+                    NormalizedOpeningAxis(),
+                    out var upperImuRotation,
+                    out var lowerImuRotation))
             {
-                if (inputProvider.TryGetLatestBleSample(out var sample)
-                    && sample.HasDualImu
-                    && ShouldUseBleSample(sample)
-                    && HashiImuMappingRuntime.UpdateIndependentRotations(
-                        sample,
-                        Time.deltaTime,
-                        NormalizedOpeningAxis(),
-                        out var upperImuRotation,
-                        out var lowerImuRotation))
-                {
-                    displayedParentRotation = Quaternion.Slerp(
-                        displayedParentRotation,
-                        AlignedParentRotation(frame.LocalRotation),
-                        blend);
-                    displayedLowerRotation = Quaternion.Slerp(displayedLowerRotation, lowerBaseRotation * lowerImuRotation, blend);
-                    displayedUpperRotation = Quaternion.Slerp(displayedUpperRotation, upperBaseRotation * upperImuRotation, blend);
-                    displayedPositionOffset = Vector3.Lerp(displayedPositionOffset, HardwarePositionOffsetFor(frame), positionBlend);
+                displayedParentRotation = Quaternion.Slerp(
+                    displayedParentRotation,
+                    AlignedParentRotation(frame.LocalRotation),
+                    blend);
+                displayedPositionOffset = Vector3.Lerp(displayedPositionOffset, HardwarePositionOffsetFor(frame), positionBlend);
+                displayedLowerRotation = Quaternion.Slerp(
+                    displayedLowerRotation,
+                    lowerBaseRotation * lowerImuRotation,
+                    blend);
+                displayedUpperRotation = Quaternion.Slerp(
+                    displayedUpperRotation,
+                    upperBaseRotation * upperImuRotation,
+                    blend);
 
-                    ApplyParentRotationKeepingAnchor(displayedParentRotation, displayedPositionOffset);
-                    lowerChopstick.localRotation = displayedLowerRotation;
-                    upperChopstick.localRotation = displayedUpperRotation;
-                    ApplyChopstickLengthScale();
-                    ApplyOpeningSeparation();
-                    AcceptBleSample(sample);
-                }
+                ApplyParentRotationKeepingAnchor(displayedParentRotation, displayedPositionOffset);
+                lowerChopstick.localRotation = displayedLowerRotation;
+                upperChopstick.localRotation = displayedUpperRotation;
+                ApplyChopstickLengthScale();
+                ApplyOpeningSeparation();
 
                 return;
             }
@@ -348,41 +342,19 @@ namespace ChopChop.Presentation
             hasAppliedDisplayOffset = true;
         }
 
-        private bool ShouldUseBleSample(HashiBleSample sample)
-        {
-            var now = Time.realtimeSinceStartup;
-            var maxAge = Mathf.Max(0f, HashiImuMappingRuntime.MaxBleSampleAgeSeconds);
-            if (maxAge > 0f && now - sample.RealtimeReceived > maxAge)
-            {
-                return false;
-            }
-
-            if (now < ignoreBleUntilRealtime)
-            {
-                return false;
-            }
-
-            var maxGap = Mathf.Max(0f, HashiImuMappingRuntime.MaxBleSampleAgeSeconds);
-            if (lastAcceptedBleRealtime > 0f && maxGap > 0f && sample.RealtimeReceived - lastAcceptedBleRealtime > maxGap)
-            {
-                ignoreBleUntilRealtime = now + Mathf.Max(0f, HashiImuMappingRuntime.BleResumeSettleSeconds);
-                lastAcceptedBleRealtime = sample.RealtimeReceived;
-                return false;
-            }
-
-            return true;
-        }
-
-        private void AcceptBleSample(HashiBleSample sample)
-        {
-            lastAcceptedBleRealtime = sample.RealtimeReceived;
-        }
-
         private void ApplyOpeningSeparation()
+        {
+            ApplyFallbackSeparation(ResolveOpeningDegrees(inputProvider != null ? inputProvider.CurrentFrame : HashiInputFrame.Empty));
+        }
+
+        private static float ResolveOpeningDegrees(HashiInputFrame frame)
         {
             var imu1 = HashiImuMappingRuntime.Imu1PoseDebugState;
             var imu2 = HashiImuMappingRuntime.Imu2PoseDebugState;
-            ApplyFallbackSeparation(Mathf.Max(Mathf.Abs(imu1.OpeningAngleDegrees), Mathf.Abs(imu2.OpeningAngleDegrees)));
+            var independentOpening = Mathf.Max(
+                Mathf.Abs(imu1.OpeningAngleDegrees),
+                Mathf.Abs(imu2.OpeningAngleDegrees));
+            return Mathf.Max(Mathf.Abs(frame.ThetaDegrees), independentOpening);
         }
 
         private void ApplyFallbackSeparation(float openingDegrees)

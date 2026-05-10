@@ -179,18 +179,19 @@ namespace ChopChop.Debugging
             GUILayout.Label($"BLE: {provider.DebugSourceStatus}");
             GUILayout.Label($"Frame: sample={frame.HasSample} theta={frame.ThetaDegrees:0.0} acc={FormatVector(frame.Acceleration)} gyro={FormatVector(frame.GyroDegreesPerSecond)}");
 
-            var hasDualSample = provider.TryGetLatestBleSample(out var sample) && sample.HasDualImu;
-            if (hasDualSample)
+            var hasBleSample = provider.TryGetLatestBleSample(out var sample);
+            var hasImuSample = hasBleSample && (sample.HasImu1 || sample.HasImu2);
+            if (hasBleSample)
             {
                 DrawSample(sample);
             }
             else
             {
-                GUILayout.Label("Latest dual IMU sample: none");
+                GUILayout.Label("Latest BLE sample: none");
             }
 
-            DrawBleCaptureControls(hasDualSample);
-            DrawIndependentDiagnostics(hasDualSample, sample);
+            DrawBleCaptureControls(hasImuSample);
+            DrawIndependentDiagnostics(hasImuSample, sample);
 
             GUILayout.Space(8f);
             showAdvancedControls = GUILayout.Toggle(showAdvancedControls, "Show advanced sliders");
@@ -205,7 +206,7 @@ namespace ChopChop.Debugging
             GUILayout.Space(8f);
             GUILayout.Label("Independent IMU pose");
             useIndependentImuPose = GUILayout.Toggle(useIndependentImuPose, "Use IMU1 upper / IMU2 lower");
-            autoCaptureIndependentNeutral = GUILayout.Toggle(autoCaptureIndependentNeutral, "Auto neutral from first dual sample");
+            autoCaptureIndependentNeutral = GUILayout.Toggle(autoCaptureIndependentNeutral, "Auto neutral from first usable IMU sample");
             independentPoseMode = DrawEnumCycle("Pose mode", independentPoseMode);
             independentPoseWeight = DrawSlider("Independent pose weight", independentPoseWeight, 0f, 1f);
             gyroDeadzoneDegreesPerSecond = DrawSlider("Gyro deadzone dps", gyroDeadzoneDegreesPerSecond, 0f, 20f);
@@ -245,7 +246,7 @@ namespace ChopChop.Debugging
             }
             GUILayout.EndHorizontal();
             useHardwarePosition = GUILayout.Toggle(useHardwarePosition, "Use BLE IMU position offset");
-            autoCapturePositionNeutral = GUILayout.Toggle(autoCapturePositionNeutral, "Auto position neutral from first dual sample");
+            autoCapturePositionNeutral = GUILayout.Toggle(autoCapturePositionNeutral, "Auto position neutral from first usable IMU sample");
             positionTrackingMode = DrawEnumCycle("Position mode", positionTrackingMode);
             positionMotionSource = DrawEnumCycle("Position source", positionMotionSource);
             positionInputEuler = DrawEulerControls("Position input basis", positionInputEuler);
@@ -370,7 +371,7 @@ namespace ChopChop.Debugging
             GUILayout.Label($"Opening velocity dps IMU1 {imu1OpeningVelocity:0.0} / IMU2 {imu2OpeningVelocity:0.0}");
         }
 
-        private void DrawBleCaptureControls(bool hasDualSample)
+        private void DrawBleCaptureControls(bool hasImuSample)
         {
             GUILayout.Space(8f);
             GUILayout.Label("BLE motion capture");
@@ -381,7 +382,7 @@ namespace ChopChop.Debugging
             bleCaptureMaxSeconds = DrawSlider("Capture seconds", bleCaptureMaxSeconds, 2f, 20f);
 
             GUILayout.BeginHorizontal();
-            GUI.enabled = hasDualSample && !isBleCaptureRecording;
+            GUI.enabled = !isBleCaptureRecording;
             if (GUILayout.Button("Start BLE capture"))
             {
                 StartBleCapture();
@@ -407,33 +408,41 @@ namespace ChopChop.Debugging
             GUI.enabled = true;
             GUILayout.EndHorizontal();
 
-            if (!hasDualSample)
+            if (!hasImuSample)
             {
-                GUILayout.Label("Waiting for dual IMU BLE sample before capture.");
+                GUILayout.Label("Capture can start now; rows will be added once usable IMU samples arrive.");
             }
         }
 
-        private void DrawIndependentDiagnostics(bool hasDualSample, HashiBleSample sample)
+        private void DrawIndependentDiagnostics(bool hasImuSample, HashiBleSample sample)
         {
             GUILayout.Space(8f);
             GUILayout.Label("Independent IMU diagnostics");
             GUILayout.Label(diagnosticStatus);
             GUILayout.Label("AccelerationOpening uses gravity tilt from neutral; it should stay valid after the motion stops.");
-            GUILayout.Label("Current logs suggest both IMUs see gravity near +Z while closed, and upper opening tilts around IMU +X.");
-            if (!hasDualSample)
+            GUILayout.Label("RelativeOpeningIntegrated uses IMU1-IMU2 gyro difference so whole-stick rotation is less likely to become opening.");
+            if (!hasImuSample)
             {
-                GUILayout.Label("Waiting for dual IMU sample; diagnostic buttons are disabled.");
+                GUILayout.Label("Waiting for usable IMU sample; diagnostic buttons are disabled.");
             }
             else
             {
-                DrawImuDiagnosticReadout("IMU1 upper", sample.Imu1AccelerationRaw, sample.Imu1GyroRaw, true);
-                DrawImuDiagnosticReadout("IMU2 lower", sample.Imu2AccelerationRaw, sample.Imu2GyroRaw, false);
+                if (sample.HasImu1)
+                {
+                    DrawImuDiagnosticReadout("IMU1 upper", sample.Imu1AccelerationRaw, sample.Imu1GyroRaw, true);
+                }
+
+                if (sample.HasImu2)
+                {
+                    DrawImuDiagnosticReadout("IMU2 lower", sample.Imu2AccelerationRaw, sample.Imu2GyroRaw, false);
+                }
+
                 DrawOpeningAxisReadout(sample);
             }
             DrawHardwarePositionReadout();
 
-            GUI.enabled = hasDualSample;
             GUILayout.BeginHorizontal();
+            GUI.enabled = hasImuSample && sample.HasImu1;
             if (GUILayout.Button("Capture IMU1 neutral"))
             {
                 ApplyToRuntime();
@@ -442,6 +451,7 @@ namespace ChopChop.Debugging
                     : "IMU1 neutral capture failed.";
             }
 
+            GUI.enabled = hasImuSample && sample.HasImu2;
             if (GUILayout.Button("Capture IMU2 neutral"))
             {
                 ApplyToRuntime();
@@ -452,6 +462,7 @@ namespace ChopChop.Debugging
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
+            GUI.enabled = hasImuSample && sample.HasImu1;
             if (GUILayout.Button("Zero IMU1 opening"))
             {
                 ApplyToRuntime();
@@ -460,6 +471,7 @@ namespace ChopChop.Debugging
                     : "IMU1 gyro zero failed.";
             }
 
+            GUI.enabled = hasImuSample && sample.HasImu2;
             if (GUILayout.Button("Zero IMU2 opening"))
             {
                 ApplyToRuntime();
@@ -469,18 +481,19 @@ namespace ChopChop.Debugging
             }
             GUILayout.EndHorizontal();
 
+            GUI.enabled = hasImuSample;
             if (GUILayout.Button("Zero Both Openings"))
             {
                 ApplyToRuntime();
                 var imu1Ok = HashiImuMappingRuntime.ZeroImu1IntegratedPose(sample);
                 var imu2Ok = HashiImuMappingRuntime.ZeroImu2IntegratedPose(sample);
-                diagnosticStatus = imu1Ok && imu2Ok
-                    ? $"Both openings zeroed and neutrals captured seq {sample.Sequence}."
+                diagnosticStatus = imu1Ok || imu2Ok
+                    ? $"Available opening neutral(s) zeroed seq {sample.Sequence}."
                     : "Opening zero failed.";
             }
 
             GUILayout.BeginHorizontal();
-            GUI.enabled = hasDualSample;
+            GUI.enabled = hasImuSample;
             if (GUILayout.Button("Zero Hardware Position"))
             {
                 ApplyToRuntime();
@@ -499,11 +512,11 @@ namespace ChopChop.Debugging
 
             if (GUILayout.Button("Copy/Print movement report"))
             {
-                LogMovementReport(hasDualSample, sample);
+                LogMovementReport(hasImuSample, sample);
             }
 
             GUILayout.BeginHorizontal();
-            GUI.enabled = hasDualSample;
+            GUI.enabled = hasImuSample && sample.HasImu1;
             if (GUILayout.Button("Record IMU1 gravity"))
             {
                 imu1GravitySnapshot = DiagnosticSnapshot.FromSample("IMU1 gravity", HashiImuId.Imu1, sample);
@@ -511,6 +524,7 @@ namespace ChopChop.Debugging
                 Debug.Log(BuildDiagnosticRecordLog(imu1GravitySnapshot));
             }
 
+            GUI.enabled = hasImuSample && sample.HasImu2;
             if (GUILayout.Button("Record IMU2 gravity"))
             {
                 imu2GravitySnapshot = DiagnosticSnapshot.FromSample("IMU2 gravity", HashiImuId.Imu2, sample);
@@ -520,6 +534,7 @@ namespace ChopChop.Debugging
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
+            GUI.enabled = hasImuSample && sample.HasImu1;
             if (GUILayout.Button("Record IMU1 motion"))
             {
                 imu1MotionSnapshot = DiagnosticSnapshot.FromSample("IMU1 motion", HashiImuId.Imu1, sample);
@@ -527,6 +542,7 @@ namespace ChopChop.Debugging
                 Debug.Log(BuildDiagnosticRecordLog(imu1MotionSnapshot));
             }
 
+            GUI.enabled = hasImuSample && sample.HasImu2;
             if (GUILayout.Button("Record IMU2 motion"))
             {
                 imu2MotionSnapshot = DiagnosticSnapshot.FromSample("IMU2 motion", HashiImuId.Imu2, sample);
@@ -537,13 +553,13 @@ namespace ChopChop.Debugging
             GUI.enabled = true;
 
             GUILayout.BeginHorizontal();
-            GUI.enabled = hasDualSample
+            GUI.enabled = hasImuSample
                 || HasAnyDiagnosticSnapshot()
                 || HashiImuMappingRuntime.HasImu1Neutral
                 || HashiImuMappingRuntime.HasImu2Neutral;
             if (GUILayout.Button("Copy/Print independent IMU report"))
             {
-                LogIndependentImuReport(hasDualSample, sample);
+                LogIndependentImuReport(hasImuSample, sample);
             }
 
             GUI.enabled = true;
@@ -663,7 +679,7 @@ namespace ChopChop.Debugging
                 return;
             }
 
-            if (!provider.TryGetLatestBleSample(out var sample) || !sample.HasDualImu)
+            if (!provider.TryGetLatestBleSample(out var sample) || (!sample.HasImu1 && !sample.HasImu2))
             {
                 return;
             }
@@ -731,7 +747,7 @@ namespace ChopChop.Debugging
             diagnosticStatus = "Safe bounded movement profile applied. Zero Hardware Position before testing.";
         }
 
-        private void LogIndependentImuReport(bool hasDualSample, HashiBleSample sample)
+        private void LogIndependentImuReport(bool hasImuSample, HashiBleSample sample)
         {
             var builder = new StringBuilder(4096);
             builder.AppendLine("[HashiIndependentImu BEGIN]");
@@ -740,12 +756,19 @@ namespace ChopChop.Debugging
             builder.AppendLine();
             AppendRuntimeState(builder);
 
-            if (hasDualSample)
+            if (hasImuSample)
             {
                 builder.AppendLine();
                 builder.AppendLine("currentSample:");
-                AppendLiveImuState(builder, "IMU1 upper", HashiImuId.Imu1, sample);
-                AppendLiveImuState(builder, "IMU2 lower", HashiImuId.Imu2, sample);
+                if (sample.HasImu1)
+                {
+                    AppendLiveImuState(builder, "IMU1 upper", HashiImuId.Imu1, sample);
+                }
+
+                if (sample.HasImu2)
+                {
+                    AppendLiveImuState(builder, "IMU2 lower", HashiImuId.Imu2, sample);
+                }
             }
 
             builder.AppendLine();
@@ -761,7 +784,7 @@ namespace ChopChop.Debugging
             Debug.Log(report);
         }
 
-        private void LogMovementReport(bool hasDualSample, HashiBleSample sample)
+        private void LogMovementReport(bool hasImuSample, HashiBleSample sample)
         {
             var builder = new StringBuilder(2048);
             builder.AppendLine("[HashiMovement BEGIN]");
@@ -777,12 +800,19 @@ namespace ChopChop.Debugging
                 builder.AppendLine($"  localPosition={FormatVectorPrecise(frame.LocalPosition)} localRotationEuler={FormatVectorPrecise(frame.LocalRotation.eulerAngles)} hasSample={frame.HasSample} timeReceived={frame.TimeReceived:0.###}");
             }
 
-            if (hasDualSample)
+            if (hasImuSample)
             {
                 builder.AppendLine();
                 builder.AppendLine("sample:");
-                AppendLiveImuState(builder, "IMU1 upper", HashiImuId.Imu1, sample);
-                AppendLiveImuState(builder, "IMU2 lower", HashiImuId.Imu2, sample);
+                if (sample.HasImu1)
+                {
+                    AppendLiveImuState(builder, "IMU1 upper", HashiImuId.Imu1, sample);
+                }
+
+                if (sample.HasImu2)
+                {
+                    AppendLiveImuState(builder, "IMU2 lower", HashiImuId.Imu2, sample);
+                }
             }
 
             builder.AppendLine("[HashiMovement END]");
