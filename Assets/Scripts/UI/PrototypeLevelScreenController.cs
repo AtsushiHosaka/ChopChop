@@ -12,7 +12,7 @@ namespace ChopChop.UI
         private LevelDefinition levelDefinition;
         private Text titleText;
         private Text descriptionText;
-        private Text languageText;
+        private Text settingsText;
         private Text levelSelectText;
 
         public static GameObject Create(GameLocalization localization, SceneNavigator navigator, LevelDefinition levelDefinition)
@@ -61,10 +61,10 @@ namespace ChopChop.UI
             descriptionText = UiFactory.CreateText(textGroup.transform, "Description", 21, FontStyle.Normal, TextAnchor.MiddleLeft, new Color(1f, 1f, 1f, 0.84f));
             UiFactory.SetSize(descriptionText.rectTransform, 920f, 32f);
 
-            var languageButton = UiFactory.CreateButton(top, "Language Button", string.Empty, new Color(0.16f, 0.48f, 0.62f, 1f), Color.white);
-            UiFactory.SetSize(languageButton.GetComponent<RectTransform>(), 170f, 58f);
-            languageText = languageButton.GetComponentInChildren<Text>();
-            languageButton.onClick.AddListener(localization.ToggleLanguage);
+            var settingsButton = UiFactory.CreateButton(top, "Settings Button", string.Empty, new Color(0.34f, 0.23f, 0.12f, 0.96f), new Color(0.98f, 0.92f, 0.82f, 1f));
+            UiFactory.SetSize(settingsButton.GetComponent<RectTransform>(), 170f, 58f);
+            settingsText = settingsButton.GetComponentInChildren<Text>();
+            settingsButton.onClick.AddListener(navigator.LoadSettings);
 
             var levelSelectButton = UiFactory.CreateButton(top, "Level Select Button", string.Empty, new Color(0.19f, 0.21f, 0.22f, 1f), Color.white);
             UiFactory.SetSize(levelSelectButton.GetComponent<RectTransform>(), 220f, 58f);
@@ -80,7 +80,7 @@ namespace ChopChop.UI
                 descriptionText.text = localization.Text(levelDefinition.descriptionKey);
             }
 
-            languageText.text = localization.Text(LocalizationKeys.App.Language);
+            settingsText.text = localization.Text(LocalizationKeys.App.Settings);
             levelSelectText.text = localization.Text(LocalizationKeys.Result.LevelSelect);
         }
     }

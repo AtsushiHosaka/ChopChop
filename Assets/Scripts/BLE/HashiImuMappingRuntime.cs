@@ -120,9 +120,9 @@ namespace ChopChop.BLE
         public static float OpeningAngleMaxDegrees { get; set; } = 35f;
         public static float OpeningAngleStaticJumpRejectDegrees { get; set; } = 12f;
         public static float OpeningAngleStaticVelocityThresholdDps { get; set; } = 20f;
-        public static float RelativeOpeningAccelerationWeight { get; set; } = 0.9f;
-        public static float RelativeOpeningGyroFullWeightBelowDps { get; set; } = 60f;
-        public static float RelativeOpeningGyroZeroWeightAboveDps { get; set; } = 180f;
+        public static float RelativeOpeningAccelerationWeight { get; set; } = 0.35f;
+        public static float RelativeOpeningGyroFullWeightBelowDps { get; set; } = 140f;
+        public static float RelativeOpeningGyroZeroWeightAboveDps { get; set; } = 900f;
         public static float MaxBleSampleAgeSeconds { get; set; } = 0.6f;
         public static float BleResumeSettleSeconds { get; set; } = 0.2f;
         public static float ChopstickOpeningSeparationPerDegree { get; set; } = 0.0015f;
@@ -213,9 +213,9 @@ namespace ChopChop.BLE
             OpeningAngleMaxDegrees = 35f;
             OpeningAngleStaticJumpRejectDegrees = 12f;
             OpeningAngleStaticVelocityThresholdDps = 20f;
-            RelativeOpeningAccelerationWeight = 0.9f;
-            RelativeOpeningGyroFullWeightBelowDps = 60f;
-            RelativeOpeningGyroZeroWeightAboveDps = 180f;
+            RelativeOpeningAccelerationWeight = 0.35f;
+            RelativeOpeningGyroFullWeightBelowDps = 140f;
+            RelativeOpeningGyroZeroWeightAboveDps = 900f;
             MaxBleSampleAgeSeconds = 0.6f;
             BleResumeSettleSeconds = 0.2f;
             ChopstickOpeningSeparationPerDegree = 0.0015f;
@@ -1017,7 +1017,9 @@ namespace ChopChop.BLE
                 out var velocityDominance);
             if (IsGyroSaturated(sample, HashiImuMotionSource.Difference))
             {
-                gyroWeight = 0f;
+                gyroWeight = Mathf.Abs(relativeVelocity) >= Mathf.Max(OpeningAngleStaticVelocityThresholdDps, 1f)
+                    ? Mathf.Max(gyroWeight, 0.35f)
+                    : 0f;
             }
 
             relativeVelocity *= gyroWeight;
@@ -1031,27 +1033,52 @@ namespace ChopChop.BLE
             }
 
             var hasAccelerationOpening = TryReadRelativeAccelerationOpening(sample, out var accelerationOpening);
+            var accelerationCorrectionAllowed = false;
             imu1Pose.RelativeOpeningGyroWeight = gyroWeight;
             imu1Pose.RelativeOpeningGyroMotionDegreesPerSecond = gyroMotion;
             imu1Pose.RelativeOpeningVelocityDominance = velocityDominance;
             imu1Pose.HasRelativeOpeningAcceleration = hasAccelerationOpening;
             imu1Pose.RelativeOpeningAccelerationDegrees = hasAccelerationOpening ? accelerationOpening : 0f;
-            imu1Pose.RelativeOpeningAccelerationCorrectionAllowed = hasAccelerationOpening;
             imu2Pose.RelativeOpeningGyroWeight = gyroWeight;
             imu2Pose.RelativeOpeningGyroMotionDegreesPerSecond = gyroMotion;
             imu2Pose.RelativeOpeningVelocityDominance = velocityDominance;
             imu2Pose.HasRelativeOpeningAcceleration = hasAccelerationOpening;
             imu2Pose.RelativeOpeningAccelerationDegrees = hasAccelerationOpening ? accelerationOpening : 0f;
-            imu2Pose.RelativeOpeningAccelerationCorrectionAllowed = hasAccelerationOpening;
 
             if (hasAccelerationOpening)
             {
-                var correctionWeight = Mathf.Clamp01(RelativeOpeningAccelerationWeight);
-                imu1Pose.OpeningAngleDegrees = ClampOpeningAngle(Mathf.Lerp(
-                    imu1Pose.OpeningAngleDegrees,
-                    accelerationOpening,
-                    correctionWeight));
+                var correctionMotionWeight = 1f - Mathf.InverseLerp(
+                    Mathf.Max(0f, RelativeOpeningGyroFullWeightBelowDps),
+                    Mathf.Max(RelativeOpeningGyroFullWeightBelowDps + 1f, RelativeOpeningGyroZeroWeightAboveDps),
+                    gyroMotion);
+                var jump = Mathf.Abs(accelerationOpening - imu1Pose.OpeningAngleDegrees);
+                var jumpLimit = Mathf.Max(OpeningAngleStaticJumpRejectDegrees, 1f);
+                var currentLooksClosed = Mathf.Abs(imu1Pose.OpeningAngleDegrees) <= jumpLimit;
+                var accelerationLooksClosed = Mathf.Abs(accelerationOpening) <= jumpLimit;
+                var correctionDirection = accelerationOpening - imu1Pose.OpeningAngleDegrees;
+                var gyroSupportsCorrection = Mathf.Abs(correctionDirection) > 0.001f
+                    && Mathf.Abs(relativeVelocity) >= Mathf.Max(OpeningAngleStaticVelocityThresholdDps, 1f)
+                    && Mathf.Sign(relativeVelocity) == Mathf.Sign(correctionDirection);
+                accelerationCorrectionAllowed = jump <= jumpLimit
+                    || (currentLooksClosed && accelerationLooksClosed)
+                    || (gyroSupportsCorrection && jump <= jumpLimit * 2f);
+                if (accelerationCorrectionAllowed)
+                {
+                    var correctionRate = Mathf.Clamp01(RelativeOpeningAccelerationWeight)
+                        * Mathf.Clamp01(correctionMotionWeight)
+                        * 6f;
+                    var correctionAlpha = correctionRate <= 0f || deltaTime <= 0f
+                        ? 0f
+                        : 1f - Mathf.Exp(-correctionRate * deltaTime);
+                    imu1Pose.OpeningAngleDegrees = ClampOpeningAngle(Mathf.Lerp(
+                        imu1Pose.OpeningAngleDegrees,
+                        accelerationOpening,
+                        correctionAlpha));
+                }
             }
+
+            imu1Pose.RelativeOpeningAccelerationCorrectionAllowed = accelerationCorrectionAllowed;
+            imu2Pose.RelativeOpeningAccelerationCorrectionAllowed = accelerationCorrectionAllowed;
 
             imu1Pose.HasIntegratedPose = true;
             imu1Pose.LastSampleRealtime = sample.RealtimeReceived;

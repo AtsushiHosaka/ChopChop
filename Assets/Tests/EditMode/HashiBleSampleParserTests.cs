@@ -1,6 +1,7 @@
 using ChopChop.BLE;
 using ChopChop.Input;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace ChopChop.Tests.EditMode
 {
@@ -105,6 +106,72 @@ namespace ChopChop.Tests.EditMode
             Assert.That(BleHashiInputSource.ShouldAutoReconnect("Native plugin missing"), Is.False);
             Assert.That(BleHashiInputSource.ShouldAutoReconnect("Unsupported platform"), Is.False);
             Assert.That(BleHashiInputSource.ShouldAutoReconnect("Unauthorized: Bluetooth permission denied"), Is.False);
+        }
+
+        [Test]
+        public void RelativeOpeningAccelerationDoesNotOpenFromClosedWithoutGyroSupport()
+        {
+            HashiImuMappingRuntime.IndependentPoseMode = HashiIndependentPoseMode.RelativeOpeningIntegrated;
+            HashiImuMappingRuntime.RelativeOpeningAccelerationWeight = 1f;
+            HashiImuMappingRuntime.RawAccelerationToG = 1f;
+            HashiImuMappingRuntime.GyroDeadzoneDegreesPerSecond = 0f;
+            HashiImuMappingRuntime.OpeningAngleStaticJumpRejectDegrees = 12f;
+            HashiImuMappingRuntime.OpeningAngleStaticVelocityThresholdDps = 20f;
+
+            var neutral = ParseDualImuCsv("0,0,1,0,0,0,0,0,1,0,0,0");
+            var falseOpenFromAccelerationOnly = ParseDualImuCsv("0,-0.573576,0.819152,0,0,0,0,0,1,0,0,0");
+
+            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
+                neutral,
+                0.1f,
+                Vector3.up,
+                out _,
+                out _), Is.True);
+            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
+                falseOpenFromAccelerationOnly,
+                0.1f,
+                Vector3.up,
+                out _,
+                out _), Is.True);
+
+            var imu1State = HashiImuMappingRuntime.Imu1PoseDebugState;
+            Assert.That(imu1State.RelativeOpeningAccelerationDegrees, Is.GreaterThan(20f));
+            Assert.That(imu1State.RelativeOpeningAccelerationCorrectionAllowed, Is.False);
+            Assert.That(imu1State.OpeningAngleDegrees, Is.LessThan(1f));
+        }
+
+        [Test]
+        public void RelativeOpeningStillRespondsWhenOpeningGyroSaturates()
+        {
+            HashiImuMappingRuntime.IndependentPoseMode = HashiIndependentPoseMode.RelativeOpeningIntegrated;
+            HashiImuMappingRuntime.RelativeOpeningAccelerationWeight = 0f;
+            HashiImuMappingRuntime.RawAccelerationToG = 1f;
+            HashiImuMappingRuntime.RawGyroToDegreesPerSecond = 1f;
+            HashiImuMappingRuntime.GyroDeadzoneDegreesPerSecond = 0f;
+
+            var neutral = ParseDualImuCsv("0,0,1,0,0,0,0,0,1,0,0,0");
+            var saturatedOpening = ParseDualImuCsv("0,0,1,32767,0,0,0,0,1,0,0,0");
+
+            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
+                neutral,
+                0.1f,
+                Vector3.up,
+                out _,
+                out _), Is.True);
+            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
+                saturatedOpening,
+                0.1f,
+                Vector3.up,
+                out _,
+                out _), Is.True);
+
+            Assert.That(HashiImuMappingRuntime.Imu1PoseDebugState.OpeningAngleDegrees, Is.GreaterThan(20f));
+        }
+
+        private static HashiBleSample ParseDualImuCsv(string payload)
+        {
+            Assert.That(HashiBleSampleParser.TryParse(payload, out var sample, out var error), Is.True, error);
+            return sample;
         }
     }
 }

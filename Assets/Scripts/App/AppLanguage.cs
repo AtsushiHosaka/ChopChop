@@ -3,6 +3,10 @@ namespace ChopChop.App
     public enum AppLanguage
     {
         Japanese,
-        English
+        English,
+        Korean,
+        ChineseSimplified,
+        French,
+        Spanish
     }
 }

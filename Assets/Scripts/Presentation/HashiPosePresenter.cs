@@ -120,6 +120,7 @@ namespace ChopChop.Presentation
             }
 
             var blend = smoothing <= 0f ? 1f : 1f - Mathf.Exp(-smoothing * Time.deltaTime);
+            var positionBlend = smoothing <= 0f ? 1f : 1f - Mathf.Exp(-(smoothing * 0.35f) * Time.deltaTime);
 
             if (HashiImuMappingRuntime.UseIndependentImuPose)
             {
@@ -139,7 +140,7 @@ namespace ChopChop.Presentation
                         blend);
                     displayedLowerRotation = Quaternion.Slerp(displayedLowerRotation, lowerBaseRotation * lowerImuRotation, blend);
                     displayedUpperRotation = Quaternion.Slerp(displayedUpperRotation, upperBaseRotation * upperImuRotation, blend);
-                    displayedPositionOffset = Vector3.Lerp(displayedPositionOffset, HardwarePositionOffsetFor(frame), blend);
+                    displayedPositionOffset = Vector3.Lerp(displayedPositionOffset, HardwarePositionOffsetFor(frame), positionBlend);
 
                     ApplyParentRotationKeepingAnchor(displayedParentRotation, displayedPositionOffset);
                     lowerChopstick.localRotation = displayedLowerRotation;
@@ -162,7 +163,7 @@ namespace ChopChop.Presentation
                 displayedUpperRotation,
                 upperBaseRotation * Quaternion.AngleAxis(displayedTheta, NormalizedOpeningAxis()),
                 blend);
-            displayedPositionOffset = Vector3.Lerp(displayedPositionOffset, HardwarePositionOffsetFor(frame), blend);
+            displayedPositionOffset = Vector3.Lerp(displayedPositionOffset, HardwarePositionOffsetFor(frame), positionBlend);
 
             ApplyParentRotationKeepingAnchor(displayedParentRotation, displayedPositionOffset);
             lowerChopstick.localRotation = displayedLowerRotation;

@@ -44,15 +44,15 @@ namespace ChopChop.Tests.EditMode
         }
 
         [Test]
-        public void ResultScreenCreatesRetryBackAndLanguageButtons()
+        public void ResultScreenCreatesRetryAndLevelSelectButtons()
         {
             var result = new LevelRunResult(12.5f, 1, 80, 92, true);
             var root = ResultScreenController.Create(new GameLocalization(), new SceneNavigator(), result, AppScenes.SukiyakiLevel);
             createdObjects.Add(root);
 
             AssertButtonExists(root, "Retry Button");
-            AssertButtonExists(root, "Back Button");
-            AssertButtonExists(root, "Language Button");
+            AssertButtonExists(root, "Level Select Button");
+            AssertButtonDoesNotExist(root, "Language Button");
         }
 
         [Test]
@@ -69,13 +69,27 @@ namespace ChopChop.Tests.EditMode
         }
 
         [Test]
-        public void SettingsScreenCreatesLanguageAndBackButtons()
+        public void SettingsScreenStartsAtSettingsMenu()
         {
             var root = SettingsScreenController.Create(new GameLocalization(), new SceneNavigator());
             createdObjects.Add(root);
 
-            AssertButtonExists(root, "Language Button");
+            AssertButtonExists(root, "Language Settings Button");
             AssertButtonExists(root, "Back Button");
+            AssertButtonNotVisible(root, "Lang_Japanese");
+        }
+
+        [Test]
+        public void SettingsScreenShowsLanguageOptionsAfterLanguageSettings()
+        {
+            var root = SettingsScreenController.Create(new GameLocalization(), new SceneNavigator());
+            createdObjects.Add(root);
+
+            FindButton(root, "Language Settings Button").onClick.Invoke();
+
+            AssertButtonVisible(root, "Lang_Japanese");
+            AssertButtonVisible(root, "Lang_English");
+            AssertButtonVisible(root, "Language Back Button");
         }
 
         private static void AssertButtonExists(GameObject root, string name)
@@ -97,6 +111,25 @@ namespace ChopChop.Tests.EditMode
             }
 
             return null;
+        }
+
+        private static void AssertButtonDoesNotExist(GameObject root, string name)
+        {
+            Assert.That(FindButton(root, name), Is.Null, $"{name} should not exist.");
+        }
+
+        private static void AssertButtonVisible(GameObject root, string name)
+        {
+            var button = FindButton(root, name);
+            Assert.That(button, Is.Not.Null, $"{name} should exist.");
+            Assert.That(button.gameObject.activeInHierarchy, Is.True, $"{name} should be visible.");
+        }
+
+        private static void AssertButtonNotVisible(GameObject root, string name)
+        {
+            var button = FindButton(root, name);
+            Assert.That(button, Is.Not.Null, $"{name} should exist.");
+            Assert.That(button.gameObject.activeInHierarchy, Is.False, $"{name} should be hidden.");
         }
 
         private static int CountLevelButtons(GameObject root)

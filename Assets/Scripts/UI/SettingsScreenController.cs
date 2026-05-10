@@ -8,11 +8,29 @@ namespace ChopChop.UI
     {
         private const string BackgroundResourcePath = "UI/Start/start_background_wafu";
 
+        private static readonly (AppLanguage lang, string nativeLabel)[] LanguageOptions =
+        {
+            (AppLanguage.Japanese,          "日本語"),
+            (AppLanguage.English,           "English"),
+            (AppLanguage.Korean,            "한국어"),
+            (AppLanguage.ChineseSimplified, "中文(简体)"),
+            (AppLanguage.French,            "Français"),
+            (AppLanguage.Spanish,           "Español"),
+        };
+
+        private static readonly Color SelectedColor   = new Color(0.72f, 0.18f, 0.11f, 0.92f);
+        private static readonly Color UnselectedColor = new Color(0.20f, 0.17f, 0.13f, 0.90f);
+
         private GameLocalization localization;
         private SceneNavigator navigator;
-        private Text titleText;
-        private Text languageText;
-        private Text backText;
+        private RectTransform settingsPanel;
+        private RectTransform languagePanel;
+        private Text settingsTitleText;
+        private Text languageButtonText;
+        private Text settingsBackText;
+        private Text languageTitleText;
+        private Text languageBackText;
+        private Button[] languageOptionButtons;
 
         public static GameObject Create(GameLocalization localization, SceneNavigator navigator)
         {
@@ -30,41 +48,83 @@ namespace ChopChop.UI
             ApplyBackgroundImage();
             CreateReadableScrim();
             CreateLeftShade();
-            CreatePanel();
+            CreateSettingsPanel();
+            CreateLanguagePanel();
+            ShowSettingsPanel();
 
             localization.LanguageChanged += UpdateTexts;
             UpdateTexts();
         }
 
-        private void CreatePanel()
+        private void CreateSettingsPanel()
         {
-            var panel = UiFactory.CreatePanel(transform, "Settings Panel", new Color(0.025f, 0.02f, 0.015f, 0.72f));
-            UiFactory.Anchor(panel, new Vector2(0.09f, 0.19f), new Vector2(0.48f, 0.82f), Vector2.zero, Vector2.zero);
-            UiFactory.AddFadeSlideIn(panel.gameObject, 0.38f, 0.04f, new Vector2(-20f, 0f), 0.98f);
-            UiFactory.AddVerticalLayout(panel.gameObject, 20f, TextAnchor.UpperLeft, new RectOffset(34, 34, 30, 30));
+            settingsPanel = UiFactory.CreatePanel(transform, "Settings Panel", new Color(0.025f, 0.02f, 0.015f, 0.72f));
+            UiFactory.Anchor(settingsPanel, new Vector2(0.09f, 0.08f), new Vector2(0.48f, 0.92f), Vector2.zero, Vector2.zero);
+            UiFactory.AddFadeSlideIn(settingsPanel.gameObject, 0.38f, 0.04f, new Vector2(-20f, 0f), 0.98f);
+            UiFactory.AddVerticalLayout(settingsPanel.gameObject, 16f, TextAnchor.UpperLeft, new RectOffset(34, 34, 30, 30));
 
-            titleText = UiFactory.CreateText(panel, "Title", 58, FontStyle.Bold, TextAnchor.MiddleLeft, Color.white);
-            UiFactory.SetPreferredHeight(titleText.rectTransform, 74f);
-            titleText.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
+            settingsTitleText = UiFactory.CreateText(settingsPanel, "Title", 52, FontStyle.Bold, TextAnchor.MiddleLeft, Color.white);
+            UiFactory.SetPreferredHeight(settingsTitleText.rectTransform, 68f);
+            settingsTitleText.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
 
-            var rule = UiFactory.CreatePanel(panel, "Gold Rule", new Color(0.93f, 0.63f, 0.22f, 0.92f));
+            var rule = UiFactory.CreatePanel(settingsPanel, "Gold Rule", new Color(0.93f, 0.63f, 0.22f, 0.92f));
             UiFactory.SetPreferredHeight(rule, 2f);
 
-            var languageButton = UiFactory.CreateButton(panel, "Language Button", string.Empty, new Color(0.34f, 0.23f, 0.12f, 0.96f), new Color(0.98f, 0.92f, 0.82f, 1f));
-            UiFactory.SetPreferredHeight(languageButton.GetComponent<RectTransform>(), 72f);
-            languageText = languageButton.GetComponentInChildren<Text>();
-            languageText.alignment = TextAnchor.MiddleLeft;
-            UiFactory.Anchor(languageText.rectTransform, Vector2.zero, Vector2.one, new Vector2(34f, 0f), new Vector2(-28f, 0f));
-            languageButton.onClick.AddListener(localization.ToggleLanguage);
+            var languageButton = UiFactory.CreateButton(settingsPanel, "Language Settings Button", string.Empty, UnselectedColor, new Color(0.98f, 0.92f, 0.82f, 1f));
+            UiFactory.SetPreferredHeight(languageButton.GetComponent<RectTransform>(), 58f);
+            languageButtonText = languageButton.GetComponentInChildren<Text>();
+            languageButtonText.alignment = TextAnchor.MiddleLeft;
+            UiFactory.Anchor(languageButtonText.rectTransform, Vector2.zero, Vector2.one, new Vector2(24f, 0f), new Vector2(-16f, 0f));
+            languageButton.onClick.AddListener(ShowLanguagePanel);
 
             var spacer = new GameObject("Spacer", typeof(RectTransform));
-            spacer.transform.SetParent(panel, false);
+            spacer.transform.SetParent(settingsPanel, false);
             UiFactory.SetFlexibleFill(spacer.GetComponent<RectTransform>());
 
-            var backButton = UiFactory.CreateButton(panel, "Back Button", string.Empty, new Color(0.11f, 0.105f, 0.095f, 0.94f), new Color(0.95f, 0.89f, 0.78f, 1f));
-            UiFactory.SetPreferredHeight(backButton.GetComponent<RectTransform>(), 62f);
-            backText = backButton.GetComponentInChildren<Text>();
+            var backButton = UiFactory.CreateButton(settingsPanel, "Back Button", string.Empty, new Color(0.11f, 0.105f, 0.095f, 0.94f), new Color(0.95f, 0.89f, 0.78f, 1f));
+            UiFactory.SetPreferredHeight(backButton.GetComponent<RectTransform>(), 56f);
+            settingsBackText = backButton.GetComponentInChildren<Text>();
             backButton.onClick.AddListener(navigator.LoadSettingsReturn);
+        }
+
+        private void CreateLanguagePanel()
+        {
+            languagePanel = UiFactory.CreatePanel(transform, "Language Settings Panel", new Color(0.025f, 0.02f, 0.015f, 0.72f));
+            UiFactory.Anchor(languagePanel, new Vector2(0.09f, 0.08f), new Vector2(0.48f, 0.92f), Vector2.zero, Vector2.zero);
+            UiFactory.AddVerticalLayout(languagePanel.gameObject, 14f, TextAnchor.UpperLeft, new RectOffset(34, 34, 30, 30));
+
+            languageTitleText = UiFactory.CreateText(languagePanel, "Title", 52, FontStyle.Bold, TextAnchor.MiddleLeft, Color.white);
+            UiFactory.SetPreferredHeight(languageTitleText.rectTransform, 68f);
+            languageTitleText.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
+
+            var rule = UiFactory.CreatePanel(languagePanel, "Gold Rule", new Color(0.93f, 0.63f, 0.22f, 0.92f));
+            UiFactory.SetPreferredHeight(rule, 2f);
+
+            languageOptionButtons = new Button[LanguageOptions.Length];
+            for (var i = 0; i < LanguageOptions.Length; i++)
+            {
+                var (lang, nativeLabel) = LanguageOptions[i];
+                var btn = UiFactory.CreateButton(languagePanel, $"Lang_{lang}", nativeLabel, UnselectedColor, new Color(0.98f, 0.92f, 0.82f, 1f));
+                UiFactory.SetPreferredHeight(btn.GetComponent<RectTransform>(), 52f);
+                var btnText = btn.GetComponentInChildren<Text>();
+                btnText.alignment = TextAnchor.MiddleLeft;
+                UiFactory.Anchor(btnText.rectTransform, Vector2.zero, Vector2.one, new Vector2(24f, 0f), new Vector2(-16f, 0f));
+                var capturedLang = lang;
+                btn.onClick.AddListener(() => localization.SetLanguage(capturedLang));
+                languageOptionButtons[i] = btn;
+            }
+
+            var secondRule = UiFactory.CreatePanel(languagePanel, "Second Rule", new Color(0.93f, 0.63f, 0.22f, 0.40f));
+            UiFactory.SetPreferredHeight(secondRule, 1f);
+
+            var spacer = new GameObject("Spacer", typeof(RectTransform));
+            spacer.transform.SetParent(languagePanel, false);
+            UiFactory.SetFlexibleFill(spacer.GetComponent<RectTransform>());
+
+            var backButton = UiFactory.CreateButton(languagePanel, "Language Back Button", string.Empty, new Color(0.11f, 0.105f, 0.095f, 0.94f), new Color(0.95f, 0.89f, 0.78f, 1f));
+            UiFactory.SetPreferredHeight(backButton.GetComponent<RectTransform>(), 56f);
+            languageBackText = backButton.GetComponentInChildren<Text>();
+            backButton.onClick.AddListener(ShowSettingsPanel);
         }
 
         private void ApplyBackgroundImage()
@@ -121,13 +181,33 @@ namespace ChopChop.UI
 
         private void UpdateTexts()
         {
-            titleText.text = localization.Text(LocalizationKeys.Settings.Title);
-            var currentLanguage = localization.CurrentLanguage == AppLanguage.Japanese
-                ? localization.Text(LocalizationKeys.Settings.Japanese)
-                : localization.Text(LocalizationKeys.Settings.English);
+            settingsTitleText.text = localization.Text(LocalizationKeys.Settings.Title);
+            languageButtonText.text = localization.Text(LocalizationKeys.Settings.Language);
+            settingsBackText.text = localization.Text(LocalizationKeys.App.Back);
+            languageTitleText.text = localization.Text(LocalizationKeys.Settings.Language);
+            languageBackText.text = localization.Text(LocalizationKeys.App.Back);
 
-            languageText.text = $"{localization.Text(LocalizationKeys.Settings.Language)}    {currentLanguage}";
-            backText.text = localization.Text(LocalizationKeys.App.Back);
+            for (var i = 0; i < LanguageOptions.Length; i++)
+            {
+                var isSelected = LanguageOptions[i].lang == localization.CurrentLanguage;
+                var image = languageOptionButtons[i].GetComponent<Image>();
+                if (image != null)
+                {
+                    image.color = isSelected ? SelectedColor : UnselectedColor;
+                }
+            }
+        }
+
+        private void ShowSettingsPanel()
+        {
+            settingsPanel.gameObject.SetActive(true);
+            languagePanel.gameObject.SetActive(false);
+        }
+
+        private void ShowLanguagePanel()
+        {
+            settingsPanel.gameObject.SetActive(false);
+            languagePanel.gameObject.SetActive(true);
         }
     }
 }

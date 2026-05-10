@@ -49,9 +49,9 @@ namespace ChopChop.Debugging
         [SerializeField] private float openingAngleMaxDegrees = 35f;
         [SerializeField] private float openingAngleStaticJumpRejectDegrees = 12f;
         [SerializeField] private float openingAngleStaticVelocityThresholdDps = 20f;
-        [SerializeField] private float relativeOpeningAccelerationWeight = 0.9f;
-        [SerializeField] private float relativeOpeningGyroFullWeightBelowDps = 60f;
-        [SerializeField] private float relativeOpeningGyroZeroWeightAboveDps = 180f;
+        [SerializeField] private float relativeOpeningAccelerationWeight = 0.35f;
+        [SerializeField] private float relativeOpeningGyroFullWeightBelowDps = 140f;
+        [SerializeField] private float relativeOpeningGyroZeroWeightAboveDps = 900f;
         [SerializeField] private float maxBleSampleAgeSeconds = 0.6f;
         [SerializeField] private float bleResumeSettleSeconds = 0.2f;
         [SerializeField] private float chopstickOpeningSeparationPerDegree = 0.0015f;
@@ -97,7 +97,7 @@ namespace ChopChop.Debugging
 
         private const int MaxBleCaptureSamples = 600;
         private const float RelativeOpeningAccelerationCorrectionWeight = 0.18f;
-        private const float RelativeOpeningAccelerationBlendWeight = 0.9f;
+        private const float RelativeOpeningAccelerationBlendWeight = 0.05f;
         private const float RelativeOpeningMinDegrees = 0f;
         private const float RelativeOpeningMaxDegrees = 35f;
 
@@ -224,7 +224,7 @@ namespace ChopChop.Debugging
             openingAngleStaticVelocityThresholdDps = DrawSlider("Static jump max dps", openingAngleStaticVelocityThresholdDps, 0f, 80f);
             relativeOpeningAccelerationWeight = DrawSlider("Relative opening acc weight", relativeOpeningAccelerationWeight, 0f, 1f);
             relativeOpeningGyroFullWeightBelowDps = DrawSlider("Relative gyro full below", relativeOpeningGyroFullWeightBelowDps, 0f, 300f);
-            relativeOpeningGyroZeroWeightAboveDps = DrawSlider("Relative gyro zero above", relativeOpeningGyroZeroWeightAboveDps, 1f, 600f);
+            relativeOpeningGyroZeroWeightAboveDps = DrawSlider("Relative gyro zero above", relativeOpeningGyroZeroWeightAboveDps, 1f, 1200f);
             maxBleSampleAgeSeconds = DrawSlider("Max BLE sample age sec", maxBleSampleAgeSeconds, 0f, 2f);
             bleResumeSettleSeconds = DrawSlider("BLE resume settle sec", bleResumeSettleSeconds, 0f, 1f);
             chopstickOpeningSeparationPerDegree = DrawSlider("Opening separation per deg", chopstickOpeningSeparationPerDegree, 0f, 0.006f);

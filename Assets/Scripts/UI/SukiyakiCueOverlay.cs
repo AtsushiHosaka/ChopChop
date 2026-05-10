@@ -19,14 +19,12 @@ namespace ChopChop.UI
         private GameLocalization localization;
         private SukiyakiStageController stageController;
 
-        // 指示バナー（上部）
-        private Image bannerLabel;
+        private Text bannerText;
         private CanvasGroup bannerGroup;
         private float bannerShownAt;
 
-        // フィードバック（中央）
         private RectTransform feedbackRoot;
-        private Image feedbackLabel;
+        private Text feedbackText;
         private CanvasGroup feedbackGroup;
         private float feedbackEndsAt;
         private float feedbackAnimTime;
@@ -67,8 +65,6 @@ namespace ChopChop.UI
             UpdateFeedback();
         }
 
-        // ─── 指示バナー ──────────────────────────────────────
-
         private void CreateBanner()
         {
             var bg = new GameObject("Cue Banner", typeof(RectTransform), typeof(CanvasGroup));
@@ -85,29 +81,33 @@ namespace ChopChop.UI
             bannerGroup.blocksRaycasts = false;
             bannerGroup.interactable = false;
 
-            bannerLabel = UiFactory.CreateSpriteImage(bg.transform, "Banner Label", null, true);
-            UiFactory.Stretch(bannerLabel.rectTransform, 0f);
+            var backdropRect = UiFactory.CreatePanel(bg.transform, "Banner Backdrop",
+                new Color(0.06f, 0.02f, 0.01f, 0.52f));
+            UiFactory.Stretch(backdropRect, 0f);
+            backdropRect.GetComponent<Image>().raycastTarget = false;
+
+            bannerText = UiFactory.CreateText(bg.transform, "Banner Text", 44, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.97f, 0.90f, 0.78f, 1f));
+            UiFactory.Stretch(bannerText.rectTransform, 8f);
+            bannerText.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.65f);
         }
 
         private void UpdateBannerPop()
         {
-            if (bannerLabel == null) return;
+            if (bannerText == null) return;
             var elapsed = Time.unscaledTime - bannerShownAt;
             var pop01 = popSeconds <= 0f ? 1f : Mathf.Clamp01(elapsed / popSeconds);
             var pop = Mathf.Sin((1f - pop01) * Mathf.PI * 0.5f) * popScale;
-            bannerLabel.rectTransform.localScale = Vector3.one * (1f + pop);
+            bannerText.rectTransform.localScale = Vector3.one * (1f + pop);
         }
 
         private void ShowInstruction(SukiyakiStep step)
         {
-            if (bannerLabel == null) return;
-            var sprite = LoadStepSprite(step);
-            UiFactory.ApplySprite(bannerLabel, sprite);
-            bannerGroup.alpha = sprite == null ? 0f : 1f;
+            if (bannerText == null) return;
+            var text = GetStepText(step);
+            bannerText.text = text;
+            bannerGroup.alpha = string.IsNullOrEmpty(text) ? 0f : 1f;
             bannerShownAt = Time.unscaledTime;
         }
-
-        // ─── フィードバック（スタイリッシュ大テキスト） ────────
 
         private void CreateFeedback()
         {
@@ -126,8 +126,9 @@ namespace ChopChop.UI
             feedbackGroup.blocksRaycasts = false;
             feedbackGroup.interactable = false;
 
-            feedbackLabel = UiFactory.CreateSpriteImage(root.transform, "Feedback Label", null, true);
-            UiFactory.Stretch(feedbackLabel.rectTransform, 0f);
+            feedbackText = UiFactory.CreateText(root.transform, "Feedback Text", 72, FontStyle.Bold, TextAnchor.MiddleCenter, SuccessColor);
+            UiFactory.Stretch(feedbackText.rectTransform, 0f);
+            feedbackText.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
         }
 
         private void UpdateFeedback()
@@ -142,19 +143,18 @@ namespace ChopChop.UI
                 return;
             }
 
-            // スプリングアニメーション（弾む登場）
             feedbackAnimTime += Time.unscaledDeltaTime;
             var spring = 1f - Mathf.Exp(-9f * feedbackAnimTime) * Mathf.Cos(22f * feedbackAnimTime);
             feedbackRoot.localScale = Vector3.one * Mathf.Max(0.01f, spring);
 
-            // フェード：登場は即座、終了前0.3秒でフェードアウト
             feedbackGroup.alpha = Mathf.Clamp01(secondsRemaining / 0.3f);
         }
 
-        private void ShowFeedback(Sprite sprite)
+        private void ShowFeedback(string text, Color color)
         {
-            if (feedbackLabel == null) return;
-            UiFactory.ApplySprite(feedbackLabel, sprite);
+            if (feedbackText == null) return;
+            feedbackText.text = text;
+            feedbackText.color = color;
             feedbackEndsAt = Time.unscaledTime + feedbackSeconds;
             feedbackAnimTime = 0f;
             feedbackGroup.alpha = 1f;
@@ -201,28 +201,28 @@ namespace ChopChop.UI
         {
             if (step == SukiyakiStep.Calibration || step == SukiyakiStep.Result) return;
             if (failureShown) return;
-            ShowFeedback(WaUiCatalog.LoadLabel(localization, "feedback_nice"));
+            ShowFeedback(localization.Text(LocalizationKeys.Feedback.Nice), SuccessColor);
         }
 
         private void HandleStepFailed(SukiyakiStep step)
         {
             if (failureShown) return;
             failureShown = true;
-            ShowFeedback(WaUiCatalog.LoadLabel(localization, "feedback_failed"));
+            ShowFeedback(localization.Text(LocalizationKeys.Feedback.Failed), FailureColor);
         }
 
-        private Sprite LoadStepSprite(SukiyakiStep step)
+        private string GetStepText(SukiyakiStep step)
         {
             switch (step)
             {
-                case SukiyakiStep.Calibration:    return WaUiCatalog.LoadLabel(localization, "step_calibration");
-                case SukiyakiStep.MixEgg:         return WaUiCatalog.LoadLabel(localization, "step_mix_egg");
-                case SukiyakiStep.PickMeat:       return WaUiCatalog.LoadLabel(localization, "step_pick_meat");
-                case SukiyakiStep.PutInBroth:     return WaUiCatalog.LoadLabel(localization, "step_put_in_broth");
-                case SukiyakiStep.FlipMeat:       return WaUiCatalog.LoadLabel(localization, "step_flip_meat");
-                case SukiyakiStep.DipEgg:         return WaUiCatalog.LoadLabel(localization, "step_dip_egg");
-                case SukiyakiStep.DeliverToMouth: return WaUiCatalog.LoadLabel(localization, "step_deliver");
-                default:                           return null;
+                case SukiyakiStep.Calibration:    return localization.Text(LocalizationKeys.Hud.Calibrate);
+                case SukiyakiStep.MixEgg:         return localization.Text(LocalizationKeys.Step.MixEgg);
+                case SukiyakiStep.PickMeat:       return localization.Text(LocalizationKeys.Step.PickMeat);
+                case SukiyakiStep.PutInBroth:     return localization.Text(LocalizationKeys.Step.PutInBroth);
+                case SukiyakiStep.FlipMeat:       return localization.Text(LocalizationKeys.Step.FlipMeat);
+                case SukiyakiStep.DipEgg:         return localization.Text(LocalizationKeys.Step.DipEgg);
+                case SukiyakiStep.DeliverToMouth: return localization.Text(LocalizationKeys.Step.Deliver);
+                default:                           return string.Empty;
             }
         }
     }
