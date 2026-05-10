@@ -1854,52 +1854,6 @@ MonoBehaviour:
     lookAtOffset: {x: 0, y: 0, z: 0}
     fieldOfView: 46
     moveSeconds: 0.9
---- !u!1 &341025080
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 341025082}
-  - component: {fileID: 341025081}
-  m_Layer: 0
-  m_Name: BurstCollisionWorld
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &341025081
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 341025080}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1a161c4294214a4fbcb7e9e94800494, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Obi::Obi.BurstColliderWorld
-  cellSpans:
-    m_AlignBytes: 16
---- !u!4 &341025082
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 341025080}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &351442562
 GameObject:
   m_ObjectHideFlags: 0
@@ -5714,7 +5668,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7860257a01ba4548975fe970f0a59ab2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ChopChop.Runtime::ChopChop.Debugging.HashiImuTuningOverlay
-  visible: 0
+  visible: 1
   applyProfileOnEnable: 1
   useTunedTheta: 1
   thetaMode: 0
@@ -5754,15 +5708,15 @@ MonoBehaviour:
   chopstickSeparationAxis: {x: 1, y: 0, z: 0}
   useHardwarePosition: 1
   autoCapturePositionNeutral: 1
-  positionTrackingMode: 1
+  positionTrackingMode: 0
   positionMotionSource: 2
   positionInputEuler: {x: 0, y: 0, z: 0}
   positionAxisSigns: {x: 1, y: 1, z: 1}
-  positionAccelerationScale: {x: 0.55, y: 0.4, z: 0.4}
-  positionMaxOffset: {x: 0.28, y: 0.22, z: 0.22}
-  positionDeadzoneG: 0.08
+  positionAccelerationScale: {x: 6, y: 6, z: 6}
+  positionMaxOffset: {x: 2.2, y: 1.4, z: 1.4}
+  positionDeadzoneG: 0.05
   positionVelocityDamping: 5
-  positionReturnToNeutral: 1.5
+  positionReturnToNeutral: 0.04
   positionSampleGapResetSeconds: 0.7
   chopstickVisualLengthScale: 0.88
   hashiDisplayAlignmentEuler: {x: 0, y: -90, z: 135}
@@ -12614,7 +12568,7 @@ MonoBehaviour:
   targetCamera: {fileID: 1951154900}
   stageController: {fileID: 1454876607}
   stageLayout: {fileID: 1713009246}
-  lockAtInitialPose: 1
+  lockAtInitialPose: 0
   defaultMoveSeconds: 0.8
   overviewFocus: {x: 0.05, y: 0.08, z: 0.02}
   stepPoses:
@@ -13063,6 +13017,52 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1965876655}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1979922788
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1979922790}
+  - component: {fileID: 1979922789}
+  m_Layer: 0
+  m_Name: BurstCollisionWorld
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1979922789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1979922788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1a161c4294214a4fbcb7e9e94800494, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Obi::Obi.BurstColliderWorld
+  cellSpans:
+    m_AlignBytes: 16
+--- !u!4 &1979922790
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1979922788}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -14130,4 +14130,4 @@ SceneRoots:
   - {fileID: 1965876656}
   - {fileID: 1713009245}
   - {fileID: 1150448513}
-  - {fileID: 341025082}
+  - {fileID: 1979922790}

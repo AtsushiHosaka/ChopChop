@@ -1,8 +1,29 @@
 using System;
+using System.Diagnostics;
 using UnityEngine;
 
 namespace ChopChop.BLE
 {
+    public struct HashiBlePayload
+    {
+        public string Text;
+        public double HostTimeSeconds;
+
+        public HashiBlePayload(string text, double hostTimeSeconds)
+        {
+            Text = text ?? string.Empty;
+            HostTimeSeconds = hostTimeSeconds;
+        }
+    }
+
+    public static class HashiBleClock
+    {
+        public static double NowSeconds
+        {
+            get { return Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency; }
+        }
+    }
+
     [Serializable]
     public struct HashiBleSample
     {
@@ -28,18 +49,26 @@ namespace ChopChop.BLE
         [SerializeField] private float gz;
         [SerializeField] private bool hasTimestamp;
         [SerializeField] private double timestamp;
-        [SerializeField] private bool hasImu1;
+        [SerializeField] private bool hasImu1Acceleration;
+        [SerializeField] private bool hasImu1Gyro;
         [SerializeField] private Vector3 imu1AccelerationRaw;
         [SerializeField] private Vector3 imu1GyroRaw;
-        [SerializeField] private bool hasImu2;
+        [SerializeField] private bool hasImu2Acceleration;
+        [SerializeField] private bool hasImu2Gyro;
         [SerializeField] private Vector3 imu2AccelerationRaw;
         [SerializeField] private Vector3 imu2GyroRaw;
+        [SerializeField] private bool hasSequence;
+        [SerializeField] private int sequence;
+        [SerializeField] private bool hasDeviceTime;
+        [SerializeField] private double deviceTimeSeconds;
+        [SerializeField] private double hostTimeSeconds;
+        [SerializeField] private float realtimeReceived;
 
         private static int nextSequence;
 
         public string RawJson { get; private set; }
-        public float RealtimeReceived { get; private set; }
-        public int Sequence { get; private set; }
+        public float RealtimeReceived => realtimeReceived;
+        public int Sequence => sequence;
 
         public bool HasTheta => hasTheta;
         public bool HasPinch => hasPinch;
@@ -52,9 +81,15 @@ namespace ChopChop.BLE
         public bool HasGy => hasGy;
         public bool HasGz => hasGz;
         public bool HasTimestamp => hasTimestamp;
-        public bool HasImu1 => hasImu1;
-        public bool HasImu2 => hasImu2;
-        public bool HasDualImu => hasImu1 && hasImu2;
+        public bool HasSequence => hasSequence;
+        public bool HasDeviceTime => hasDeviceTime;
+        public bool HasImu1Acceleration => hasImu1Acceleration;
+        public bool HasImu1Gyro => hasImu1Gyro;
+        public bool HasImu2Acceleration => hasImu2Acceleration;
+        public bool HasImu2Gyro => hasImu2Gyro;
+        public bool HasImu1 => hasImu1Acceleration && hasImu1Gyro;
+        public bool HasImu2 => hasImu2Acceleration && hasImu2Gyro;
+        public bool HasDualImu => HasImu1 && HasImu2;
 
         public float ThetaValue => theta;
         public float PinchValue => pinch;
@@ -67,6 +102,9 @@ namespace ChopChop.BLE
         public float GyValue => gy;
         public float GzValue => gz;
         public double TimestampValue => timestamp;
+        public double HostTimeSeconds => hostTimeSeconds;
+        public double DeviceTimeSeconds => deviceTimeSeconds;
+        public double BestTimeSeconds => hasDeviceTime ? deviceTimeSeconds : hostTimeSeconds;
 
         public float? Theta => hasTheta ? theta : (float?)null;
         public float? Pinch => hasPinch ? pinch : (float?)null;
@@ -93,14 +131,33 @@ namespace ChopChop.BLE
         public Vector3 Imu2AccelerationG => imu2AccelerationRaw * HashiImuMappingRuntime.RawAccelerationToG;
         public Vector3 Imu2GyroDegreesPerSecond => imu2GyroRaw * HashiImuMappingRuntime.RawGyroToDegreesPerSecond;
 
-        internal static HashiBleSample Create(string rawJson)
+        internal static HashiBleSample Create(string rawPayload)
+        {
+            return Create(new HashiBlePayload(rawPayload, HashiBleClock.NowSeconds));
+        }
+
+        internal static HashiBleSample Create(HashiBlePayload payload)
         {
             return new HashiBleSample
             {
-                RawJson = rawJson,
-                RealtimeReceived = Time.realtimeSinceStartup,
-                Sequence = unchecked(++nextSequence)
+                RawJson = payload.Text ?? string.Empty,
+                hostTimeSeconds = payload.HostTimeSeconds > 0.0 ? payload.HostTimeSeconds : HashiBleClock.NowSeconds,
+                realtimeReceived = Time.realtimeSinceStartup,
+                sequence = unchecked(++nextSequence),
+                hasSequence = false
             };
+        }
+
+        internal void SetSequence(int value)
+        {
+            sequence = value;
+            hasSequence = true;
+        }
+
+        internal void SetDeviceTimeSeconds(double value)
+        {
+            deviceTimeSeconds = value;
+            hasDeviceTime = true;
         }
 
         internal void SetTheta(float value)
@@ -171,16 +228,38 @@ namespace ChopChop.BLE
 
         internal void SetImu1(Vector3 accelerationRaw, Vector3 gyroRaw)
         {
-            imu1AccelerationRaw = accelerationRaw;
-            imu1GyroRaw = gyroRaw;
-            hasImu1 = true;
+            SetImu1Acceleration(accelerationRaw);
+            SetImu1Gyro(gyroRaw);
         }
 
         internal void SetImu2(Vector3 accelerationRaw, Vector3 gyroRaw)
         {
+            SetImu2Acceleration(accelerationRaw);
+            SetImu2Gyro(gyroRaw);
+        }
+
+        internal void SetImu1Acceleration(Vector3 accelerationRaw)
+        {
+            imu1AccelerationRaw = accelerationRaw;
+            hasImu1Acceleration = true;
+        }
+
+        internal void SetImu1Gyro(Vector3 gyroRaw)
+        {
+            imu1GyroRaw = gyroRaw;
+            hasImu1Gyro = true;
+        }
+
+        internal void SetImu2Acceleration(Vector3 accelerationRaw)
+        {
             imu2AccelerationRaw = accelerationRaw;
+            hasImu2Acceleration = true;
+        }
+
+        internal void SetImu2Gyro(Vector3 gyroRaw)
+        {
             imu2GyroRaw = gyroRaw;
-            hasImu2 = true;
+            hasImu2Gyro = true;
         }
     }
 }

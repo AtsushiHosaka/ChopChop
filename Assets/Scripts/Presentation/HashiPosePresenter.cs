@@ -12,6 +12,8 @@ namespace ChopChop.Presentation
         [SerializeField] private Transform upperChopstick;
         [SerializeField] private Vector3 openingAxis = Vector3.forward;
         [SerializeField] private float smoothing = 12f;
+        [SerializeField, Range(0f, 1f)] private float gripPivotFromTip = 0.72f;
+        [SerializeField, Range(0f, 1f)] private float wholeRotationSensitivity = 1f;
 
         private Quaternion baseParentRotation;
         private Quaternion lowerBaseRotation;
@@ -20,6 +22,10 @@ namespace ChopChop.Presentation
         private Vector3 upperBasePosition;
         private Vector3 lowerBaseScale;
         private Vector3 upperBaseScale;
+        private Vector3 lowerGripPivotLocal;
+        private Vector3 upperGripPivotLocal;
+        private Vector3 lowerBaseGripPivotParent;
+        private Vector3 upperBaseGripPivotParent;
         private Vector3 lowerLengthScaleMask = Vector3.forward;
         private Vector3 upperLengthScaleMask = Vector3.forward;
         private Quaternion displayedParentRotation;
@@ -74,6 +80,18 @@ namespace ChopChop.Presentation
             upperBasePosition = upperChopstick != null ? upperChopstick.localPosition : Vector3.zero;
             lowerBaseScale = lowerChopstick != null ? lowerChopstick.localScale : Vector3.one;
             upperBaseScale = upperChopstick != null ? upperChopstick.localScale : Vector3.one;
+            lowerGripPivotLocal = InferGripPivotLocal(lowerChopstick);
+            upperGripPivotLocal = InferGripPivotLocal(upperChopstick);
+            lowerBaseGripPivotParent = LocalPivotParentPosition(
+                lowerBasePosition,
+                lowerBaseRotation,
+                lowerBaseScale,
+                lowerGripPivotLocal);
+            upperBaseGripPivotParent = LocalPivotParentPosition(
+                upperBasePosition,
+                upperBaseRotation,
+                upperBaseScale,
+                upperGripPivotLocal);
             lowerLengthScaleMask = InferLengthScaleMask(lowerChopstick);
             upperLengthScaleMask = InferLengthScaleMask(upperChopstick);
             displayedLowerRotation = lowerBaseRotation;
@@ -117,7 +135,7 @@ namespace ChopChop.Presentation
                 {
                     displayedParentRotation = Quaternion.Slerp(
                         displayedParentRotation,
-                        AlignedBaseParentRotation() * frame.LocalRotation,
+                        AlignedParentRotation(frame.LocalRotation),
                         blend);
                     displayedLowerRotation = Quaternion.Slerp(displayedLowerRotation, lowerBaseRotation * lowerImuRotation, blend);
                     displayedUpperRotation = Quaternion.Slerp(displayedUpperRotation, upperBaseRotation * upperImuRotation, blend);
@@ -137,7 +155,7 @@ namespace ChopChop.Presentation
             displayedTheta = Mathf.Lerp(displayedTheta, frame.ThetaDegrees, blend);
             displayedParentRotation = Quaternion.Slerp(
                 displayedParentRotation,
-                AlignedBaseParentRotation() * frame.LocalRotation,
+                AlignedParentRotation(frame.LocalRotation),
                 blend);
             displayedLowerRotation = Quaternion.Slerp(displayedLowerRotation, lowerBaseRotation, blend);
             displayedUpperRotation = Quaternion.Slerp(
@@ -163,35 +181,60 @@ namespace ChopChop.Presentation
             return baseParentRotation * Quaternion.Euler(HashiImuMappingRuntime.HashiDisplayAlignmentEuler);
         }
 
+        private Quaternion AlignedParentRotation(Quaternion imuRotation)
+        {
+            var adjustedImuRotation = Quaternion.Slerp(
+                Quaternion.identity,
+                imuRotation,
+                Mathf.Clamp01(wholeRotationSensitivity));
+            return adjustedImuRotation * baseParentRotation * Quaternion.Euler(HashiImuMappingRuntime.HashiDisplayAlignmentEuler);
+        }
+
         private void CaptureDisplayAnchor()
         {
-            hasDisplayAnchor = false;
-            displayAnchorLocal = Vector3.zero;
-
-            var count = 0;
-            AddAnchorPoint(lowerChopstick, ref count);
-            AddAnchorPoint(upperChopstick, ref count);
-            AddAnchorPoint(FindTip(lowerChopstick), ref count);
-            AddAnchorPoint(FindTip(upperChopstick), ref count);
-
-            if (count <= 0)
-            {
-                return;
-            }
-
-            displayAnchorLocal /= count;
+            displayAnchorLocal = (lowerBaseGripPivotParent + upperBaseGripPivotParent) * 0.5f;
             hasDisplayAnchor = true;
         }
 
-        private void AddAnchorPoint(Transform point, ref int count)
+        private Vector3 InferGripPivotLocal(Transform chopstick)
         {
-            if (point == null)
+            var tip = FindTip(chopstick);
+            if (chopstick == null || tip == null)
+            {
+                return Vector3.zero;
+            }
+
+            var tipLocal = chopstick.InverseTransformPoint(tip.position);
+            if (tipLocal.sqrMagnitude < 0.000001f)
+            {
+                return Vector3.zero;
+            }
+
+            return Vector3.Lerp(tipLocal, -tipLocal, Mathf.Clamp01(gripPivotFromTip));
+        }
+
+        private static Vector3 LocalPivotParentPosition(
+            Vector3 localPosition,
+            Quaternion localRotation,
+            Vector3 localScale,
+            Vector3 pivotLocal)
+        {
+            return localPosition + localRotation * Vector3.Scale(pivotLocal, localScale);
+        }
+
+        private static void ApplyLocalPoseAroundPivot(
+            Transform target,
+            Quaternion localRotation,
+            Vector3 pivotLocal,
+            Vector3 pivotParentPosition)
+        {
+            if (target == null)
             {
                 return;
             }
 
-            displayAnchorLocal += transform.InverseTransformPoint(point.position);
-            count++;
+            target.localRotation = localRotation;
+            target.localPosition = pivotParentPosition - localRotation * Vector3.Scale(pivotLocal, target.localScale);
         }
 
         private static Transform FindTip(Transform root)
@@ -349,8 +392,16 @@ namespace ChopChop.Presentation
                 Mathf.Abs(openingDegrees) * Mathf.Max(0f, HashiImuMappingRuntime.ChopstickOpeningSeparationPerDegree),
                 Mathf.Max(0f, HashiImuMappingRuntime.MaxChopstickOpeningSeparation));
             var halfOffset = axis * (separation * 0.5f);
-            lowerChopstick.localPosition = lowerBasePosition - halfOffset;
-            upperChopstick.localPosition = upperBasePosition + halfOffset;
+            ApplyLocalPoseAroundPivot(
+                lowerChopstick,
+                displayedLowerRotation,
+                lowerGripPivotLocal,
+                lowerBaseGripPivotParent - halfOffset);
+            ApplyLocalPoseAroundPivot(
+                upperChopstick,
+                displayedUpperRotation,
+                upperGripPivotLocal,
+                upperBaseGripPivotParent + halfOffset);
         }
     }
 }

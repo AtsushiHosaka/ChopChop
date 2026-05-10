@@ -24,9 +24,6 @@ namespace ChopChop.App
             public const string ChineseSimplified = "settings.chineseSimplified";
             public const string French = "settings.french";
             public const string Spanish = "settings.spanish";
-            public const string Bgm = "settings.bgm";
-            public const string BgmOn = "settings.bgmOn";
-            public const string BgmOff = "settings.bgmOff";
         }
 
         public static class Level

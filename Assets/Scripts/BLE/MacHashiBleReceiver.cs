@@ -8,7 +8,7 @@ namespace ChopChop.BLE
     public sealed class MacHashiBleReceiver : IDisposable
     {
         private readonly object queueLock = new object();
-        private readonly Queue<string> rawPayloads = new Queue<string>();
+        private readonly Queue<HashiBlePayload> payloads = new Queue<HashiBlePayload>();
         private readonly Queue<string> logs = new Queue<string>();
 
         private bool isDisposed;
@@ -29,7 +29,7 @@ namespace ChopChop.BLE
 
             lock (queueLock)
             {
-                rawPayloads.Clear();
+                payloads.Clear();
                 logs.Clear();
             }
 
@@ -110,15 +110,27 @@ namespace ChopChop.BLE
 
         public bool TryDequeueRawPayload(out string json)
         {
+            if (TryDequeuePayload(out var payload))
+            {
+                json = payload.Text;
+                return true;
+            }
+
+            json = string.Empty;
+            return false;
+        }
+
+        public bool TryDequeuePayload(out HashiBlePayload payload)
+        {
             lock (queueLock)
             {
-                if (rawPayloads.Count == 0)
+                if (payloads.Count == 0)
                 {
-                    json = string.Empty;
+                    payload = new HashiBlePayload();
                     return false;
                 }
 
-                json = rawPayloads.Dequeue();
+                payload = payloads.Dequeue();
                 return true;
             }
         }
@@ -153,7 +165,7 @@ namespace ChopChop.BLE
         {
             lock (queueLock)
             {
-                rawPayloads.Enqueue(json);
+                payloads.Enqueue(new HashiBlePayload(json, HashiBleClock.NowSeconds));
             }
         }
 

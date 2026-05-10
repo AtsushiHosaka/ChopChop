@@ -143,7 +143,7 @@ namespace ChopChop.UI
             var retryAnimator = retryButton.GetComponent<UiButtonAnimator>();
             if (retryAnimator != null)
             {
-                Destroy(retryAnimator);
+                DestroyComponent(retryAnimator);
             }
             UiFactory.SetSize(retryButton.GetComponent<RectTransform>(), 320f, 96f);
             retryText = UiFactory.CreateText(retryButton.transform, "Retry Label", 34, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.18f, 0.1f, 0.05f, 1f));
@@ -160,7 +160,7 @@ namespace ChopChop.UI
             var levelSelectAnimator = levelSelectButton.GetComponent<UiButtonAnimator>();
             if (levelSelectAnimator != null)
             {
-                Destroy(levelSelectAnimator);
+                DestroyComponent(levelSelectAnimator);
             }
             UiFactory.SetSize(levelSelectButton.GetComponent<RectTransform>(), 320f, 96f);
             levelSelectText = UiFactory.CreateText(levelSelectButton.transform, "Level Select Label", 28, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(0.18f, 0.1f, 0.05f, 1f));
@@ -295,6 +295,22 @@ namespace ChopChop.UI
             speedRow.Root.SetActive(isActive);
             careRow.Root.SetActive(isActive);
             failureRow.Root.SetActive(isActive);
+        }
+
+        private static void DestroyComponent(Component component)
+        {
+            if (component == null)
+            {
+                return;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(component);
+                return;
+            }
+
+            DestroyImmediate(component);
         }
 
         private readonly struct StatRow
