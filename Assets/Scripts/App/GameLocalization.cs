@@ -46,7 +46,7 @@ namespace ChopChop.App
                 try
                 {
                     var text = LocalizationSettings.StringDatabase.GetLocalizedString(StringTableName, key);
-                    if (!string.IsNullOrEmpty(text))
+                    if (!string.IsNullOrEmpty(text) && text != key)
                     {
                         return text;
                     }

@@ -35,7 +35,9 @@ namespace ChopChop.App
             ["level.3.desc"] = "崩れやすい豆腐をつかむ練習",
             ["level.4.desc"] = "焼き魚の身をほぐす練習",
             ["level.5.desc"] = "肉を返して卵につける総合練習",
-            [LocalizationKeys.Hud.Calibrate] = "箸を自然に持ってください",
+            [LocalizationKeys.Hud.Calibrate] = "箸先を左に向けて！",
+            [LocalizationKeys.Hud.ConnectHashi] = "BLEが接続されていません",
+            [LocalizationKeys.Hud.ResetHashi] = "リセット",
             [LocalizationKeys.Step.MixEgg] = "卵をかき混ぜろ！",
             [LocalizationKeys.Step.PickMeat] = "肉をつかめ！",
             [LocalizationKeys.Step.PutInBroth] = "割下に入れろ！",
@@ -56,7 +58,8 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "引き分け",
             [LocalizationKeys.Result.Total] = "合計",
             [LocalizationKeys.Feedback.Nice] = "いい感じ！",
-            [LocalizationKeys.Feedback.Failed] = "ミス！"
+            [LocalizationKeys.Feedback.Failed] = "ミス！",
+            [LocalizationKeys.Feedback.Reset] = "リセットしました"
         };
 
         private static readonly IReadOnlyDictionary<string, string> EnglishEntries = new Dictionary<string, string>
@@ -90,7 +93,9 @@ namespace ChopChop.App
             ["level.3.desc"] = "Practice holding fragile tofu.",
             ["level.4.desc"] = "Practice flaking grilled fish.",
             ["level.5.desc"] = "Flip beef and dip it in egg.",
-            [LocalizationKeys.Hud.Calibrate] = "Hold the chopsticks naturally.",
+            [LocalizationKeys.Hud.Calibrate] = "Point the chopstick tips left!",
+            [LocalizationKeys.Hud.ConnectHashi] = "BLE is not connected.",
+            [LocalizationKeys.Hud.ResetHashi] = "Reset",
             [LocalizationKeys.Step.MixEgg] = "Mix the egg!",
             [LocalizationKeys.Step.PickMeat] = "Pick up the beef!",
             [LocalizationKeys.Step.PutInBroth] = "Put it in the broth!",
@@ -111,7 +116,8 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "Draw",
             [LocalizationKeys.Result.Total] = "Total",
             [LocalizationKeys.Feedback.Nice] = "Nice!",
-            [LocalizationKeys.Feedback.Failed] = "Failed!"
+            [LocalizationKeys.Feedback.Failed] = "Failed!",
+            [LocalizationKeys.Feedback.Reset] = "Reset complete."
         };
 
         private static readonly IReadOnlyDictionary<string, string> KoreanEntries = new Dictionary<string, string>
@@ -145,7 +151,9 @@ namespace ChopChop.App
             ["level.3.desc"] = "부서지기 쉬운 두부를 집는 연습.",
             ["level.4.desc"] = "구운 생선 살을 발라내는 연습.",
             ["level.5.desc"] = "고기를 뒤집어 달걀에 찍는 연습.",
-            [LocalizationKeys.Hud.Calibrate] = "젓가락을 자연스럽게 잡으세요.",
+            [LocalizationKeys.Hud.Calibrate] = "젓가락 끝을 왼쪽으로 향하게 하세요!",
+            [LocalizationKeys.Hud.ConnectHashi] = "BLE가 연결되어 있지 않습니다.",
+            [LocalizationKeys.Hud.ResetHashi] = "초기화",
             [LocalizationKeys.Step.MixEgg] = "달걀을 저어라!",
             [LocalizationKeys.Step.PickMeat] = "고기를 잡아라!",
             [LocalizationKeys.Step.PutInBroth] = "국물에 넣어라!",
@@ -166,7 +174,8 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "무승부",
             [LocalizationKeys.Result.Total] = "합계",
             [LocalizationKeys.Feedback.Nice] = "잘했어!",
-            [LocalizationKeys.Feedback.Failed] = "실패!"
+            [LocalizationKeys.Feedback.Failed] = "실패!",
+            [LocalizationKeys.Feedback.Reset] = "초기화했습니다."
         };
 
         private static readonly IReadOnlyDictionary<string, string> ChineseSimplifiedEntries = new Dictionary<string, string>
@@ -200,7 +209,9 @@ namespace ChopChop.App
             ["level.3.desc"] = "练习夹住易碎的豆腐。",
             ["level.4.desc"] = "练习剥开烤鱼的鱼肉。",
             ["level.5.desc"] = "翻转牛肉并蘸蛋液的综合练习。",
-            [LocalizationKeys.Hud.Calibrate] = "请自然地握住筷子。",
+            [LocalizationKeys.Hud.Calibrate] = "请把筷子尖朝向左边！",
+            [LocalizationKeys.Hud.ConnectHashi] = "BLE 未连接。",
+            [LocalizationKeys.Hud.ResetHashi] = "重置",
             [LocalizationKeys.Step.MixEgg] = "搅拌鸡蛋！",
             [LocalizationKeys.Step.PickMeat] = "夹起牛肉！",
             [LocalizationKeys.Step.PutInBroth] = "放入汤底！",
@@ -221,7 +232,8 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "平局",
             [LocalizationKeys.Result.Total] = "合计",
             [LocalizationKeys.Feedback.Nice] = "不错！",
-            [LocalizationKeys.Feedback.Failed] = "失败！"
+            [LocalizationKeys.Feedback.Failed] = "失败！",
+            [LocalizationKeys.Feedback.Reset] = "已重置。"
         };
 
         private static readonly IReadOnlyDictionary<string, string> FrenchEntries = new Dictionary<string, string>
@@ -255,7 +267,9 @@ namespace ChopChop.App
             ["level.3.desc"] = "Pratiquez à tenir du tofu fragile.",
             ["level.4.desc"] = "Pratiquez à émietter du poisson grillé.",
             ["level.5.desc"] = "Retournez le bœuf et trempez-le dans l'œuf.",
-            [LocalizationKeys.Hud.Calibrate] = "Tenez les baguettes naturellement.",
+            [LocalizationKeys.Hud.Calibrate] = "Orientez les pointes des baguettes vers la gauche !",
+            [LocalizationKeys.Hud.ConnectHashi] = "Le BLE n'est pas connecté.",
+            [LocalizationKeys.Hud.ResetHashi] = "Réinitialiser",
             [LocalizationKeys.Step.MixEgg] = "Mélangez l'œuf !",
             [LocalizationKeys.Step.PickMeat] = "Saisissez le bœuf !",
             [LocalizationKeys.Step.PutInBroth] = "Mettez-le dans le bouillon !",
@@ -276,7 +290,8 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "Égalité",
             [LocalizationKeys.Result.Total] = "Total",
             [LocalizationKeys.Feedback.Nice] = "Bien !",
-            [LocalizationKeys.Feedback.Failed] = "Raté !"
+            [LocalizationKeys.Feedback.Failed] = "Raté !",
+            [LocalizationKeys.Feedback.Reset] = "Réinitialisé."
         };
 
         private static readonly IReadOnlyDictionary<string, string> SpanishEntries = new Dictionary<string, string>
@@ -310,7 +325,9 @@ namespace ChopChop.App
             ["level.3.desc"] = "Practica sostener tofu frágil.",
             ["level.4.desc"] = "Practica desmenuzar pescado a la parrilla.",
             ["level.5.desc"] = "Voltea la carne y summérgela en huevo.",
-            [LocalizationKeys.Hud.Calibrate] = "Sujeta los palillos con naturalidad.",
+            [LocalizationKeys.Hud.Calibrate] = "¡Apunta las puntas de los palillos hacia la izquierda!",
+            [LocalizationKeys.Hud.ConnectHashi] = "BLE no está conectado.",
+            [LocalizationKeys.Hud.ResetHashi] = "Reiniciar",
             [LocalizationKeys.Step.MixEgg] = "¡Mezcla el huevo!",
             [LocalizationKeys.Step.PickMeat] = "¡Agarra la carne!",
             [LocalizationKeys.Step.PutInBroth] = "¡Ponla en el caldo!",
@@ -331,7 +348,8 @@ namespace ChopChop.App
             [LocalizationKeys.Result.Draw] = "Empate",
             [LocalizationKeys.Result.Total] = "Total",
             [LocalizationKeys.Feedback.Nice] = "¡Bien!",
-            [LocalizationKeys.Feedback.Failed] = "¡Fallido!"
+            [LocalizationKeys.Feedback.Failed] = "¡Fallido!",
+            [LocalizationKeys.Feedback.Reset] = "Reinicio completo."
         };
 
         public static IReadOnlyDictionary<string, string> Japanese => JapaneseEntries;

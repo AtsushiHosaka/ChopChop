@@ -7,6 +7,8 @@ namespace ChopChop.Input
     [AddComponentMenu("ChopChop/Input/Hashi Input Provider")]
     public sealed class HashiInputProvider : MonoBehaviour
     {
+        private const float BleConnectionPromptStaleSeconds = 1.5f;
+
         [SerializeField] private PlayerId playerId = new PlayerId(0);
         [SerializeField] private string playerLabel = "P1";
         [SerializeField] private HashiInputMode inputMode = HashiInputMode.Ble;
@@ -28,6 +30,30 @@ namespace ChopChop.Input
         public string DebugSourceStatus => source is BleHashiInputSource bleSource
             ? bleSource.Status
             : source?.GetType().Name ?? "None";
+        public bool NeedsBleConnectionPrompt
+        {
+            get
+            {
+                if (inputMode != HashiInputMode.Ble)
+                {
+                    return false;
+                }
+
+                var bleSource = source as BleHashiInputSource;
+                if (bleSource == null)
+                {
+                    return true;
+                }
+
+                if (!bleSource.IsRunning || !bleSource.HasLatestSample)
+                {
+                    return true;
+                }
+
+                return Time.realtimeSinceStartup - bleSource.LatestSample.RealtimeReceived
+                    > BleConnectionPromptStaleSeconds;
+            }
+        }
 
         public bool TryGetLatestBleSample(out HashiBleSample sample)
         {
@@ -91,7 +117,28 @@ namespace ChopChop.Input
 
         public void CaptureNeutral()
         {
-            calibration.Capture(CurrentFrame);
+            ResetPose();
+        }
+
+        public bool ResetPose()
+        {
+            var frame = source?.CurrentFrame ?? CurrentFrame;
+            if (!frame.HasSample)
+            {
+                return false;
+            }
+
+            if (source is BleHashiInputSource bleSource && bleSource.HasLatestSample)
+            {
+                var sample = bleSource.LatestSample;
+                HashiImuMappingRuntime.CaptureIndependentNeutral(sample);
+                HashiImuMappingRuntime.ZeroImu1IntegratedPose(sample);
+                HashiImuMappingRuntime.ZeroImu2IntegratedPose(sample);
+            }
+
+            calibration.Capture(frame);
+            CurrentFrame = calibration.Apply(frame);
+            return true;
         }
 
         private void OnEnable()
@@ -126,7 +173,7 @@ namespace ChopChop.Input
             var frame = source.CurrentFrame;
             if (captureNeutralOnStart && inputMode == HashiInputMode.Ble && frame.HasSample && !calibration.HasNeutral)
             {
-                calibration.Capture(frame);
+                ResetPose();
             }
 
             CurrentFrame = calibration.Apply(frame);

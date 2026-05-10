@@ -9,11 +9,18 @@ namespace ChopChop.Input
         private static BleHashiInputSource activeSource;
         private static string activeOwnerLabel = string.Empty;
         private const float ReconnectDelaySeconds = 3f;
-        private const float ParentGyroIgnoreAboveDegreesPerSecond = 1200f;
-        private const float ParentGyroSaturatedClampDegreesPerSecond = 600f;
+        private const float ParentGyroIgnoreAboveDegreesPerSecond = 900f;
+        private const float ParentGyroFullTrustBelowDegreesPerSecond = 220f;
+        private const float ParentGyroLowTrustAboveDegreesPerSecond = 420f;
+        private const float ParentGyroHighSpeedMinimumTrust = 0.22f;
+        private const float ParentGyroSaturatedTrust = 0.15f;
+        private const float ParentGyroMaxStepDegrees = 28f;
         private const float ParentAccelerationCorrectionFloor = 0.18f;
         private const float ParentAccelerationFullCorrectionBelowDps = 60f;
         private const float ParentAccelerationZeroCorrectionAboveDps = 260f;
+        private const float ParentVerticalPitchAccelerationCorrectionBoost = 3.5f;
+        private const float ParentVerticalPitchAccelerationMaxWeight = 0.65f;
+        private const float ParentVerticalPitchAccelerationDeadzoneDegrees = 4f;
 
         private readonly string deviceNameFilter;
         private readonly string serviceUuid;
@@ -309,12 +316,7 @@ namespace ChopChop.Input
             bool gyroSaturated)
         {
             gyroDegreesPerSecond = ApplyParentGyroDeadzone(gyroDegreesPerSecond);
-            if (gyroSaturated)
-            {
-                gyroDegreesPerSecond = Vector3.ClampMagnitude(
-                    gyroDegreesPerSecond,
-                    ParentGyroSaturatedClampDegreesPerSecond);
-            }
+            gyroDegreesPerSecond = ApplyParentGyroReliability(gyroDegreesPerSecond, gyroSaturated);
 
             var angularSpeed = gyroDegreesPerSecond.magnitude;
             if (angularSpeed < 0.0001f || angularSpeed > ParentGyroIgnoreAboveDegreesPerSecond)
@@ -322,10 +324,44 @@ namespace ChopChop.Input
                 return currentRotation;
             }
 
+            var deltaDegrees = angularSpeed * Mathf.Max(0f, deltaTime);
+            if (deltaDegrees > ParentGyroMaxStepDegrees)
+            {
+                deltaDegrees = ParentGyroMaxStepDegrees;
+            }
+
             var deltaRotation = Quaternion.AngleAxis(
-                angularSpeed * Mathf.Max(0f, deltaTime),
+                deltaDegrees,
                 gyroDegreesPerSecond / angularSpeed);
             return Normalize(currentRotation * deltaRotation);
+        }
+
+        private static Vector3 ApplyParentGyroReliability(Vector3 gyroDegreesPerSecond, bool gyroSaturated)
+        {
+            var angularSpeed = gyroDegreesPerSecond.magnitude;
+            if (angularSpeed < 0.0001f)
+            {
+                return Vector3.zero;
+            }
+
+            var trust = 1f;
+            if (angularSpeed > ParentGyroFullTrustBelowDegreesPerSecond)
+            {
+                trust = Mathf.Lerp(
+                    1f,
+                    ParentGyroHighSpeedMinimumTrust,
+                    Mathf.InverseLerp(
+                        ParentGyroFullTrustBelowDegreesPerSecond,
+                        ParentGyroLowTrustAboveDegreesPerSecond,
+                        angularSpeed));
+            }
+
+            if (gyroSaturated)
+            {
+                trust = Mathf.Min(trust, ParentGyroSaturatedTrust);
+            }
+
+            return gyroDegreesPerSecond * Mathf.Clamp01(trust);
         }
 
         private Quaternion ApplyAccelerometerCorrection(
@@ -347,12 +383,18 @@ namespace ChopChop.Input
                 return currentRotation;
             }
 
-            var correctionWeight = ParentAccelerationCorrectionWeight();
-            if (correctionWeight <= 0f)
+            var baseCorrectionWeight = ParentAccelerationCorrectionWeight();
+            if (baseCorrectionWeight <= 0f)
             {
                 return currentRotation;
             }
 
+            var correctedRotation = ApplyVerticalPitchAccelerationCorrection(
+                currentRotation,
+                measuredGravity,
+                baseCorrectionWeight);
+
+            var correctionWeight = baseCorrectionWeight;
             var motionWeight = 1f - Mathf.InverseLerp(
                 ParentAccelerationFullCorrectionBelowDps,
                 ParentAccelerationZeroCorrectionAboveDps,
@@ -360,37 +402,111 @@ namespace ChopChop.Input
             correctionWeight *= Mathf.Clamp01(motionWeight);
             if (correctionWeight <= 0f)
             {
-                return currentRotation;
+                return correctedRotation;
             }
 
             var neutralGravity = parentNeutralAcceleration.normalized;
             if (neutralGravity.sqrMagnitude < 0.0001f)
             {
-                return currentRotation;
+                return correctedRotation;
             }
 
-            var predictedGravity = Quaternion.Inverse(currentRotation) * neutralGravity;
+            var predictedGravity = Quaternion.Inverse(correctedRotation) * neutralGravity;
             if (predictedGravity.sqrMagnitude < 0.0001f)
             {
-                return currentRotation;
+                return correctedRotation;
             }
 
             var correctionAngle = Vector3.Angle(predictedGravity.normalized, measuredGravity);
             if (float.IsNaN(correctionAngle)
                 || correctionAngle < Mathf.Max(0f, HashiImuMappingRuntime.AccelerationCorrectionDeadzoneDegrees))
             {
-                return currentRotation;
+                return correctedRotation;
             }
 
             var localCorrection = Quaternion.FromToRotation(measuredGravity, predictedGravity.normalized);
-            var correctedRotation = currentRotation * Quaternion.Slerp(
+            correctedRotation = correctedRotation * Quaternion.Slerp(
                 Quaternion.identity,
                 localCorrection,
                 correctionWeight);
-            // A 6-axis IMU cannot observe yaw from acceleration. Keep yaw gyro-only and use
-            // acceleration solely to correct gravity tilt, otherwise horizontal pointing
-            // motions get pulled back toward the neutral direction.
             return Normalize(correctedRotation);
+        }
+
+        private Quaternion ApplyVerticalPitchAccelerationCorrection(
+            Quaternion currentRotation,
+            Vector3 measuredGravity,
+            float correctionWeight)
+        {
+            if (!HashiImuMappingRuntime.ParentPlanarYawOnly
+                || !HashiImuMappingRuntime.ParentVerticalPitchWhenDominant
+                || !hasParentNeutralAcceleration
+                || correctionWeight <= 0f)
+            {
+                return currentRotation;
+            }
+
+            var neutralGravity = parentNeutralAcceleration.normalized;
+            if (neutralGravity.sqrMagnitude < 0.0001f || measuredGravity.sqrMagnitude < 0.0001f)
+            {
+                return currentRotation;
+            }
+
+            if (!TryBuildVerticalPitchTarget(
+                    neutralGravity,
+                    measuredGravity.normalized,
+                    out var targetPitch)
+                || !TryExtractTwist(currentRotation, Vector3.forward, out var currentPitch))
+            {
+                return currentRotation;
+            }
+
+            var targetPitchAngle = Quaternion.Angle(Quaternion.identity, targetPitch);
+            if (float.IsNaN(targetPitchAngle)
+                || targetPitchAngle < ParentVerticalPitchAccelerationDeadzoneDegrees)
+            {
+                return currentRotation;
+            }
+
+            var correctionAngle = Quaternion.Angle(currentPitch, targetPitch);
+            if (float.IsNaN(correctionAngle)
+                || correctionAngle < ParentVerticalPitchAccelerationDeadzoneDegrees)
+            {
+                return currentRotation;
+            }
+
+            var swing = currentRotation * Quaternion.Inverse(currentPitch);
+            var pitchWeight = Mathf.Min(
+                ParentVerticalPitchAccelerationMaxWeight,
+                correctionWeight * ParentVerticalPitchAccelerationCorrectionBoost);
+            var correctedPitch = Quaternion.Slerp(currentPitch, targetPitch, pitchWeight);
+            return Normalize(swing * correctedPitch);
+        }
+
+        private static bool TryBuildVerticalPitchTarget(
+            Vector3 neutralGravity,
+            Vector3 measuredGravity,
+            out Quaternion targetPitch)
+        {
+            targetPitch = Quaternion.identity;
+            var axis = Vector3.forward;
+            var neutralProjected = Vector3.ProjectOnPlane(neutralGravity, axis);
+            var measuredProjected = Vector3.ProjectOnPlane(measuredGravity, axis);
+            if (neutralProjected.sqrMagnitude < 0.0001f || measuredProjected.sqrMagnitude < 0.0001f)
+            {
+                return false;
+            }
+
+            var pitchDegrees = Vector3.SignedAngle(
+                measuredProjected.normalized,
+                neutralProjected.normalized,
+                axis);
+            if (float.IsNaN(pitchDegrees))
+            {
+                return false;
+            }
+
+            targetPitch = Quaternion.AngleAxis(Mathf.Clamp(pitchDegrees, -115f, 115f), axis);
+            return true;
         }
 
         private float ParentAccelerationCorrectionWeight()
@@ -430,6 +546,21 @@ namespace ChopChop.Input
                 rotation.y / magnitude,
                 rotation.z / magnitude,
                 rotation.w / magnitude);
+        }
+
+        private static bool TryExtractTwist(Quaternion rotation, Vector3 axis, out Quaternion twist)
+        {
+            twist = Quaternion.identity;
+            if (axis.sqrMagnitude < 0.000001f)
+            {
+                return false;
+            }
+
+            axis.Normalize();
+            var vectorPart = new Vector3(rotation.x, rotation.y, rotation.z);
+            var projected = Vector3.Project(vectorPart, axis);
+            twist = Normalize(new Quaternion(projected.x, projected.y, projected.z, rotation.w));
+            return true;
         }
 
         private static bool TryReadStableGravity(Vector3 acceleration, out Vector3 gravity)

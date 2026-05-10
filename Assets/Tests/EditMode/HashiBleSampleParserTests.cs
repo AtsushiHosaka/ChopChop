@@ -1,3 +1,4 @@
+using ChopChop.App;
 using ChopChop.BLE;
 using ChopChop.Input;
 using NUnit.Framework;
@@ -109,6 +110,142 @@ namespace ChopChop.Tests.EditMode
         }
 
         [Test]
+        public void ParentPlanarGyroUsesYawWhenVerticalPitchIsWeak()
+        {
+            HashiImuMappingRuntime.ParentPlanarYawOnly = true;
+            HashiImuMappingRuntime.ParentPlanarYawDirection = -1f;
+            HashiImuMappingRuntime.ParentVerticalPitchWhenDominant = true;
+            HashiImuMappingRuntime.ParentVerticalPitchScale = 0f;
+
+            var filtered = HashiImuMappingRuntime.FilterParentRotationGyro(new Vector3(0f, -200f, 80f));
+
+            Assert.That(filtered.x, Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(filtered.y, Is.EqualTo(200f).Within(0.0001f));
+            Assert.That(filtered.z, Is.EqualTo(0f).Within(0.0001f));
+        }
+
+        [Test]
+        public void ParentPlanarGyroBlendsPitchWhenPitchDominates()
+        {
+            HashiImuMappingRuntime.ParentPlanarYawOnly = true;
+            HashiImuMappingRuntime.ParentPlanarYawDirection = -1f;
+            HashiImuMappingRuntime.ParentVerticalPitchWhenDominant = true;
+            HashiImuMappingRuntime.ParentVerticalPitchScale = 1.35f;
+
+            var filtered = HashiImuMappingRuntime.FilterParentRotationGyro(new Vector3(0f, -20f, 120f));
+
+            Assert.That(filtered.x, Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(filtered.y, Is.EqualTo(7f).Within(0.0001f));
+            Assert.That(filtered.z, Is.EqualTo(162f).Within(0.0001f));
+        }
+
+        [Test]
+        public void ParentPlanarGyroKeepsDownwardPitchWhenYawIsAlsoPresent()
+        {
+            HashiImuMappingRuntime.ParentPlanarYawOnly = true;
+            HashiImuMappingRuntime.ParentPlanarYawDirection = -1f;
+            HashiImuMappingRuntime.ParentVerticalPitchWhenDominant = true;
+            HashiImuMappingRuntime.ParentVerticalPitchScale = 1f;
+
+            var filtered = HashiImuMappingRuntime.FilterParentRotationGyro(new Vector3(0f, -120f, 120f));
+
+            Assert.That(filtered.x, Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(filtered.y, Is.GreaterThan(0f));
+            Assert.That(filtered.z, Is.GreaterThan(70f));
+        }
+
+        [Test]
+        public void ParentVerticalPitchScaleUpgradesLegacySerializedValues()
+        {
+            HashiImuMappingRuntime.ParentVerticalPitchScale = 1f;
+            Assert.That(HashiImuMappingRuntime.ParentVerticalPitchScale, Is.EqualTo(1.35f).Within(0.0001f));
+
+            HashiImuMappingRuntime.ParentVerticalPitchScale = 0.55f;
+            Assert.That(HashiImuMappingRuntime.ParentVerticalPitchScale, Is.EqualTo(1.35f).Within(0.0001f));
+
+            HashiImuMappingRuntime.ParentVerticalPitchScale = 0f;
+            Assert.That(HashiImuMappingRuntime.ParentVerticalPitchScale, Is.EqualTo(0f).Within(0.0001f));
+
+            HashiImuMappingRuntime.ParentVerticalPitchScale = 1.5f;
+            Assert.That(HashiImuMappingRuntime.ParentVerticalPitchScale, Is.EqualTo(1.5f).Within(0.0001f));
+        }
+
+        [Test]
+        public void ParentPlanarGyroCanBoostDownwardPitchPastNeutralWeight()
+        {
+            HashiImuMappingRuntime.ParentPlanarYawOnly = true;
+            HashiImuMappingRuntime.ParentPlanarYawDirection = -1f;
+            HashiImuMappingRuntime.ParentVerticalPitchWhenDominant = true;
+            HashiImuMappingRuntime.ParentVerticalPitchDominance = 1.35f;
+            HashiImuMappingRuntime.ParentVerticalPitchScale = 1.35f;
+
+            var filtered = HashiImuMappingRuntime.FilterParentRotationGyro(new Vector3(0f, -120f, 120f));
+            var weighted = HashiImuMappingRuntime.ApplyParentRotationRateWeight(filtered);
+
+            Assert.That(filtered.z, Is.EqualTo(162f).Within(0.0001f));
+            Assert.That(weighted.z, Is.GreaterThan(95f));
+        }
+
+        [Test]
+        public void BleDisconnectedPromptIsLocalizedInEverySupportedLanguage()
+        {
+            Assert.That(
+                LocalizationCatalog.Japanese[LocalizationKeys.Hud.ConnectHashi],
+                Is.EqualTo("BLEが接続されていません"));
+            Assert.That(
+                LocalizationCatalog.Japanese[LocalizationKeys.Hud.ResetHashi],
+                Is.EqualTo("リセット"));
+            Assert.That(
+                LocalizationCatalog.Japanese[LocalizationKeys.Feedback.Reset],
+                Is.EqualTo("リセットしました"));
+            Assert.That(
+                LocalizationCatalog.English[LocalizationKeys.Hud.ConnectHashi],
+                Is.EqualTo("BLE is not connected."));
+            Assert.That(
+                LocalizationCatalog.English[LocalizationKeys.Hud.ResetHashi],
+                Is.EqualTo("Reset"));
+            Assert.That(
+                LocalizationCatalog.English[LocalizationKeys.Feedback.Reset],
+                Is.EqualTo("Reset complete."));
+            Assert.That(
+                LocalizationCatalog.Korean[LocalizationKeys.Hud.ConnectHashi],
+                Is.EqualTo("BLE가 연결되어 있지 않습니다."));
+            Assert.That(
+                LocalizationCatalog.Korean[LocalizationKeys.Hud.ResetHashi],
+                Is.EqualTo("초기화"));
+            Assert.That(
+                LocalizationCatalog.Korean[LocalizationKeys.Feedback.Reset],
+                Is.EqualTo("초기화했습니다."));
+            Assert.That(
+                LocalizationCatalog.ChineseSimplified[LocalizationKeys.Hud.ConnectHashi],
+                Is.EqualTo("BLE 未连接。"));
+            Assert.That(
+                LocalizationCatalog.ChineseSimplified[LocalizationKeys.Hud.ResetHashi],
+                Is.EqualTo("重置"));
+            Assert.That(
+                LocalizationCatalog.ChineseSimplified[LocalizationKeys.Feedback.Reset],
+                Is.EqualTo("已重置。"));
+            Assert.That(
+                LocalizationCatalog.French[LocalizationKeys.Hud.ConnectHashi],
+                Is.EqualTo("Le BLE n'est pas connecté."));
+            Assert.That(
+                LocalizationCatalog.French[LocalizationKeys.Hud.ResetHashi],
+                Is.EqualTo("Réinitialiser"));
+            Assert.That(
+                LocalizationCatalog.French[LocalizationKeys.Feedback.Reset],
+                Is.EqualTo("Réinitialisé."));
+            Assert.That(
+                LocalizationCatalog.Spanish[LocalizationKeys.Hud.ConnectHashi],
+                Is.EqualTo("BLE no está conectado."));
+            Assert.That(
+                LocalizationCatalog.Spanish[LocalizationKeys.Hud.ResetHashi],
+                Is.EqualTo("Reiniciar"));
+            Assert.That(
+                LocalizationCatalog.Spanish[LocalizationKeys.Feedback.Reset],
+                Is.EqualTo("Reinicio completo."));
+        }
+
+        [Test]
         public void RelativeOpeningClosingGyroCanBeatStaleAccelerationOpen()
         {
             HashiImuMappingRuntime.IndependentPoseMode = HashiIndependentPoseMode.RelativeOpeningIntegrated;
@@ -153,6 +290,69 @@ namespace ChopChop.Tests.EditMode
                 out _), Is.True);
             Assert.That(HashiImuMappingRuntime.Imu1PoseDebugState.OpeningAngleDegrees, Is.LessThan(3f));
             Assert.That(HashiImuMappingRuntime.Imu1PoseDebugState.RelativeOpeningAccelerationCorrectionAllowed, Is.False);
+        }
+
+        [Test]
+        public void RelativeOpeningAccelerationIgnoresWholeHashiMotion()
+        {
+            HashiImuMappingRuntime.IndependentPoseMode = HashiIndependentPoseMode.RelativeOpeningIntegrated;
+            HashiImuMappingRuntime.RawAccelerationToG = 1f;
+            HashiImuMappingRuntime.RawGyroToDegreesPerSecond = 1f;
+            HashiImuMappingRuntime.GyroDeadzoneDegreesPerSecond = 0f;
+            HashiImuMappingRuntime.RelativeOpeningAccelerationWeight = 0.9f;
+
+            var neutral = ParseDualImuCsv("IMU1,0,0,1,0,0,0,1\nIMU2,0,0,1,0,0,0,1");
+            var wholeMotionFalseOpen = ParseDualImuCsv(
+                "IMU1,0,-0.342020,0.939693,0,120,0,2\nIMU2,0,0,1,0,120,0,2");
+
+            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
+                neutral,
+                0.1f,
+                Vector3.up,
+                out _,
+                out _), Is.True);
+            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
+                wholeMotionFalseOpen,
+                0.1f,
+                Vector3.up,
+                out _,
+                out _), Is.True);
+
+            var debugState = HashiImuMappingRuntime.Imu1PoseDebugState;
+            Assert.That(debugState.RelativeOpeningAccelerationDegrees, Is.GreaterThan(15f));
+            Assert.That(debugState.RelativeOpeningVelocityDominance, Is.LessThan(0.25f));
+            Assert.That(debugState.RelativeOpeningAccelerationCorrectionAllowed, Is.False);
+            Assert.That(debugState.OpeningAngleDegrees, Is.LessThan(1f));
+        }
+
+        [Test]
+        public void RelativeOpeningAccelerationRejectsProjectedFalseOpen()
+        {
+            HashiImuMappingRuntime.IndependentPoseMode = HashiIndependentPoseMode.RelativeOpeningIntegrated;
+            HashiImuMappingRuntime.RawAccelerationToG = 1f;
+            HashiImuMappingRuntime.RawGyroToDegreesPerSecond = 1f;
+            HashiImuMappingRuntime.GyroDeadzoneDegreesPerSecond = 0f;
+            HashiImuMappingRuntime.RelativeOpeningAccelerationWeight = 0.9f;
+
+            var neutral = ParseDualImuCsv("IMU1,994,98,41,0,0,0,1\nIMU2,977,88,193,0,0,0,1");
+            var falseOpen = ParseDualImuCsv("IMU1,-538,14916,-4293,0,0,0,2\nIMU2,81,14985,-5170,0,0,0,2");
+
+            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
+                neutral,
+                0.1f,
+                Vector3.up,
+                out _,
+                out _), Is.True);
+            Assert.That(HashiImuMappingRuntime.UpdateIndependentRotations(
+                falseOpen,
+                0.1f,
+                Vector3.up,
+                out _,
+                out _), Is.True);
+
+            var debugState = HashiImuMappingRuntime.Imu1PoseDebugState;
+            Assert.That(debugState.HasRelativeOpeningAcceleration, Is.False);
+            Assert.That(debugState.OpeningAngleDegrees, Is.LessThan(1f));
         }
 
         private static HashiBleSample ParseDualImuCsv(string payload)

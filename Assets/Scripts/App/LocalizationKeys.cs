@@ -35,6 +35,8 @@ namespace ChopChop.App
         public static class Hud
         {
             public const string Calibrate = "hud.calibrate";
+            public const string ConnectHashi = "hud.connectHashi";
+            public const string ResetHashi = "hud.resetHashi";
             public const string Time = "hud.time";
             public const string Failures = "hud.failures";
             public const string Speed = "hud.speed";
@@ -67,6 +69,7 @@ namespace ChopChop.App
         {
             public const string Nice = "feedback.nice";
             public const string Failed = "feedback.failed";
+            public const string Reset = "feedback.reset";
         }
     }
 }

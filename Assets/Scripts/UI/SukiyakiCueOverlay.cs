@@ -1,4 +1,5 @@
 using ChopChop.App;
+using ChopChop.Input;
 using ChopChop.Levels.Sukiyaki;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,6 +10,8 @@ namespace ChopChop.UI
     {
         [SerializeField] private Vector2 bannerSize = new Vector2(640f, 92f);
         [SerializeField] private Vector2 bannerOffset = new Vector2(0f, -86f);
+        [SerializeField] private Vector2 resetButtonSize = new Vector2(184f, 54f);
+        [SerializeField] private Vector2 resetButtonOffset = new Vector2(-32f, -28f);
         [SerializeField] private float feedbackSeconds = 1.2f;
         [SerializeField] private float popScale = 0.06f;
         [SerializeField] private float popSeconds = 0.22f;
@@ -18,10 +21,12 @@ namespace ChopChop.UI
 
         private GameLocalization localization;
         private SukiyakiStageController stageController;
+        private HashiInputProvider inputProvider;
 
         private Text bannerText;
         private CanvasGroup bannerGroup;
         private float bannerShownAt;
+        private bool showingConnectionPrompt;
 
         private RectTransform feedbackRoot;
         private Text feedbackText;
@@ -30,10 +35,14 @@ namespace ChopChop.UI
         private float feedbackAnimTime;
         private bool failureShown;
 
+        private Button resetButton;
+        private Text resetButtonText;
+
         public void Initialize(GameLocalization appLocalization, SukiyakiStageController stage)
         {
             localization = appLocalization;
             stageController = stage;
+            inputProvider = stageController != null ? stageController.InputProvider : null;
 
             var canvas = gameObject.GetComponent<Canvas>();
             if (canvas == null)
@@ -46,6 +55,7 @@ namespace ChopChop.UI
 
             CreateBanner();
             CreateFeedback();
+            CreateResetButton();
             Subscribe();
 
             if (stageController != null)
@@ -61,6 +71,9 @@ namespace ChopChop.UI
 
         private void Update()
         {
+            ResolveInputProvider();
+            UpdateConnectionPrompt();
+            UpdateResetButton();
             UpdateBannerPop();
             UpdateFeedback();
         }
@@ -103,10 +116,91 @@ namespace ChopChop.UI
         private void ShowInstruction(SukiyakiStep step)
         {
             if (bannerText == null) return;
-            var text = GetStepText(step);
+            if (showingConnectionPrompt) return;
+            SetBannerText(GetStepText(step));
+        }
+
+        private void SetBannerText(string text)
+        {
+            if (bannerText == null) return;
+            var visible = !string.IsNullOrEmpty(text);
+            if (bannerText.text == text && (bannerGroup.alpha > 0f) == visible)
+            {
+                return;
+            }
+
             bannerText.text = text;
-            bannerGroup.alpha = string.IsNullOrEmpty(text) ? 0f : 1f;
+            bannerGroup.alpha = visible ? 1f : 0f;
             bannerShownAt = Time.unscaledTime;
+        }
+
+        private void UpdateConnectionPrompt()
+        {
+            if (bannerText == null) return;
+
+            var shouldShowPrompt = inputProvider != null && inputProvider.NeedsBleConnectionPrompt;
+            if (shouldShowPrompt)
+            {
+                showingConnectionPrompt = true;
+                var text = localization != null
+                    ? localization.Text(LocalizationKeys.Hud.ConnectHashi)
+                    : "BLEが接続されていません";
+                SetBannerText(text);
+                return;
+            }
+
+            if (!showingConnectionPrompt)
+            {
+                return;
+            }
+
+            showingConnectionPrompt = false;
+            if (stageController != null)
+            {
+                SetBannerText(GetStepText(stageController.CurrentStep));
+            }
+            else
+            {
+                SetBannerText(string.Empty);
+            }
+        }
+
+        private void CreateResetButton()
+        {
+            resetButton = UiFactory.CreateButton(
+                transform,
+                "Hashi Reset Button",
+                ResetButtonLabel(),
+                new Color(0.13f, 0.09f, 0.06f, 0.86f),
+                new Color(0.98f, 0.91f, 0.78f, 1f));
+
+            var rt = resetButton.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(1f, 1f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 1f);
+            rt.anchoredPosition = resetButtonOffset;
+            rt.sizeDelta = resetButtonSize;
+
+            resetButtonText = resetButton.transform.Find("Label")?.GetComponent<Text>();
+            if (resetButtonText != null)
+            {
+                resetButtonText.fontSize = 24;
+                resetButtonText.resizeTextForBestFit = true;
+                resetButtonText.resizeTextMinSize = 16;
+                resetButtonText.resizeTextMaxSize = 24;
+            }
+
+            resetButton.onClick.AddListener(HandleResetClicked);
+            UpdateResetButton();
+        }
+
+        private void UpdateResetButton()
+        {
+            if (resetButton == null) return;
+
+            resetButton.interactable = inputProvider != null
+                && inputProvider.CurrentFrame.HasSample
+                && !inputProvider.NeedsBleConnectionPrompt;
         }
 
         private void CreateFeedback()
@@ -127,6 +221,9 @@ namespace ChopChop.UI
             feedbackGroup.interactable = false;
 
             feedbackText = UiFactory.CreateText(root.transform, "Feedback Text", 72, FontStyle.Bold, TextAnchor.MiddleCenter, SuccessColor);
+            feedbackText.resizeTextForBestFit = true;
+            feedbackText.resizeTextMinSize = 28;
+            feedbackText.resizeTextMaxSize = 72;
             UiFactory.Stretch(feedbackText.rectTransform, 0f);
             feedbackText.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.55f);
         }
@@ -188,7 +285,37 @@ namespace ChopChop.UI
 
         private void HandleLanguageChanged()
         {
+            if (resetButtonText != null)
+            {
+                resetButtonText.text = ResetButtonLabel();
+            }
+
+            if (showingConnectionPrompt)
+            {
+                showingConnectionPrompt = false;
+                UpdateConnectionPrompt();
+                return;
+            }
+
             if (stageController != null) ShowInstruction(stageController.CurrentStep);
+        }
+
+        private void HandleResetClicked()
+        {
+            ResolveInputProvider();
+
+            if (inputProvider != null && inputProvider.ResetPose())
+            {
+                ShowFeedback(LocalizedText(LocalizationKeys.Feedback.Reset, "リセットしました"), SuccessColor);
+                showingConnectionPrompt = false;
+                if (stageController != null)
+                {
+                    SetBannerText(GetStepText(stageController.CurrentStep));
+                }
+                return;
+            }
+
+            ShowFeedback(LocalizedText(LocalizationKeys.Hud.ConnectHashi, "BLEが接続されていません"), FailureColor);
         }
 
         private void HandleStepChanged(SukiyakiStep step)
@@ -224,6 +351,28 @@ namespace ChopChop.UI
                 case SukiyakiStep.DeliverToMouth: return localization.Text(LocalizationKeys.Step.Deliver);
                 default:                           return string.Empty;
             }
+        }
+
+        private void ResolveInputProvider()
+        {
+            if (inputProvider != null)
+            {
+                return;
+            }
+
+            inputProvider = stageController != null
+                ? stageController.InputProvider
+                : FindAnyObjectByType<HashiInputProvider>();
+        }
+
+        private string ResetButtonLabel()
+        {
+            return LocalizedText(LocalizationKeys.Hud.ResetHashi, "リセット");
+        }
+
+        private string LocalizedText(string key, string fallback)
+        {
+            return localization != null ? localization.Text(key) : fallback;
         }
     }
 }

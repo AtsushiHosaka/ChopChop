@@ -83,6 +83,12 @@ namespace ChopChop.BLE
     {
         public const float Esp32Lsm6RawAccelerationToG = HashiBleDefaults.RawAccelerationToG;
         private const float RelativeOpeningReleaseOpenSuppressionDps = 4f;
+        private const float RelativeOpeningAccelerationRejectWholeMotionDps = 90f;
+        private const float RelativeOpeningAccelerationMinDominanceDuringMotion = 0.25f;
+        private const float RelativeOpeningAccelerationCredibilityMinDegrees = 6f;
+        private const float RelativeOpeningAccelerationRelativeAngleRatio = 0.35f;
+        private const float PreferredParentVerticalPitchScale = 1.35f;
+        private const float LegacyParentVerticalPitchScaleMax = 1.0001f;
 
         public static bool UseTunedTheta { get; set; }
         public static HashiImuThetaMode ThetaMode { get; set; } = HashiImuThetaMode.AccelerationAngle;
@@ -101,7 +107,12 @@ namespace ChopChop.BLE
         public static bool ParentPlanarYawOnly { get; set; } = true;
         public static float ParentPlanarYawDirection { get; set; } = -1f;
         public static bool ParentVerticalPitchWhenDominant { get; set; } = true;
-        public static float ParentVerticalPitchScale { get; set; } = 0.55f;
+        public static float ParentVerticalPitchDominance { get; set; } = 1.35f;
+        public static float ParentVerticalPitchScale
+        {
+            get => parentVerticalPitchScale;
+            set => parentVerticalPitchScale = NormalizeParentVerticalPitchScale(value);
+        }
         public static float ParentLongAxisTwistWeight { get; set; } = 0f;
         public static bool UseIndependentImuPose { get; set; } = true;
         public static bool AutoCaptureIndependentNeutral { get; set; } = true;
@@ -143,7 +154,7 @@ namespace ChopChop.BLE
         public static float PositionSampleGapResetSeconds { get; set; } = 0.7f;
         public static float ChopstickVisualLengthScale { get; set; } = 0.88f;
         public static Vector3 HashiDisplayAlignmentEuler { get; set; } = new Vector3(0f, -90f, 135f);
-        public static Vector3 HashiDisplayOffsetWorld { get; set; } = new Vector3(1f, 0f, 0f);
+        public static Vector3 HashiDisplayOffsetWorld { get; set; } = Vector3.zero;
         public static bool InvertImu1Pose { get; set; }
         public static bool InvertImu2Pose { get; set; }
         public static HashiImuAxis Imu1MapX { get; set; } = HashiImuAxis.X;
@@ -174,6 +185,7 @@ namespace ChopChop.BLE
         private static ImuPoseTracker imu1Pose = ImuPoseTracker.Create();
         private static ImuPoseTracker imu2Pose = ImuPoseTracker.Create();
         private static PositionTracker positionTracker = PositionTracker.Create();
+        private static float parentVerticalPitchScale = PreferredParentVerticalPitchScale;
 
         public static void ResetDefaults()
         {
@@ -194,7 +206,8 @@ namespace ChopChop.BLE
             ParentPlanarYawOnly = true;
             ParentPlanarYawDirection = -1f;
             ParentVerticalPitchWhenDominant = true;
-            ParentVerticalPitchScale = 0.55f;
+            ParentVerticalPitchDominance = 1.35f;
+            ParentVerticalPitchScale = 1.35f;
             ParentLongAxisTwistWeight = 0f;
             UseIndependentImuPose = true;
             AutoCaptureIndependentNeutral = true;
@@ -236,7 +249,7 @@ namespace ChopChop.BLE
             PositionSampleGapResetSeconds = 0.7f;
             ChopstickVisualLengthScale = 0.88f;
             HashiDisplayAlignmentEuler = new Vector3(0f, -90f, 135f);
-            HashiDisplayOffsetWorld = new Vector3(1f, 0f, 0f);
+            HashiDisplayOffsetWorld = Vector3.zero;
             InvertImu1Pose = false;
             InvertImu2Pose = false;
             Imu1MapX = HashiImuAxis.X;
@@ -395,10 +408,63 @@ namespace ChopChop.BLE
 
             var yawDirection = ParentPlanarYawDirection < 0f ? -1f : 1f;
             var yaw = yawDirection * gyro.y;
-            var pitch = ParentVerticalPitchWhenDominant
-                ? gyro.z * Mathf.Clamp01(ParentVerticalPitchScale)
-                : 0f;
-            return new Vector3(0f, yaw, pitch);
+            if (!ParentVerticalPitchWhenDominant)
+            {
+                return new Vector3(0f, yaw, 0f);
+            }
+
+            var pitch = gyro.z * ParentVerticalPitchScaleValue();
+            var pitchWeight = ParentVerticalPitchWeight(gyro, yaw, pitch);
+            var yawWeight = Mathf.Lerp(1f, 0.35f, pitchWeight);
+            return new Vector3(0f, yaw * yawWeight, pitch * pitchWeight);
+        }
+
+        public static bool ShouldUseParentVerticalPitch(Vector3 gyro, float yaw)
+        {
+            if (!ParentPlanarYawOnly || !ParentVerticalPitchWhenDominant)
+            {
+                return false;
+            }
+
+            var pitch = gyro.z * ParentVerticalPitchScaleValue();
+            return ParentVerticalPitchWeight(gyro, yaw, pitch) >= 0.5f;
+        }
+
+        private static float ParentVerticalPitchScaleValue()
+        {
+            return Mathf.Clamp(ParentVerticalPitchScale, 0f, 2f);
+        }
+
+        private static float NormalizeParentVerticalPitchScale(float value)
+        {
+            var clamped = Mathf.Clamp(value, 0f, 2f);
+            return clamped > 0f && clamped <= LegacyParentVerticalPitchScaleMax
+                ? PreferredParentVerticalPitchScale
+                : clamped;
+        }
+
+        private static float ParentVerticalPitchWeight(Vector3 gyro, float yaw, float pitch)
+        {
+            var pitchMagnitude = Mathf.Abs(pitch);
+            if (pitchMagnitude < 0.0001f)
+            {
+                return 0f;
+            }
+
+            var strongestPlanar = Mathf.Max(Mathf.Abs(yaw), Mathf.Abs(gyro.x));
+            if (strongestPlanar < 0.0001f)
+            {
+                return 1f;
+            }
+
+            var blendStart = strongestPlanar * 0.35f;
+            var fullPitch = strongestPlanar * Mathf.Max(1f, ParentVerticalPitchDominance);
+            if (fullPitch <= blendStart + 0.0001f)
+            {
+                return pitchMagnitude >= fullPitch ? 1f : 0f;
+            }
+
+            return Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(blendStart, fullPitch, pitchMagnitude));
         }
 
         public static void CaptureIndependentNeutral(HashiBleSample sample)
@@ -1057,7 +1123,11 @@ namespace ChopChop.BLE
             if (hasAccelerationOpening)
             {
                 var accelerationPullsOpen = accelerationOpening > imu1Pose.OpeningAngleDegrees + 0.5f;
-                accelerationCorrectionAllowed = !(imu1Pose.SuppressAccelerationOpeningUntilOpenMotion && accelerationPullsOpen);
+                var wholeHashiMotionLooksLikeOpening = accelerationPullsOpen
+                    && gyroMotion > RelativeOpeningAccelerationRejectWholeMotionDps
+                    && velocityDominance < RelativeOpeningAccelerationMinDominanceDuringMotion;
+                accelerationCorrectionAllowed = !((imu1Pose.SuppressAccelerationOpeningUntilOpenMotion && accelerationPullsOpen)
+                    || wholeHashiMotionLooksLikeOpening);
                 if (accelerationCorrectionAllowed)
                 {
                     var correctionWeight = Mathf.Clamp01(RelativeOpeningAccelerationWeight);
@@ -1227,7 +1297,28 @@ namespace ChopChop.BLE
 
             var relativeOpening = imu1Opening - imu2Opening;
             openingDegrees = ClampOpeningAngle(relativeOpening);
-            return true;
+            return IsRelativeAccelerationOpeningCredible(imu1Acceleration, imu2Acceleration, openingDegrees);
+        }
+
+        private static bool IsRelativeAccelerationOpeningCredible(
+            Vector3 imu1Acceleration,
+            Vector3 imu2Acceleration,
+            float openingDegrees)
+        {
+            var absoluteOpening = Mathf.Abs(openingDegrees);
+            if (absoluteOpening < RelativeOpeningAccelerationCredibilityMinDegrees)
+            {
+                return true;
+            }
+
+            var currentRelativeAngle = Vector3.Angle(imu1Acceleration, imu2Acceleration);
+            if (float.IsNaN(currentRelativeAngle))
+            {
+                return false;
+            }
+
+            var relativeAngleChange = Mathf.Abs(currentRelativeAngle - imu1Pose.RelativeOpeningNeutralAngleDegrees);
+            return relativeAngleChange >= absoluteOpening * RelativeOpeningAccelerationRelativeAngleRatio;
         }
 
         private static bool TryReadAccelerationOpeningDelta(

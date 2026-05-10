@@ -187,7 +187,10 @@ namespace ChopChop.Presentation
                 Quaternion.identity,
                 imuRotation,
                 Mathf.Clamp01(wholeRotationSensitivity));
-            return adjustedImuRotation * baseParentRotation * Quaternion.Euler(HashiImuMappingRuntime.HashiDisplayAlignmentEuler);
+            var alignedRotation = adjustedImuRotation
+                * baseParentRotation
+                * Quaternion.Euler(HashiImuMappingRuntime.HashiDisplayAlignmentEuler);
+            return alignedRotation;
         }
 
         private void CaptureDisplayAnchor()

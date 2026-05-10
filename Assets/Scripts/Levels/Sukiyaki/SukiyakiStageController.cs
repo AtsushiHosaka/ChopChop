@@ -1,4 +1,5 @@
 using System;
+using ChopChop.BLE;
 using ChopChop.Food.Liquid;
 using ChopChop.Input;
 using ChopChop.Food.Meat;
@@ -56,6 +57,7 @@ namespace ChopChop.Levels.Sukiyaki
         public float StepProgress01 => stepGoalSeconds <= 0f ? 0f : Mathf.Clamp01(stepProgress / stepGoalSeconds);
         public LevelRunResult CurrentResult => result;
         public bool IsCurrentTargetSatisfied => IsTargetSatisfiedFor(CurrentStep);
+        public HashiInputProvider InputProvider => inputProvider;
 
         public event Action<SukiyakiStep> StepChanged;
         public event Action<SukiyakiStep> StepSucceeded;
@@ -114,6 +116,7 @@ namespace ChopChop.Levels.Sukiyaki
             switch (CurrentStep)
             {
                 case SukiyakiStep.Calibration:
+                    CaptureHashiNeutral();
                     StepSucceeded?.Invoke(completedStep);
                     SetStep(SukiyakiStep.MixEgg);
                     break;
@@ -465,6 +468,20 @@ namespace ChopChop.Levels.Sukiyaki
                     railMover.MoveTo(5);
                     break;
             }
+        }
+
+        private void CaptureHashiNeutral()
+        {
+            inputProvider?.CaptureNeutral();
+            if (inputProvider == null || !inputProvider.TryGetLatestBleSample(out var sample))
+            {
+                return;
+            }
+
+            HashiImuMappingRuntime.CaptureIndependentNeutral(sample);
+            HashiImuMappingRuntime.ZeroImu1IntegratedPose(sample);
+            HashiImuMappingRuntime.ZeroImu2IntegratedPose(sample);
+            HashiImuMappingRuntime.ZeroHardwarePosition(sample);
         }
 
         private bool ShouldMoveDemoRail()

@@ -199,11 +199,11 @@ namespace ChopChop.Presentation
             return new[]
             {
                 new StepCameraPose(SukiyakiStep.Calibration, new Vector3(0.2f, 1.1f, -1.65f), new Vector3(0f, 0.18f, 0f), 46f, 0.55f),
-                new StepCameraPose(SukiyakiStep.MixEgg, new Vector3(0.0f, 0.58f, -0.9f), new Vector3(0f, 0.11f, 0f), 34f, 0.85f),
+                new StepCameraPose(SukiyakiStep.MixEgg, new Vector3(0.0f, 0.78f, -1.35f), new Vector3(0f, 0.16f, 0f), 40f, 0.85f),
                 new StepCameraPose(SukiyakiStep.PickMeat, new Vector3(-0.08f, 0.62f, -0.92f), new Vector3(0f, 0.10f, 0f), 35f, 0.85f),
                 new StepCameraPose(SukiyakiStep.PutInBroth, new Vector3(-0.08f, 0.64f, -0.94f), new Vector3(0f, 0.12f, 0f), 35f, 0.85f),
                 new StepCameraPose(SukiyakiStep.FlipMeat, new Vector3(-0.22f, 0.66f, -0.92f), new Vector3(0f, 0.12f, 0f), 34f, 0.85f),
-                new StepCameraPose(SukiyakiStep.DipEgg, new Vector3(0.08f, 0.58f, -0.9f), new Vector3(0f, 0.11f, 0f), 34f, 0.85f),
+                new StepCameraPose(SukiyakiStep.DipEgg, new Vector3(0.08f, 0.78f, -1.35f), new Vector3(0f, 0.16f, 0f), 40f, 0.85f),
                 new StepCameraPose(SukiyakiStep.DeliverToMouth, new Vector3(0f, 0.68f, -1.1f), new Vector3(0f, 0.04f, 0f), 38f, 0.9f),
                 new StepCameraPose(SukiyakiStep.Result, new Vector3(0f, 1.18f, -2.15f), new Vector3(0f, 0f, 0f), 46f, 0.9f)
             };
